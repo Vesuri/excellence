@@ -2,9 +2,9 @@
 #include <QPoint>
 #include "algorithms.h"
 
-void Algorithms::drawLine(QImage &image, const QPoint &from, const QPoint &to)
+void Algorithms::line(const QPoint &from, const QPoint &to, std::function<void(const QPoint &)> point)
 {
-    image.setPixel(from, 1);
+    point(from);
 
     int dx = to.x() - from.x();
     int dy = to.y() - from.y();
@@ -27,7 +27,7 @@ void Algorithms::drawLine(QImage &image, const QPoint &from, const QPoint &to)
                     y += yAdd;
                     error -= twoDx;
                 }
-                image.setPixel(x, y, 1);
+                point(QPoint(x, y));
             }
         } else {
             while (y != to.y()) {
@@ -37,7 +37,7 @@ void Algorithms::drawLine(QImage &image, const QPoint &from, const QPoint &to)
                     x += xAdd;
                     error -= twoDy;
                 }
-                image.setPixel(x, y, 1);
+                point(QPoint(x, y));
             }
         }
     }

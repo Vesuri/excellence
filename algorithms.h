@@ -1,13 +1,15 @@
 #ifndef ALGORITHMS_H
 #define ALGORITHMS_H
 
+#include <functional>
+
 class QImage;
 class QPoint;
 
 class Algorithms
 {
 public:
-    static void drawLine(QImage &image, const QPoint &from, const QPoint &to);
+    static void line(const QPoint &from, const QPoint &to, std::function<void(const QPoint &)> point);
 };
 
 #endif // ALGORITHMS_H

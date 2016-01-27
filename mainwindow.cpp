@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     drawTool->setMode(DrawTool::ConnectedDraw);
+    drawTool->setColor(2);
     imageWindow->setTool(drawTool);
     imageWindow->show();
 }
