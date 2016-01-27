@@ -8,8 +8,10 @@ class ImageWindow;
 }
 
 class QGraphicsScene;
+class QGraphicsPixmapItem;
 class QImage;
 class QPixmap;
+class DrawTool;
 
 class ImageWindow : public QWidget
 {
@@ -19,11 +21,15 @@ public:
     explicit ImageWindow(QWidget *parent = 0);
     ~ImageWindow();
 
+    virtual bool eventFilter(QObject *watched, QEvent *event);
+
 private:
     Ui::ImageWindow *ui;
     QGraphicsScene *scene;
+    QGraphicsPixmapItem *pixmapItem;
     QImage *image;
-    QPixmap *pixmap;
+    DrawTool *drawTool;
+    QRect changedRect;
 };
 
 #endif // IMAGEWINDOW_H
