@@ -2,6 +2,6 @@
 ui_*.h
 moc_*
 *.o
-build-Excellence*
+build-excellence*
 Makefile
-Excellence
+excellence
