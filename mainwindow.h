@@ -22,8 +22,10 @@ public:
 private:
     Ui::MainWindow *ui;
     ImageWindow *imageWindow;
+    QImage *image;
     DrawTool *drawTool;
     PenTip *penTip;
+    QVector<QRgb> palette;
 };
 
 #endif // MAINWINDOW_H

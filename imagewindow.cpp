@@ -10,21 +10,12 @@ ImageWindow::ImageWindow(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ImageWindow),
     scene(new QGraphicsScene(this)),
-    image(new QImage(320, 256, QImage::Format_Indexed8))
+    pixmapItem(new QGraphicsPixmapItem),
+    image(0),
+    tool(0)
 {
     ui->setupUi(this);
 
-    QVector<QRgb> colors;
-    colors.append(0xff959595);
-    colors.append(0xff000000);
-    colors.append(0xffffffff);
-    colors.append(0xff3b67a2);
-    colors.append(0xff7b7b7b);
-    colors.append(0xffafafaf);
-    colors.append(0xffaa907c);
-    colors.append(0xffffa997);
-    image->setColorTable(colors);
-    pixmapItem = new QGraphicsPixmapItem(QPixmap::fromImage(*image));
     scene->addItem(pixmapItem);
     ui->graphicsView->setScene(scene);
 
@@ -34,12 +25,17 @@ ImageWindow::ImageWindow(QWidget *parent) :
 ImageWindow::~ImageWindow()
 {
     delete ui;
-    delete image;
 }
 
 void ImageWindow::setTool(Tool *tool)
 {
     this->tool = tool;
+}
+
+void ImageWindow::setImage(QImage *image)
+{
+    this->image = image;
+    pixmapItem->setPixmap(QPixmap::fromImage(*image));
 }
 
 bool ImageWindow::eventFilter(QObject *watched, QEvent *event)

@@ -22,6 +22,7 @@ public:
     ~ImageWindow();
 
     void setTool(Tool *tool);
+    void setImage(QImage *image);
     virtual bool eventFilter(QObject *watched, QEvent *event);
 
 private:
