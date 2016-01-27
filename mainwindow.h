@@ -9,6 +9,7 @@ class MainWindow;
 
 class ImageWindow;
 class DrawTool;
+class PenTip;
 
 class MainWindow : public QMainWindow
 {
@@ -22,6 +23,7 @@ private:
     Ui::MainWindow *ui;
     ImageWindow *imageWindow;
     DrawTool *drawTool;
+    PenTip *penTip;
 };
 
 #endif // MAINWINDOW_H

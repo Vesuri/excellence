@@ -1,48 +1,13 @@
 #include <QImage>
 #include <QRect>
+#include "pen.h"
 #include "algorithms.h"
 #include "drawtool.h"
 
 DrawTool::DrawTool(QObject *parent) : Tool(parent),
     mode(ConnectedDraw),
-    color(1)
+    pen(0)
 {
-
-}
-
-QRect DrawTool::press(const QPoint &point, QImage &image)
-{
-    image.setPixel(point, color);
-    previousPoint = point;
-    return QRect(point, point);
-}
-
-QRect DrawTool::move(const QPoint &point, QImage &image)
-{
-    if (mode == Draw) {
-        image.setPixel(point, color);
-        return QRect(point, point);
-    } else {
-        int drawColor = color;
-        Algorithms::line(previousPoint, point, [&image, drawColor](const QPoint &point) { image.setPixel(point, drawColor); });
-        QPoint oldPoint = previousPoint;
-        previousPoint = point;
-        return QRect(oldPoint, point);
-    }
-}
-
-QRect DrawTool::release(const QPoint &point, QImage &image)
-{
-    if (mode == Draw) {
-        image.setPixel(point, color);
-        return QRect(point, point);
-    } else {
-        int drawColor = color;
-        Algorithms::line(previousPoint, point, [&image, drawColor](const QPoint &point) { image.setPixel(point, drawColor); });
-        QPoint oldPoint = previousPoint;
-        previousPoint = point;
-        return QRect(oldPoint, point);
-    }
 }
 
 void DrawTool::setMode(const Mode &mode)
@@ -50,7 +15,39 @@ void DrawTool::setMode(const Mode &mode)
     this->mode = mode;
 }
 
-void DrawTool::setColor(int color)
+void DrawTool::setPen(Pen *pen)
 {
-    this->color = color;
+    this->pen = pen;
+}
+
+QRect DrawTool::press(const QPoint &point, QImage &image)
+{
+    previousPoint = point;
+    return pen->draw(point, image);
+}
+
+QRect DrawTool::move(const QPoint &point, QImage &image)
+{
+    if (mode == Draw) {
+        return pen->draw(point, image);
+    } else {
+        Pen *drawPen = pen;
+        QRect changedRect;
+        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->draw(point, image)); });
+        previousPoint = point;
+        return changedRect;
+    }
+}
+
+QRect DrawTool::release(const QPoint &point, QImage &image)
+{
+    if (mode == Draw) {
+        return pen->draw(point, image);
+    } else {
+        Pen *drawPen = pen;
+        QRect changedRect;
+        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->draw(point, image)); });
+        previousPoint = point;
+        return changedRect;
+    }
 }

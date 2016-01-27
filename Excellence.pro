@@ -18,13 +18,17 @@ SOURCES += main.cpp\
     imagewindow.cpp \
     drawtool.cpp \
     algorithms.cpp \
-    tool.cpp
+    tool.cpp \
+    pen.cpp \
+    pentip.cpp
 
 HEADERS  += mainwindow.h \
     imagewindow.h \
     drawtool.h \
     algorithms.h \
-    tool.h
+    tool.h \
+    pen.h \
+    pentip.h
 
 FORMS    += mainwindow.ui \
     imagewindow.ui
