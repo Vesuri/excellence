@@ -30,6 +30,8 @@ ImageWindow::ImageWindow(QWidget *parent) :
     ui->graphicsView->setScene(scene);
 
     scene->installEventFilter(this);
+
+    drawTool->setMode(DrawTool::ConnectedDraw);
 }
 
 ImageWindow::~ImageWindow()
