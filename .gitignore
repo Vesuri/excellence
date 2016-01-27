@@ -1,1 +1,7 @@
 *.pro.user
+ui_*.h
+moc_*
+*.o
+build-Excellence*
+Makefile
+Excellence
