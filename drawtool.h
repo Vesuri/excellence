@@ -1,10 +1,10 @@
 #ifndef DRAWTOOL_H
 #define DRAWTOOL_H
 
-#include <QObject>
+#include "tool.h"
 #include <QPoint>
 
-class DrawTool : public QObject
+class DrawTool : public Tool
 {
     Q_OBJECT
 
@@ -14,9 +14,9 @@ public:
     explicit DrawTool(QObject *parent = 0);
 
     void setMode(const Mode &mode);
-    QRect press(const QPoint &point, QImage &image);
-    QRect move(const QPoint &point, QImage &image);
-    QRect release(const QPoint &point, QImage &image);
+    virtual QRect press(const QPoint &point, QImage &image);
+    virtual QRect move(const QPoint &point, QImage &image);
+    virtual QRect release(const QPoint &point, QImage &image);
 
 private:
     Mode mode;

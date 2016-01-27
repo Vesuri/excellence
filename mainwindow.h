@@ -8,6 +8,7 @@ class MainWindow;
 }
 
 class ImageWindow;
+class DrawTool;
 
 class MainWindow : public QMainWindow
 {
@@ -20,6 +21,7 @@ public:
 private:
     Ui::MainWindow *ui;
     ImageWindow *imageWindow;
+    DrawTool *drawTool;
 };
 
 #endif // MAINWINDOW_H

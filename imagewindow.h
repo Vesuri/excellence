@@ -11,7 +11,7 @@ class QGraphicsScene;
 class QGraphicsPixmapItem;
 class QImage;
 class QPixmap;
-class DrawTool;
+class Tool;
 
 class ImageWindow : public QWidget
 {
@@ -21,6 +21,7 @@ public:
     explicit ImageWindow(QWidget *parent = 0);
     ~ImageWindow();
 
+    void setTool(Tool *tool);
     virtual bool eventFilter(QObject *watched, QEvent *event);
 
 private:
@@ -28,7 +29,7 @@ private:
     QGraphicsScene *scene;
     QGraphicsPixmapItem *pixmapItem;
     QImage *image;
-    DrawTool *drawTool;
+    Tool *tool;
     QRect changedRect;
 };
 

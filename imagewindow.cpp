@@ -2,7 +2,7 @@
 #include <QGraphicsScene>
 #include <QPixmap>
 #include <QGraphicsSceneMouseEvent>
-#include "drawtool.h"
+#include "tool.h"
 #include "imagewindow.h"
 #include "ui_imagewindow.h"
 
@@ -10,8 +10,7 @@ ImageWindow::ImageWindow(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ImageWindow),
     scene(new QGraphicsScene(this)),
-    image(new QImage(320, 256, QImage::Format_Indexed8)),
-    drawTool(new DrawTool(this))
+    image(new QImage(320, 256, QImage::Format_Indexed8))
 {
     ui->setupUi(this);
 
@@ -30,8 +29,6 @@ ImageWindow::ImageWindow(QWidget *parent) :
     ui->graphicsView->setScene(scene);
 
     scene->installEventFilter(this);
-
-    drawTool->setMode(DrawTool::ConnectedDraw);
 }
 
 ImageWindow::~ImageWindow()
@@ -40,18 +37,23 @@ ImageWindow::~ImageWindow()
     delete image;
 }
 
+void ImageWindow::setTool(Tool *tool)
+{
+    this->tool = tool;
+}
+
 bool ImageWindow::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == ui->graphicsView->scene()) {
         switch (event->type()) {
         case QEvent::GraphicsSceneMousePress:
-            changedRect = drawTool->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image);
+            changedRect = tool->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image);
             break;
         case QEvent::GraphicsSceneMouseMove:
-            changedRect = changedRect.united(drawTool->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
+            changedRect = changedRect.united(tool->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
             break;
         case QEvent::GraphicsSceneMouseRelease:
-            changedRect = changedRect.united(drawTool->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
+            changedRect = changedRect.united(tool->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
             break;
         default:
             break;

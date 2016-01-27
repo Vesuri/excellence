@@ -3,7 +3,7 @@
 #include "algorithms.h"
 #include "drawtool.h"
 
-DrawTool::DrawTool(QObject *parent) : QObject(parent),
+DrawTool::DrawTool(QObject *parent) : Tool(parent),
     mode(ConnectedDraw)
 {
 

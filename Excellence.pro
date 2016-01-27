@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     imagewindow.cpp \
     drawtool.cpp \
-    algorithms.cpp
+    algorithms.cpp \
+    tool.cpp
 
 HEADERS  += mainwindow.h \
     imagewindow.h \
     drawtool.h \
-    algorithms.h
+    algorithms.h \
+    tool.h
 
 FORMS    += mainwindow.ui \
     imagewindow.ui
