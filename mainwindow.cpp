@@ -1,5 +1,5 @@
-#include <QGraphicsScene>
-#include "paletteitem.h"
+#include <QToolButton>
+#include <QSizePolicy>
 #include "imagewindow.h"
 #include "drawtool.h"
 #include "pentip.h"
@@ -9,8 +9,6 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    paletteScene(new QGraphicsScene(this)),
-    paletteItem(new PaletteItem),
     imageWindow(new ImageWindow),
     image(new QImage(320, 256, QImage::Format_Indexed8)),
     drawTool(new DrawTool(this)),
@@ -18,10 +16,6 @@ MainWindow::MainWindow(QWidget *parent) :
     palette(new QVector<QRgb>)
 {
     ui->setupUi(this);
-
-    paletteItem->setPalette(palette);
-    paletteScene->addItem(paletteItem);
-    ui->paletteGraphicsView->setScene(paletteScene);
 
     palette->append(0xff959595);
     palette->append(0xff000000);
@@ -39,18 +33,20 @@ MainWindow::MainWindow(QWidget *parent) :
     imageWindow->setImage(image);
     imageWindow->show();
 
-    paletteItem->setSize(ui->paletteGraphicsView->size());
+    int row = ui->gridLayout->rowCount() + 2;
+    for (int i = 0; i < palette->count(); i++) {
+        QToolButton *button = new QToolButton();
+        QPixmap pixmap(32, 32);
+        pixmap.fill(QColor(palette->at(i)));
+        button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
+        button->setIcon(QIcon(pixmap));
+        button->setIconSize(QSize(32, 32));
+        ui->gridLayout->addWidget(button, row + i / 2, i % 2);
+    }
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
     delete image;
-}
-
-void MainWindow::resizeEvent(QResizeEvent *event)
-{
-    QMainWindow::resizeEvent(event);
-
-    paletteItem->setSize(ui->paletteGraphicsView->size());
 }

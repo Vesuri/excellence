@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>176</width>
+    <width>112</width>
     <height>303</height>
    </rect>
   </property>
@@ -16,45 +16,56 @@
   <widget class="QWidget" name="widgetMain">
    <layout class="QGridLayout" name="gridLayout">
     <property name="leftMargin">
-     <number>0</number>
+     <number>4</number>
     </property>
     <property name="topMargin">
-     <number>0</number>
+     <number>4</number>
     </property>
     <property name="rightMargin">
-     <number>0</number>
+     <number>4</number>
     </property>
     <property name="bottomMargin">
-     <number>0</number>
+     <number>4</number>
+    </property>
+    <property name="spacing">
+     <number>4</number>
     </property>
     <item row="1" column="0">
-     <widget class="QPushButton" name="curveButton">
+     <widget class="QToolButton" name="curveButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Curve</string>
       </property>
      </widget>
     </item>
     <item row="0" column="1">
-     <widget class="QPushButton" name="lineButton">
+     <widget class="QToolButton" name="lineButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Line</string>
       </property>
      </widget>
     </item>
     <item row="0" column="0">
-     <widget class="QPushButton" name="drawButton">
+     <widget class="QToolButton" name="drawButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>Draw</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0" colspan="2">
-     <widget class="QGraphicsView" name="paletteGraphicsView">
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-      </property>
-      <property name="transformationAnchor">
-       <enum>QGraphicsView::AnchorViewCenter</enum>
       </property>
      </widget>
     </item>
@@ -65,7 +76,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>176</width>
+     <width>112</width>
      <height>22</height>
     </rect>
    </property>

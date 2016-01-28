@@ -22,12 +22,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    virtual void resizeEvent(QResizeEvent *event);
-
 private:
     Ui::MainWindow *ui;
-    QGraphicsScene *paletteScene;
-    PaletteItem *paletteItem;
     ImageWindow *imageWindow;
     QImage *image;
     DrawTool *drawTool;

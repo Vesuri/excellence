@@ -20,8 +20,7 @@ SOURCES += main.cpp\
     algorithms.cpp \
     tool.cpp \
     pen.cpp \
-    pentip.cpp \
-    paletteitem.cpp
+    pentip.cpp
 
 HEADERS  += mainwindow.h \
     imagewindow.h \
@@ -29,8 +28,7 @@ HEADERS  += mainwindow.h \
     algorithms.h \
     tool.h \
     pen.h \
-    pentip.h \
-    paletteitem.h
+    pentip.h
 
 FORMS    += mainwindow.ui \
     imagewindow.ui
