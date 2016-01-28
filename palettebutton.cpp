@@ -15,6 +15,16 @@ void PaletteButton::paintEvent(QPaintEvent *event)
     painter.end();
 }
 
+int PaletteButton::paletteIndex() const
+{
+    return paletteIndex_;
+}
+
+void PaletteButton::setPaletteIndex(int paletteIndex)
+{
+    paletteIndex_ = paletteIndex;
+}
+
 void PaletteButton::setColor(const QColor &color)
 {
     this->color = color;

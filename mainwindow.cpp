@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     int row = ui->gridLayout->rowCount() + 2;
     for (int i = 0; i < palette->count(); i++) {
         PaletteButton *button = new PaletteButton();
+        button->setPaletteIndex(i);
         button->setColor(QColor(palette->at(i)));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
         ui->gridLayout->addWidget(button, row + i / 2, i % 2);
