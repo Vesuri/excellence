@@ -22,6 +22,10 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+private slots:
+    void setPaintColor(unsigned paletteIndex);
+    void setEraseColor(unsigned paletteIndex);
+
 private:
     Ui::MainWindow *ui;
     ImageWindow *imageWindow;

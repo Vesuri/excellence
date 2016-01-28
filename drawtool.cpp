@@ -23,17 +23,17 @@ void DrawTool::setPen(Pen *pen)
 QRect DrawTool::press(const QPoint &point, QImage &image)
 {
     previousPoint = point;
-    return pen->draw(point, image);
+    return pen->paint(point, image);
 }
 
 QRect DrawTool::move(const QPoint &point, QImage &image)
 {
     if (mode == Draw) {
-        return pen->draw(point, image);
+        return pen->paint(point, image);
     } else {
         Pen *drawPen = pen;
         QRect changedRect;
-        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->draw(point, image)); });
+        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->paint(point, image)); });
         previousPoint = point;
         return changedRect;
     }
@@ -42,11 +42,11 @@ QRect DrawTool::move(const QPoint &point, QImage &image)
 QRect DrawTool::release(const QPoint &point, QImage &image)
 {
     if (mode == Draw) {
-        return pen->draw(point, image);
+        return pen->paint(point, image);
     } else {
         Pen *drawPen = pen;
         QRect changedRect;
-        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->draw(point, image)); });
+        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->paint(point, image)); });
         previousPoint = point;
         return changedRect;
     }

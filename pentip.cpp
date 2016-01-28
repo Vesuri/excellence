@@ -3,17 +3,23 @@
 #include "pentip.h"
 
 PenTip::PenTip(QObject *parent) : Pen(parent),
-    color(1)
+    paintColor_(1),
+    eraseColor_(0)
 {
 }
 
-void PenTip::setColor(int color)
+void PenTip::setPaintColor(unsigned paintColor)
 {
-    this->color = color;
+    this->paintColor_ = paintColor;
 }
 
-QRect PenTip::draw(const QPoint &point, QImage &image)
+void PenTip::setEraseColor(unsigned eraseColor)
 {
-    image.setPixel(point, color);
+    this->eraseColor_ = eraseColor;
+}
+
+QRect PenTip::paint(const QPoint &point, QImage &image)
+{
+    image.setPixel(point, paintColor_);
     return QRect(point, point);
 }

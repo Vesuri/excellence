@@ -26,9 +26,10 @@ MainWindow::MainWindow(QWidget *parent) :
     palette->append(0xffaa907c);
     palette->append(0xffffa997);
     image->setColorTable(*palette);
-    ui->currentColorsButton->setPaintColor(QColor(palette->at(2)));
-    ui->currentColorsButton->setEraseColor(QColor(palette->at(1)));
-    penTip->setColor(2);
+    ui->currentColorsButton->setPaintColor(QColor(palette->at(1)));
+    ui->currentColorsButton->setEraseColor(QColor(palette->at(0)));
+    penTip->setPaintColor(1);
+    penTip->setEraseColor(0);
     drawTool->setMode(DrawTool::ConnectedDraw);
     drawTool->setPen(penTip);
     imageWindow->setTool(drawTool);
@@ -37,6 +38,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     for (int i = 0; i < palette->count(); i++) {
         PaletteButton *button = new PaletteButton();
+        connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(setPaintColor(unsigned)));
+        connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(setEraseColor(unsigned)));
         button->setPaletteIndex(i);
         button->setColor(QColor(palette->at(i)));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
@@ -48,4 +51,16 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete image;
+}
+
+void MainWindow::setPaintColor(unsigned paletteIndex)
+{
+    penTip->setPaintColor(paletteIndex);
+    ui->currentColorsButton->setPaintColor(QColor(palette->at(paletteIndex)));
+}
+
+void MainWindow::setEraseColor(unsigned paletteIndex)
+{
+    penTip->setEraseColor(paletteIndex);
+    ui->currentColorsButton->setEraseColor(QColor(palette->at(paletteIndex)));
 }

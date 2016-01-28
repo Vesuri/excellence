@@ -9,12 +9,14 @@ class PenTip : public Pen
 public:
     explicit PenTip(QObject *parent = 0);
 
-    void setColor(int color);
+    void setPaintColor(unsigned paintColor);
+    void setEraseColor(unsigned eraseColor);
 
-    virtual QRect draw(const QPoint &point, QImage &image);
+    virtual QRect paint(const QPoint &point, QImage &image);
 
 private:
-    int color;
+    unsigned paintColor_;
+    unsigned eraseColor_;
 };
 
 #endif // PENTIP_H

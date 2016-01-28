@@ -5,22 +5,28 @@
 
 class PaletteButton : public QAbstractButton
 {
-public:
-    PaletteButton(QWidget *parent = 0);
+    Q_OBJECT
 
-    int paletteIndex() const;
-    void setPaletteIndex(int paletteIndex);
+public:
+    explicit PaletteButton(QWidget *parent = 0);
+
+    unsigned paletteIndex() const;
+    void setPaletteIndex(unsigned paletteIndex);
     void setColor(const QColor &color);
 
     virtual void paintEvent(QPaintEvent *e);
+    virtual void mousePressEvent(QMouseEvent *e);
+    virtual void mouseReleaseEvent(QMouseEvent *e);
 
 signals:
-    void selectedAsPaintColor();
-    void selectedAsEraseColor();
+    void paintColorSelected(unsigned paletteIndex);
+    void eraseColorSelected(unsigned paletteIndex);
 
 private:
-    int paletteIndex_;
+    unsigned paletteIndex_;
     QColor color;
+    bool paintButtonDown;
+    bool eraseButtonDown;
 };
 
 #endif // PALETTEBUTTON_H

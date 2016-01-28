@@ -31,9 +31,13 @@ void CurrentColorsButton::paintEvent(QPaintEvent *event)
 void CurrentColorsButton::setPaintColor(const QColor &color)
 {
     this->paintColor = color;
+
+    update();
 }
 
 void CurrentColorsButton::setEraseColor(const QColor &color)
 {
     this->eraseColor = color;
+
+    update();
 }
