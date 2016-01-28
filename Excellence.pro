@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     tool.cpp \
     pen.cpp \
     pentip.cpp \
-    palettebutton.cpp
+    palettebutton.cpp \
+    currentcolorsbutton.cpp
 
 HEADERS  += mainwindow.h \
     imagewindow.h \
@@ -30,7 +31,8 @@ HEADERS  += mainwindow.h \
     tool.h \
     pen.h \
     pentip.h \
-    palettebutton.h
+    palettebutton.h \
+    currentcolorsbutton.h
 
 FORMS    += mainwindow.ui \
     imagewindow.ui
