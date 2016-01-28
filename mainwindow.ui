@@ -30,33 +30,10 @@
     <property name="spacing">
      <number>4</number>
     </property>
-    <item row="2" column="0" colspan="2">
-     <widget class="CurrentColorsButton" name="currentColorsButton">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QToolButton" name="curveButton">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string>Curve</string>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="1">
      <widget class="QToolButton" name="lineButton">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -66,10 +43,26 @@
       </property>
      </widget>
     </item>
+    <item row="2" column="0" colspan="2">
+     <widget class="CurrentColorsButton" name="currentColorsButton" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>32</height>
+       </size>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="0">
      <widget class="QToolButton" name="drawButton">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -78,6 +71,26 @@
        <string>Draw</string>
       </property>
      </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QToolButton" name="curveButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Curve</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0" colspan="2">
+     <layout class="QGridLayout" name="paletteLayout">
+      <property name="spacing">
+       <number>4</number>
+      </property>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -93,6 +106,13 @@
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>CurrentColorsButton</class>
+   <extends>QWidget</extends>
+   <header>currentcolorsbutton.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
