@@ -1,6 +1,7 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QPixmap>
+#include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include "tool.h"
 #include "imagewindow.h"
@@ -43,20 +44,33 @@ bool ImageWindow::eventFilter(QObject *watched, QEvent *event)
     if (watched == ui->graphicsView->scene()) {
         switch (event->type()) {
         case QEvent::GraphicsSceneMousePress:
-            changedRect = tool->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image);
-            break;
         case QEvent::GraphicsSceneMouseMove:
-            changedRect = changedRect.united(tool->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
-            break;
         case QEvent::GraphicsSceneMouseRelease:
-            changedRect = changedRect.united(tool->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
-            break;
+        {
+            QGraphicsSceneMouseEvent *mouseEvent = (QGraphicsSceneMouseEvent *)event;
+
+            if (mouseEvent->buttons() != Qt::NoButton) {
+                switch (event->type()) {
+                case QEvent::GraphicsSceneMousePress:
+                    changedRect = tool->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image);
+                    break;
+                case QEvent::GraphicsSceneMouseMove:
+                    changedRect = changedRect.united(tool->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
+                    break;
+                case QEvent::GraphicsSceneMouseRelease:
+                    changedRect = changedRect.united(tool->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
+                    break;
+                default:
+                    break;
+                }
+
+                if (!changedRect.isEmpty()) {
+                    pixmapItem->setPixmap(QPixmap::fromImage(*image));
+                }
+            }
+        }
         default:
             break;
-        }
-
-        if (!changedRect.isEmpty()) {
-            pixmapItem->setPixmap(QPixmap::fromImage(*image));
         }
     }
     return false;
