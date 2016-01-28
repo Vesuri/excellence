@@ -8,3 +8,4 @@ excellence
 excellence.app
 .DS_Store
 .qmake.stash
+qrc_*

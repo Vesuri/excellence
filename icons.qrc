@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>clear.png</file>
+        <file>connecteddraw.png</file>
+        <file>curve.png</file>
+        <file>ellipse.png</file>
+        <file>fill.png</file>
+        <file>lasso.png</file>
+        <file>line.png</file>
+        <file>rectangle.png</file>
+        <file>spray.png</file>
+        <file>text.png</file>
+        <file>undo.png</file>
+        <file>zoom.png</file>
+    </qresource>
+</RCC>

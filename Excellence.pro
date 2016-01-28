@@ -36,3 +36,6 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     imagewindow.ui
+
+RESOURCES += \
+    icons.qrc
