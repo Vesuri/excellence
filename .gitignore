@@ -5,3 +5,6 @@ moc_*
 build-excellence*
 Makefile
 excellence
+excellence.app
+.DS_Store
+.qmake.stash
