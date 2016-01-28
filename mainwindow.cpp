@@ -1,4 +1,4 @@
-#include <QToolButton>
+#include "palettebutton.h"
 #include <QSizePolicy>
 #include "imagewindow.h"
 #include "drawtool.h"
@@ -35,12 +35,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     int row = ui->gridLayout->rowCount() + 2;
     for (int i = 0; i < palette->count(); i++) {
-        QToolButton *button = new QToolButton();
-        QPixmap pixmap(32, 32);
-        pixmap.fill(QColor(palette->at(i)));
+        PaletteButton *button = new PaletteButton();
+        button->setColor(QColor(palette->at(i)));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
-        button->setIcon(QIcon(pixmap));
-        button->setIconSize(QSize(32, 32));
         ui->gridLayout->addWidget(button, row + i / 2, i % 2);
     }
 }
