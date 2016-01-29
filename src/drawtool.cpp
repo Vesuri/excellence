@@ -5,14 +5,14 @@
 #include "drawtool.h"
 
 DrawTool::DrawTool(QObject *parent) : Tool(parent),
-    mode(ConnectedDraw),
+    drawMode(ConnectedDraw),
     pen(0)
 {
 }
 
-void DrawTool::setMode(const Mode &mode)
+void DrawTool::setDrawMode(const DrawMode &drawMode)
 {
-    this->mode = mode;
+    this->drawMode = drawMode;
 }
 
 void DrawTool::setPen(Pen *pen)
@@ -23,17 +23,16 @@ void DrawTool::setPen(Pen *pen)
 QRect DrawTool::press(const QPoint &point, QImage &image)
 {
     previousPoint = point;
-    return pen->paint(point, image);
+    return draw(point, image);
 }
 
 QRect DrawTool::move(const QPoint &point, QImage &image)
 {
-    if (mode == Draw) {
-        return pen->paint(point, image);
+    if (drawMode == Draw) {
+        return draw(point, image);
     } else {
-        Pen *drawPen = pen;
         QRect changedRect;
-        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->paint(point, image)); });
+        Algorithms::line(previousPoint, point, [this, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point, image)); });
         previousPoint = point;
         return changedRect;
     }
@@ -41,13 +40,21 @@ QRect DrawTool::move(const QPoint &point, QImage &image)
 
 QRect DrawTool::release(const QPoint &point, QImage &image)
 {
-    if (mode == Draw) {
-        return pen->paint(point, image);
+    if (drawMode == Draw) {
+        return draw(point, image);
     } else {
-        Pen *drawPen = pen;
         QRect changedRect;
-        Algorithms::line(previousPoint, point, [drawPen, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(drawPen->paint(point, image)); });
+        Algorithms::line(previousPoint, point, [this, &image, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point, image)); });
         previousPoint = point;
         return changedRect;
+    }
+}
+
+QRect DrawTool::draw(const QPoint &point, QImage &image)
+{
+    if (mode_ == Paint) {
+        return pen->paint(point, image);
+    } else {
+        return pen->erase(point, image);
     }
 }

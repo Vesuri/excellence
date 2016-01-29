@@ -23,3 +23,9 @@ QRect PenTip::paint(const QPoint &point, QImage &image)
     image.setPixel(point, paintColor_);
     return QRect(point, point);
 }
+
+QRect PenTip::erase(const QPoint &point, QImage &image)
+{
+    image.setPixel(point, eraseColor_);
+    return QRect(point, point);
+}

@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->currentColorsButton->setEraseColor(QColor(buffer->palette()->at(0)));
     penTip->setPaintColor(1);
     penTip->setEraseColor(0);
-    drawTool->setMode(DrawTool::ConnectedDraw);
+    drawTool->setDrawMode(DrawTool::ConnectedDraw);
     drawTool->setPen(penTip);
     bufferView->setTool(drawTool);
     bufferView->setBuffer(buffer);

@@ -10,6 +10,7 @@ public:
     explicit Pen(QObject *parent = 0);
 
     virtual QRect paint(const QPoint &point, QImage &image) = 0;
+    virtual QRect erase(const QPoint &point, QImage &image) = 0;
 };
 
 #endif // PEN_H

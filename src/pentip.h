@@ -13,6 +13,7 @@ public:
     void setEraseColor(unsigned eraseColor);
 
     virtual QRect paint(const QPoint &point, QImage &image);
+    virtual QRect erase(const QPoint &point, QImage &image);
 
 private:
     unsigned paintColor_;

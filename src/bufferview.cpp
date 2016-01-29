@@ -58,14 +58,15 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             QGraphicsSceneMouseEvent *mouseEvent = (QGraphicsSceneMouseEvent *)event;
 
             if (event->type() == QEvent::GraphicsSceneMouseMove && mouseEvent->buttons() != Qt::NoButton) {
-                buffer->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), tool);
+                buffer->move(mouseEvent->scenePos().toPoint(), tool);
             } else {
                 switch (event->type()) {
                 case QEvent::GraphicsSceneMousePress:
-                    buffer->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), tool);
+                    tool->setMode(mouseEvent->button() == Qt::LeftButton ? Tool::Paint : Tool::Erase);
+                    buffer->press(mouseEvent->scenePos().toPoint(), tool);
                     break;
                 case QEvent::GraphicsSceneMouseRelease:
-                    buffer->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), tool);
+                    buffer->release(mouseEvent->scenePos().toPoint(), tool);
                     break;
                 default:
                     break;
