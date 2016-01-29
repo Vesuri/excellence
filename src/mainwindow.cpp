@@ -29,14 +29,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->clearButton, SIGNAL(clicked(bool)), buffer, SLOT(clear()));
 
-    for (int i = 0; i < buffer->palette()->count(); i++) {
+    static const int paletteButtonPerRow = 16;
+    for (int i = 0, row = 0, column = 0; i < buffer->palette()->count(); i++) {
         PaletteButton *button = new PaletteButton();
         connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(setPaintColor(unsigned)));
         connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(setEraseColor(unsigned)));
         button->setPaletteIndex(i);
         button->setColor(QColor(buffer->palette()->at(i)));
-        button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding));
-        ui->paletteLayout->addWidget(button, i / 2, i % 2);
+        button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+        ui->paletteLayout->addWidget(button, row, column);
+        column++;
+        if (column >= paletteButtonPerRow) {
+            column = 0;
+            row++;
+        }
     }
 }
 

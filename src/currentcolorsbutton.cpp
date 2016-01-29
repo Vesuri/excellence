@@ -16,11 +16,13 @@ void CurrentColorsButton::paintEvent(QPaintEvent *event)
     QPainterPath path;
     path.moveTo(event->rect().topLeft());
     path.lineTo(event->rect().topRight());
-    path.lineTo(event->rect().bottomLeft());
+    path.lineTo(event->rect().right(), (event->rect().top() + event->rect().bottom()) / 2);
+    path.lineTo(event->rect().left(), (event->rect().top() + event->rect().bottom()) / 2);
     painter.fillPath(path, paintColor);
 
     path = QPainterPath();
-    path.moveTo(event->rect().topRight());
+    path.moveTo(event->rect().left(), (event->rect().top() + event->rect().bottom()) / 2);
+    path.lineTo(event->rect().right(), (event->rect().top() + event->rect().bottom()) / 2);
     path.lineTo(event->rect().bottomRight());
     path.lineTo(event->rect().bottomLeft());
     painter.fillPath(path, eraseColor);
