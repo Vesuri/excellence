@@ -34,7 +34,6 @@ private:
     QGraphicsPixmapItem *pixmapItem;
     Buffer *buffer;
     Tool *tool;
-    QRect changedRect;
 };
 
 #endif // BUFFERVIEW_H

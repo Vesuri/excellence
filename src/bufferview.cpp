@@ -57,23 +57,18 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
         {
             QGraphicsSceneMouseEvent *mouseEvent = (QGraphicsSceneMouseEvent *)event;
 
-            if (mouseEvent->buttons() != Qt::NoButton) {
+            if (event->type() == QEvent::GraphicsSceneMouseMove && mouseEvent->buttons() != Qt::NoButton) {
+                buffer->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), tool);
+            } else {
                 switch (event->type()) {
                 case QEvent::GraphicsSceneMousePress:
-                    changedRect = tool->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *buffer->image());
-                    break;
-                case QEvent::GraphicsSceneMouseMove:
-                    changedRect = changedRect.united(tool->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *buffer->image()));
+                    buffer->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), tool);
                     break;
                 case QEvent::GraphicsSceneMouseRelease:
-                    changedRect = changedRect.united(tool->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *buffer->image()));
+                    buffer->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), tool);
                     break;
                 default:
                     break;
-                }
-
-                if (!changedRect.isEmpty()) {
-                    pixmapItem->setPixmap(QPixmap::fromImage(*buffer->image()));
                 }
             }
         }

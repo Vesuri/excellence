@@ -1,4 +1,6 @@
 #include <QImage>
+#include <QDebug>
+#include "tool.h"
 #include "buffer.h"
 
 Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
@@ -33,4 +35,27 @@ void Buffer::clear()
     image_->fill(0);
 
     emit modified(image_->rect());
+}
+
+void Buffer::press(const QPoint &point, Tool *tool)
+{
+    modifiedArea = tool->press(point, *image_);
+
+    emit modified(modifiedArea);
+}
+
+void Buffer::move(const QPoint &point, Tool *tool)
+{
+    modifiedArea = modifiedArea.united(tool->move(point, *image_));
+
+    emit modified(modifiedArea);
+}
+
+void Buffer::release(const QPoint &point, Tool *tool)
+{
+    modifiedArea = modifiedArea.united(tool->release(point, *image_));
+
+    emit modified(modifiedArea);
+
+    modifiedArea = QRect();
 }
