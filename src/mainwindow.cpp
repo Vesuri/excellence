@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     palette->append(0xffaa907c);
     palette->append(0xffffa997);
     image->setColorTable(*palette);
+    image->fill(0);
     ui->currentColorsButton->setPaintColor(QColor(palette->at(1)));
     ui->currentColorsButton->setEraseColor(QColor(palette->at(0)));
     penTip->setPaintColor(1);
