@@ -15,24 +15,26 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    imagewindow.cpp \
     drawtool.cpp \
     algorithms.cpp \
     tool.cpp \
     pen.cpp \
     pentip.cpp \
     palettebutton.cpp \
-    currentcolorsbutton.cpp
+    currentcolorsbutton.cpp \
+    buffer.cpp \
+    bufferview.cpp
 
 HEADERS  += mainwindow.h \
-    imagewindow.h \
     drawtool.h \
     algorithms.h \
     tool.h \
     pen.h \
     pentip.h \
     palettebutton.h \
-    currentcolorsbutton.h
+    currentcolorsbutton.h \
+    buffer.h \
+    bufferview.h
 
 FORMS    += mainwindow.ui \
     imagewindow.ui

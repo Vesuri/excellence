@@ -1,18 +1,18 @@
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QPixmap>
-#include <QDebug>
 #include <QGraphicsSceneMouseEvent>
 #include "tool.h"
-#include "imagewindow.h"
+#include "buffer.h"
+#include "bufferview.h"
 #include "ui_imagewindow.h"
 
-ImageWindow::ImageWindow(QWidget *parent) :
+BufferView::BufferView(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ImageWindow),
     scene(new QGraphicsScene(this)),
     pixmapItem(new QGraphicsPixmapItem),
-    image(0),
+    buffer(0),
     tool(0)
 {
     ui->setupUi(this);
@@ -23,23 +23,23 @@ ImageWindow::ImageWindow(QWidget *parent) :
     scene->installEventFilter(this);
 }
 
-ImageWindow::~ImageWindow()
+BufferView::~BufferView()
 {
     delete ui;
 }
 
-void ImageWindow::setTool(Tool *tool)
+void BufferView::setTool(Tool *tool)
 {
     this->tool = tool;
 }
 
-void ImageWindow::setImage(QImage *image)
+void BufferView::setBuffer(Buffer *buffer)
 {
-    this->image = image;
-    pixmapItem->setPixmap(QPixmap::fromImage(*image));
+    this->buffer = buffer;
+    pixmapItem->setPixmap(QPixmap::fromImage(*buffer->image()));
 }
 
-bool ImageWindow::eventFilter(QObject *watched, QEvent *event)
+bool BufferView::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == ui->graphicsView->scene()) {
         switch (event->type()) {
@@ -52,20 +52,20 @@ bool ImageWindow::eventFilter(QObject *watched, QEvent *event)
             if (mouseEvent->buttons() != Qt::NoButton) {
                 switch (event->type()) {
                 case QEvent::GraphicsSceneMousePress:
-                    changedRect = tool->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image);
+                    changedRect = tool->press(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *buffer->image());
                     break;
                 case QEvent::GraphicsSceneMouseMove:
-                    changedRect = changedRect.united(tool->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
+                    changedRect = changedRect.united(tool->move(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *buffer->image()));
                     break;
                 case QEvent::GraphicsSceneMouseRelease:
-                    changedRect = changedRect.united(tool->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *image));
+                    changedRect = changedRect.united(tool->release(((QGraphicsSceneMouseEvent *)event)->scenePos().toPoint(), *buffer->image()));
                     break;
                 default:
                     break;
                 }
 
                 if (!changedRect.isEmpty()) {
-                    pixmapItem->setPixmap(QPixmap::fromImage(*image));
+                    pixmapItem->setPixmap(QPixmap::fromImage(*buffer->image()));
                 }
             }
         }

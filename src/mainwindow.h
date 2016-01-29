@@ -9,10 +9,10 @@ class MainWindow;
 
 class QGraphicsScene;
 class PaletteItem;
-class ImageWindow;
+class BufferView;
+class Buffer;
 class DrawTool;
 class PenTip;
-template <class T> class QVector;
 
 class MainWindow : public QMainWindow
 {
@@ -28,11 +28,10 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    ImageWindow *imageWindow;
-    QImage *image;
+    BufferView *bufferView;
+    Buffer *buffer;
     DrawTool *drawTool;
     PenTip *penTip;
-    QVector<QRgb> *palette;
 };
 
 #endif // MAINWINDOW_H

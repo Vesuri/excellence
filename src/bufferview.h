@@ -1,5 +1,5 @@
-#ifndef IMAGEWINDOW_H
-#define IMAGEWINDOW_H
+#ifndef BUFFERVIEW_H
+#define BUFFERVIEW_H
 
 #include <QWidget>
 
@@ -9,29 +9,29 @@ class ImageWindow;
 
 class QGraphicsScene;
 class QGraphicsPixmapItem;
-class QImage;
+class Buffer;
 class QPixmap;
 class Tool;
 
-class ImageWindow : public QWidget
+class BufferView : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ImageWindow(QWidget *parent = 0);
-    ~ImageWindow();
+    explicit BufferView(QWidget *parent = 0);
+    ~BufferView();
 
     void setTool(Tool *tool);
-    void setImage(QImage *image);
+    void setBuffer(Buffer *buffer);
     virtual bool eventFilter(QObject *watched, QEvent *event);
 
 private:
     Ui::ImageWindow *ui;
     QGraphicsScene *scene;
     QGraphicsPixmapItem *pixmapItem;
-    QImage *image;
+    Buffer *buffer;
     Tool *tool;
     QRect changedRect;
 };
 
-#endif // IMAGEWINDOW_H
+#endif // BUFFERVIEW_H
