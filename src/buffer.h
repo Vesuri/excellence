@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QColor>
+#include <QRect>
 
 template <class T> class QVector;
 
@@ -19,6 +20,7 @@ private slots:
     void clear();
 
 signals:
+    void modified(QRect area);
 
 private:
     QImage *image_;

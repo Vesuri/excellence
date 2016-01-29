@@ -25,6 +25,9 @@ public:
     void setBuffer(Buffer *buffer);
     virtual bool eventFilter(QObject *watched, QEvent *event);
 
+private slots:
+    void setPixmap(const QRect &area);
+
 private:
     Ui::ImageWindow *ui;
     QGraphicsScene *scene;

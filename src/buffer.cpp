@@ -31,4 +31,6 @@ QVector<QRgb> *Buffer::palette() const
 void Buffer::clear()
 {
     image_->fill(0);
+
+    emit modified(image_->rect());
 }
