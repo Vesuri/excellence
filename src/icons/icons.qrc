@@ -5,12 +5,27 @@
         <file>curve.png</file>
         <file>ellipse.png</file>
         <file>fill.png</file>
-        <file>lasso.png</file>
         <file>line.png</file>
         <file>rectangle.png</file>
-        <file>spray.png</file>
         <file>text.png</file>
         <file>undo.png</file>
         <file>zoom.png</file>
+        <file>antialias.png</file>
+        <file>brushdistort.png</file>
+        <file>carvebrush.png</file>
+        <file>cutbrush.png</file>
+        <file>cyclegradient.png</file>
+        <file>drawmode.png</file>
+        <file>fastfeedback.png</file>
+        <file>finesprayairbrush.png</file>
+        <file>fixbackground.png</file>
+        <file>gridlock.png</file>
+        <file>icons.qrc</file>
+        <file>mirror.png</file>
+        <file>palette.png</file>
+        <file>pentip.png</file>
+        <file>segment.png</file>
+        <file>stencil.png</file>
+        <file>transparent.png</file>
     </qresource>
 </RCC>
