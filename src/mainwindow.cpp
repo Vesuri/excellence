@@ -3,6 +3,7 @@
 #include "buffer.h"
 #include "bufferview.h"
 #include "drawtool.h"
+#include "linetool.h"
 #include "pentip.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -13,6 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     bufferView(new BufferView),
     buffer(new Buffer(320, 256, 8, this)),
     drawTool(new DrawTool(this)),
+    lineTool(new LineTool(this)),
+    tool(lineTool),
     penTip(new PenTip(this))
 {
     ui->setupUi(this);
@@ -23,7 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
     penTip->setEraseColor(0);
     drawTool->setDrawMode(DrawTool::ConnectedDraw);
     drawTool->setPen(penTip);
-    bufferView->setTool(drawTool);
+    lineTool->setPen(penTip);
+    bufferView->setTool(tool);
     bufferView->setBuffer(buffer);
     bufferView->show();
 

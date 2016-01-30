@@ -12,6 +12,8 @@ class PaletteItem;
 class BufferView;
 class Buffer;
 class DrawTool;
+class LineTool;
+class Tool;
 class PenTip;
 
 class MainWindow : public QMainWindow
@@ -31,6 +33,8 @@ private:
     BufferView *bufferView;
     Buffer *buffer;
     DrawTool *drawTool;
+    LineTool *lineTool;
+    Tool *tool;
     PenTip *penTip;
 };
 

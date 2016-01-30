@@ -23,7 +23,9 @@ SOURCES += main.cpp\
     palettebutton.cpp \
     currentcolorsbutton.cpp \
     buffer.cpp \
-    bufferview.cpp
+    bufferview.cpp \
+    linetool.cpp \
+    undobuffer.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -34,7 +36,9 @@ HEADERS  += mainwindow.h \
     palettebutton.h \
     currentcolorsbutton.h \
     buffer.h \
-    bufferview.h
+    bufferview.h \
+    linetool.h \
+    undobuffer.h
 
 FORMS    += mainwindow.ui \
     imagewindow.ui

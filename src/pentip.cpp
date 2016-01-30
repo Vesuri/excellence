@@ -18,14 +18,19 @@ void PenTip::setEraseColor(unsigned eraseColor)
     this->eraseColor_ = eraseColor;
 }
 
-QRect PenTip::paint(const QPoint &point, QImage &image)
+QRect PenTip::paint(const QPoint &point, QImage &image) const
 {
     image.setPixel(point, paintColor_);
     return QRect(point, point);
 }
 
-QRect PenTip::erase(const QPoint &point, QImage &image)
+QRect PenTip::erase(const QPoint &point, QImage &image) const
 {
     image.setPixel(point, eraseColor_);
+    return QRect(point, point);
+}
+
+QRect PenTip::rect(const QPoint &point) const
+{
     return QRect(point, point);
 }

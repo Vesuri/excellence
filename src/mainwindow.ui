@@ -73,11 +73,14 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Line</string>
+       <string/>
       </property>
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/line.png</normaloff>:/line.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -95,6 +98,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/rectangle.png</normaloff>:/rectangle.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -130,6 +136,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/ellipse.png</normaloff>:/ellipse.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="1" column="2">
@@ -141,11 +150,17 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Draw</string>
+       <string/>
       </property>
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/connecteddraw.png</normaloff>:/connecteddraw.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -174,11 +189,14 @@
        </sizepolicy>
       </property>
       <property name="text">
-       <string>Curve</string>
+       <string/>
       </property>
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/curve.png</normaloff>:/curve.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -197,6 +215,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/text.png</normaloff>:/text.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="1" column="10">
@@ -213,6 +234,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/cutbrush.png</normaloff>:/cutbrush.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -231,6 +255,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/fill.png</normaloff>:/fill.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="1" column="7">
@@ -247,6 +274,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/finesprayairbrush.png</normaloff>:/finesprayairbrush.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -281,6 +311,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/brushdistort.png</normaloff>:/brushdistort.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -323,6 +356,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/stencil.png</normaloff>:/stencil.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="2" column="3">
@@ -339,6 +375,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/fixbackground.png</normaloff>:/fixbackground.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -357,6 +396,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/gridlock.png</normaloff>:/gridlock.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="2" column="5">
@@ -373,6 +415,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/mirror.png</normaloff>:/mirror.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -391,6 +436,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/segment.png</normaloff>:/segment.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="2" column="7">
@@ -407,6 +455,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/fastfeedback.png</normaloff>:/fastfeedback.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -425,6 +476,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/antialias.png</normaloff>:/antialias.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="2" column="9">
@@ -441,6 +495,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/transparent.png</normaloff>:/transparent.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
@@ -459,6 +516,9 @@
        <iconset resource="icons/icons.qrc">
         <normaloff>:/pentip.png</normaloff>:/pentip.png</iconset>
       </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
      </widget>
     </item>
     <item row="2" column="11">
@@ -475,6 +535,9 @@
       <property name="icon">
        <iconset resource="icons/icons.qrc">
         <normaloff>:/drawmode.png</normaloff>:/drawmode.png</iconset>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
       </property>
      </widget>
     </item>
