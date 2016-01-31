@@ -15,6 +15,7 @@ public:
 
     QPoint pos() const;
     QImage image() const;
+    QRect rect() const;
     void apply(QImage &image) const;
 
 private:

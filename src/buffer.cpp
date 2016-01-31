@@ -1,5 +1,6 @@
 #include <QImage>
 #include <QDebug>
+#include "undobuffer.h"
 #include "tool.h"
 #include "buffer.h"
 
@@ -16,8 +17,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     palette_->append(0xffaa907c);
     palette_->append(0xffffa997);
     image_->setColorTable(*palette_);
-
-    clear();
+    image_->fill(0);
 }
 
 QImage *Buffer::image() const
@@ -32,6 +32,8 @@ QVector<QRgb> *Buffer::palette() const
 
 void Buffer::clear()
 {
+    undoBuffers.append(new UndoBuffer(QPoint(), image_->copy()));
+
     image_->fill(0);
 
     emit modified(image_->rect());
@@ -39,6 +41,8 @@ void Buffer::clear()
 
 void Buffer::press(const QPoint &point, Tool *tool)
 {
+    preModificationImage = image_->copy();
+
     modifiedArea = tool->press(point, *image_);
 
     emit modified(modifiedArea);
@@ -46,16 +50,33 @@ void Buffer::press(const QPoint &point, Tool *tool)
 
 void Buffer::move(const QPoint &point, Tool *tool)
 {
-    modifiedArea = modifiedArea.united(tool->move(point, *image_));
+    QRect modification = tool->move(point, *image_);
 
-    emit modified(modifiedArea);
+    modifiedArea = modifiedArea.united(modification);
+
+    emit modified(modification);
 }
 
 void Buffer::release(const QPoint &point, Tool *tool)
 {
-    modifiedArea = modifiedArea.united(tool->release(point, *image_));
+    QRect modification = tool->release(point, *image_);
 
-    emit modified(modifiedArea);
+    modifiedArea = modifiedArea.united(modification);
+
+    emit modified(modification);
+
+    undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
 
     modifiedArea = QRect();
+    preModificationImage = QImage();
+}
+
+void Buffer::undo()
+{
+    if (!undoBuffers.isEmpty()) {
+        UndoBuffer *undoBuffer = undoBuffers.takeLast();
+        undoBuffer->apply(*image_);
+        emit modified(undoBuffer->rect());
+        delete undoBuffer;
+    }
 }

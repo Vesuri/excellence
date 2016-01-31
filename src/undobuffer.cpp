@@ -18,6 +18,11 @@ QImage UndoBuffer::image() const
     return image_;
 }
 
+QRect UndoBuffer::rect() const
+{
+    return QRect(pos_, image_.size());
+}
+
 void UndoBuffer::apply(QImage &image) const
 {
     for (int y = 0; y < image_.height(); y++) {

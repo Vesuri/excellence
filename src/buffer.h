@@ -4,9 +4,12 @@
 #include <QObject>
 #include <QColor>
 #include <QRect>
+#include <QImage>
+#include <QList>
 
 class Tool;
 template <class T> class QVector;
+class UndoBuffer;
 
 class Buffer : public QObject
 {
@@ -22,6 +25,7 @@ public:
 
 private slots:
     void clear();
+    void undo();
 
 signals:
     void modified(QRect area);
@@ -30,6 +34,8 @@ private:
     QImage *image_;
     QVector<QRgb> *palette_;
     QRect modifiedArea;
+    QImage preModificationImage;
+    QList<UndoBuffer *> undoBuffers;
 };
 
 #endif // BUFFER_H

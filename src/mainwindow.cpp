@@ -32,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     bufferView->show();
 
     connect(ui->clearButton, SIGNAL(clicked(bool)), buffer, SLOT(clear()));
+    connect(ui->undoButton, SIGNAL(clicked(bool)), buffer, SLOT(undo()));
 
     static const int paletteButtonPerRow = 16;
     for (int i = 0, row = 0, column = 0; i < buffer->palette()->count(); i++) {
