@@ -17,6 +17,7 @@ BufferView::BufferView(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    pixmapItem->setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
     scene->addItem(pixmapItem);
     ui->graphicsView->setStyleSheet( "QGraphicsView { border-style: none; }" );
     ui->graphicsView->setScene(scene);
