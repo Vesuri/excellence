@@ -18,6 +18,7 @@ BufferView::BufferView(QWidget *parent) :
     ui->setupUi(this);
 
     scene->addItem(pixmapItem);
+    ui->graphicsView->setStyleSheet( "QGraphicsView { border-style: none; }" );
     ui->graphicsView->setScene(scene);
 
     scene->installEventFilter(this);
