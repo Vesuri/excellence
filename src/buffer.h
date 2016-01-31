@@ -17,8 +17,9 @@ class Buffer : public QObject
 public:
     explicit Buffer(int width, int height, int colors, QObject *parent = 0);
 
-    QImage *image() const;
-    QVector<QRgb> *palette() const;
+    QImage image() const;
+    QRgb color(unsigned index) const;
+    unsigned colorCount() const;
     void press(const QPoint &point, Tool *tool);
     void move(const QPoint &point, Tool *tool);
     void release(const QPoint &point, Tool *tool);
@@ -31,8 +32,8 @@ signals:
     void modified(QRect area);
 
 private:
-    QImage *image_;
-    QVector<QRgb> *palette_;
+    QImage image_;
+    QVector<QRgb> palette_;
     QRect modifiedArea;
     QImage preModificationImage;
     QList<UndoBuffer *> undoBuffers;

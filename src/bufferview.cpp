@@ -43,7 +43,7 @@ void BufferView::setBuffer(Buffer *buffer)
 
     if (buffer != 0) {
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
-        pixmapItem->setPixmap(QPixmap::fromImage(*buffer->image()));
+        pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
     }
 }
 
@@ -83,6 +83,6 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
 void BufferView::setPixmap(const QRect &area)
 {
     if (!area.isEmpty()) {
-        pixmapItem->setPixmap(QPixmap::fromImage(*buffer->image()));
+        pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
     }
 }

@@ -20,8 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    ui->currentColorsButton->setPaintColor(QColor(buffer->palette()->at(1)));
-    ui->currentColorsButton->setEraseColor(QColor(buffer->palette()->at(0)));
+    ui->currentColorsButton->setPaintColor(QColor(buffer->color(1)));
+    ui->currentColorsButton->setEraseColor(QColor(buffer->color(0)));
     penTip->setPaintColor(1);
     penTip->setEraseColor(0);
     drawTool->setDrawMode(DrawTool::ConnectedDraw);
@@ -35,12 +35,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->undoButton, SIGNAL(clicked(bool)), buffer, SLOT(undo()));
 
     static const int paletteButtonPerRow = 16;
-    for (int i = 0, row = 0, column = 0; i < buffer->palette()->count(); i++) {
+    for (unsigned i = 0, row = 0, column = 0; i < buffer->colorCount(); i++) {
         PaletteButton *button = new PaletteButton();
         connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(setPaintColor(unsigned)));
         connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(setEraseColor(unsigned)));
         button->setPaletteIndex(i);
-        button->setColor(QColor(buffer->palette()->at(i)));
+        button->setColor(QColor(buffer->color(i)));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
         ui->paletteLayout->addWidget(button, row, column);
         column++;
@@ -59,11 +59,11 @@ MainWindow::~MainWindow()
 void MainWindow::setPaintColor(unsigned paletteIndex)
 {
     penTip->setPaintColor(paletteIndex);
-    ui->currentColorsButton->setPaintColor(QColor(buffer->palette()->at(paletteIndex)));
+    ui->currentColorsButton->setPaintColor(QColor(buffer->color(paletteIndex)));
 }
 
 void MainWindow::setEraseColor(unsigned paletteIndex)
 {
     penTip->setEraseColor(paletteIndex);
-    ui->currentColorsButton->setEraseColor(QColor(buffer->palette()->at(paletteIndex)));
+    ui->currentColorsButton->setEraseColor(QColor(buffer->color(paletteIndex)));
 }
