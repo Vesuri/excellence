@@ -41,7 +41,7 @@ HEADERS  += mainwindow.h \
     undobuffer.h
 
 FORMS    += mainwindow.ui \
-    imagewindow.ui
+    bufferview.ui
 
 RESOURCES += \
     icons/icons.qrc

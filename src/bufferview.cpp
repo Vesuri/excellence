@@ -5,11 +5,11 @@
 #include "tool.h"
 #include "buffer.h"
 #include "bufferview.h"
-#include "ui_imagewindow.h"
+#include "ui_bufferview.h"
 
 BufferView::BufferView(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ImageWindow),
+    ui(new Ui::BufferView),
     scene(new QGraphicsScene(this)),
     pixmapItem(new QGraphicsPixmapItem),
     buffer(0),

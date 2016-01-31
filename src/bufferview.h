@@ -4,7 +4,7 @@
 #include <QWidget>
 
 namespace Ui {
-class ImageWindow;
+class BufferView;
 }
 
 class QGraphicsScene;
@@ -29,7 +29,7 @@ private slots:
     void setPixmap(const QRect &area);
 
 private:
-    Ui::ImageWindow *ui;
+    Ui::BufferView *ui;
     QGraphicsScene *scene;
     QGraphicsPixmapItem *pixmapItem;
     Buffer *buffer;
