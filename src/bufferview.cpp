@@ -12,8 +12,7 @@ BufferView::BufferView(QWidget *parent) :
     ui(new Ui::BufferView),
     scene(new QGraphicsScene(this)),
     pixmapItem(new QGraphicsPixmapItem),
-    buffer(0),
-    tool(0)
+    buffer(0)
 {
     ui->setupUi(this);
 
@@ -28,11 +27,6 @@ BufferView::BufferView(QWidget *parent) :
 BufferView::~BufferView()
 {
     delete ui;
-}
-
-void BufferView::setTool(Tool *tool)
-{
-    this->tool = tool;
 }
 
 void BufferView::setBuffer(Buffer *buffer)
@@ -60,15 +54,14 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             QGraphicsSceneMouseEvent *mouseEvent = (QGraphicsSceneMouseEvent *)event;
 
             if (event->type() == QEvent::GraphicsSceneMouseMove && mouseEvent->buttons() != Qt::NoButton) {
-                buffer->move(mouseEvent->scenePos().toPoint(), tool);
+                buffer->move(mouseEvent->scenePos().toPoint());
             } else {
                 switch (event->type()) {
                 case QEvent::GraphicsSceneMousePress:
-                    tool->setMode(mouseEvent->button() == Qt::LeftButton ? Tool::Paint : Tool::Erase);
-                    buffer->press(mouseEvent->scenePos().toPoint(), tool);
+                    buffer->press(mouseEvent->scenePos().toPoint(), mouseEvent->button());
                     break;
                 case QEvent::GraphicsSceneMouseRelease:
-                    buffer->release(mouseEvent->scenePos().toPoint(), tool);
+                    buffer->release(mouseEvent->scenePos().toPoint());
                     break;
                 default:
                     break;

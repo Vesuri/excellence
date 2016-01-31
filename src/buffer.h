@@ -10,6 +10,8 @@
 class Tool;
 template <class T> class QVector;
 class UndoBuffer;
+class Tool;
+class Pen;
 
 class Buffer : public QObject
 {
@@ -17,14 +19,17 @@ class Buffer : public QObject
 public:
     explicit Buffer(int width, int height, int colors, QObject *parent = 0);
 
-    QImage image() const;
+    QImage &image();
     QRgb color(unsigned index) const;
     unsigned colorCount() const;
-    void press(const QPoint &point, Tool *tool);
-    void move(const QPoint &point, Tool *tool);
-    void release(const QPoint &point, Tool *tool);
+    void press(const QPoint &point, const Qt::MouseButton &button);
+    void move(const QPoint &point);
+    void release(const QPoint &point);
+    void setTool(Tool *tool);
+    void setPen(Pen *pen);
+    Pen *pen() const;
 
-private slots:
+public slots:
     void clear();
     void undo();
 
@@ -37,6 +42,8 @@ private:
     QRect modifiedArea;
     QImage preModificationImage;
     QList<UndoBuffer *> undoBuffers;
+    Tool *tool;
+    Pen *pen_;
 };
 
 #endif // BUFFER_H

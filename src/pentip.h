@@ -3,6 +3,8 @@
 
 #include "pen.h"
 
+class Buffer;
+
 class PenTip : public Pen
 {
     Q_OBJECT
@@ -12,8 +14,8 @@ public:
     void setPaintColor(unsigned paintColor);
     void setEraseColor(unsigned eraseColor);
 
-    virtual QRect paint(const QPoint &point, QImage &image) const;
-    virtual QRect erase(const QPoint &point, QImage &image) const;
+    virtual QRect paint(const QPoint &point, Buffer *buffer) const;
+    virtual QRect erase(const QPoint &point, Buffer *buffer) const;
     virtual QRect rect(const QPoint &point) const;
 
 private:

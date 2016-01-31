@@ -11,7 +11,6 @@ class QGraphicsScene;
 class QGraphicsPixmapItem;
 class Buffer;
 class QPixmap;
-class Tool;
 
 class BufferView : public QWidget
 {
@@ -21,7 +20,6 @@ public:
     explicit BufferView(QWidget *parent = 0);
     ~BufferView();
 
-    void setTool(Tool *tool);
     void setBuffer(Buffer *buffer);
     virtual bool eventFilter(QObject *watched, QEvent *event);
 
@@ -33,7 +31,6 @@ private:
     QGraphicsScene *scene;
     QGraphicsPixmapItem *pixmapItem;
     Buffer *buffer;
-    Tool *tool;
 };
 
 #endif // BUFFERVIEW_H

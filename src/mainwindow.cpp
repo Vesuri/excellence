@@ -1,5 +1,6 @@
 #include "palettebutton.h"
 #include <QSizePolicy>
+#include <QTimer>
 #include "buffer.h"
 #include "bufferview.h"
 #include "drawtool.h"
@@ -13,9 +14,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     bufferView(new BufferView),
     buffer(new Buffer(320, 256, 8, this)),
-    drawTool(new DrawTool(this)),
-    lineTool(new LineTool(this)),
-    tool(lineTool),
     penTip(new PenTip(this))
 {
     ui->setupUi(this);
@@ -24,15 +22,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->currentColorsButton->setEraseColor(QColor(buffer->color(0)));
     penTip->setPaintColor(1);
     penTip->setEraseColor(0);
-    drawTool->setDrawMode(DrawTool::ConnectedDraw);
-    drawTool->setPen(penTip);
-    lineTool->setPen(penTip);
-    bufferView->setTool(tool);
+    buffer->setPen(penTip);
     bufferView->setBuffer(buffer);
     bufferView->show();
-
-    connect(ui->clearButton, SIGNAL(clicked(bool)), buffer, SLOT(clear()));
-    connect(ui->undoButton, SIGNAL(clicked(bool)), buffer, SLOT(undo()));
 
     static const int paletteButtonPerRow = 16;
     for (unsigned i = 0, row = 0, column = 0; i < buffer->colorCount(); i++) {
@@ -49,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent) :
             row++;
         }
     }
+
+    QTimer::singleShot(1, this, SLOT(setupTools()));
 }
 
 MainWindow::~MainWindow()
@@ -66,4 +60,14 @@ void MainWindow::setEraseColor(unsigned paletteIndex)
 {
     penTip->setEraseColor(paletteIndex);
     ui->currentColorsButton->setEraseColor(QColor(buffer->color(paletteIndex)));
+}
+
+void MainWindow::setupTools()
+{
+    for (int i = 0; i < tools.count(); i++) {
+        tools.at(i)->addButtonToGridLayout(ui->toolsLayout);
+        tools.at(i)->setBuffer(buffer);
+    }
+
+    buffer->setTool(tools.at(0));
 }

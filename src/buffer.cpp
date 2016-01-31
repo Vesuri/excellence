@@ -1,11 +1,11 @@
 #include <QImage>
-#include <QDebug>
 #include "undobuffer.h"
 #include "tool.h"
 #include "buffer.h"
 
-Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
-    image_(width, height, QImage::Format_Indexed8)
+Buffer::Buffer(int width, int height, int, QObject *parent) : QObject(parent),
+    image_(width, height, QImage::Format_Indexed8),
+    pen_(0)
 {
     palette_.append(0xff959595);
     palette_.append(0xff000000);
@@ -19,7 +19,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     image_.fill(0);
 }
 
-QImage Buffer::image() const
+QImage &Buffer::image()
 {
     return image_;
 }
@@ -43,27 +43,29 @@ void Buffer::clear()
     emit modified(image_.rect());
 }
 
-void Buffer::press(const QPoint &point, Tool *tool)
+void Buffer::press(const QPoint &point, const Qt::MouseButton &button)
 {
+    tool->setMode(button == Qt::LeftButton ? Tool::Paint : Tool::Erase);
+
     preModificationImage = image_.copy();
 
-    modifiedArea = tool->press(point, image_);
+    modifiedArea = tool->press(point);
 
     emit modified(modifiedArea);
 }
 
-void Buffer::move(const QPoint &point, Tool *tool)
+void Buffer::move(const QPoint &point)
 {
-    QRect modification = tool->move(point, image_);
+    QRect modification = tool->move(point);
 
     modifiedArea = modifiedArea.united(modification);
 
     emit modified(modification);
 }
 
-void Buffer::release(const QPoint &point, Tool *tool)
+void Buffer::release(const QPoint &point)
 {
-    QRect modification = tool->release(point, image_);
+    QRect modification = tool->release(point);
 
     modifiedArea = modifiedArea.united(modification);
 
@@ -79,8 +81,23 @@ void Buffer::undo()
 {
     if (!undoBuffers.isEmpty()) {
         UndoBuffer *undoBuffer = undoBuffers.takeLast();
-        undoBuffer->apply(image_);
+        undoBuffer->apply(this);
         emit modified(undoBuffer->rect());
         delete undoBuffer;
     }
+}
+
+void Buffer::setPen(Pen *pen)
+{
+    this->pen_ = pen;
+}
+
+Pen *Buffer::pen() const
+{
+    return pen_;
+}
+
+void Buffer::setTool(Tool *tool)
+{
+    this->tool = tool;
 }

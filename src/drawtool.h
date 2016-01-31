@@ -4,8 +4,6 @@
 #include <QPoint>
 #include "tool.h"
 
-class Pen;
-
 class DrawTool : public Tool
 {
     Q_OBJECT
@@ -16,17 +14,21 @@ public:
     explicit DrawTool(QObject *parent = 0);
 
     void setDrawMode(const DrawMode &drawMode);
-    void setPen(Pen *pen);
-    virtual QRect press(const QPoint &point, QImage &image);
-    virtual QRect move(const QPoint &point, QImage &image);
-    virtual QRect release(const QPoint &point, QImage &image);
+    virtual QRect press(const QPoint &point);
+    virtual QRect move(const QPoint &point);
+    virtual QRect release(const QPoint &point);
+    virtual void addButtonToGridLayout(QGridLayout *layout);
+
+protected:
+    virtual void registerTool();
 
 private:
-    QRect draw(const QPoint &point, QImage &image);
+    QRect draw(const QPoint &point);
 
     DrawMode drawMode;
-    Pen *pen;
     QPoint previousPoint;
+
+    static DrawTool instance;
 };
 
 #endif // DRAWTOOL_H

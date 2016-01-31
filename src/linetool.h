@@ -15,17 +15,23 @@ public:
     explicit LineTool(QObject *parent = 0);
 
     void setPen(Pen *pen);
-    virtual QRect press(const QPoint &point, QImage &image);
-    virtual QRect move(const QPoint &point, QImage &image);
-    virtual QRect release(const QPoint &point, QImage &image);
+    virtual QRect press(const QPoint &point);
+    virtual QRect move(const QPoint &point);
+    virtual QRect release(const QPoint &point);
+    virtual void addButtonToGridLayout(QGridLayout *layout);
+
+protected:
+    virtual void registerTool();
 
 private:
     QRect changes(const QPoint &point);
-    QRect draw(const QPoint &point, QImage &image);
+    QRect draw(const QPoint &point);
 
     Pen *pen;
     QPoint startPoint;
     UndoBuffer *undoBuffer;
+
+    static LineTool instance;
 };
 
 #endif // LINETOOL_H

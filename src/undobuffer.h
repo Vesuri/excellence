@@ -6,6 +6,7 @@
 #include <QImage>
 
 class QImage;
+class Buffer;
 
 class UndoBuffer : public QObject
 {
@@ -16,7 +17,7 @@ public:
     QPoint pos() const;
     QImage image() const;
     QRect rect() const;
-    void apply(QImage &image) const;
+    void apply(Buffer *buffer) const;
 
 private:
     QPoint pos_;

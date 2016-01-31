@@ -2,6 +2,12 @@
 #define TOOL_H
 
 #include <QObject>
+#include <QToolButton>
+#include <QList>
+
+class Buffer;
+class QToolButton;
+class QGridLayout;
 
 class Tool : public QObject
 {
@@ -13,13 +19,22 @@ public:
     explicit Tool(QObject *parent = 0);
 
     void setMode(const Mode &mode);
+    virtual void setBuffer(Buffer *buffer);
 
-    virtual QRect press(const QPoint &point, QImage &image) = 0;
-    virtual QRect move(const QPoint &point, QImage &image) = 0;
-    virtual QRect release(const QPoint &point, QImage &image) = 0;
+    virtual QRect press(const QPoint &point) = 0;
+    virtual QRect move(const QPoint &point) = 0;
+    virtual QRect release(const QPoint &point) = 0;
+    virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
+
+protected slots:
+    virtual void registerTool();
 
 protected:
     Mode mode_;
+    Buffer *buffer_;
+    QToolButton *button_;
 };
+
+extern QList<Tool *> tools;
 
 #endif // TOOL_H

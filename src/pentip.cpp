@@ -1,5 +1,6 @@
 #include <QRect>
 #include <QImage>
+#include "buffer.h"
 #include "pentip.h"
 
 PenTip::PenTip(QObject *parent) : Pen(parent),
@@ -18,15 +19,15 @@ void PenTip::setEraseColor(unsigned eraseColor)
     this->eraseColor_ = eraseColor;
 }
 
-QRect PenTip::paint(const QPoint &point, QImage &image) const
+QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 {
-    image.setPixel(point, paintColor_);
+    buffer->image().setPixel(point, paintColor_);
     return QRect(point, point);
 }
 
-QRect PenTip::erase(const QPoint &point, QImage &image) const
+QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 {
-    image.setPixel(point, eraseColor_);
+    buffer->image().setPixel(point, eraseColor_);
     return QRect(point, point);
 }
 

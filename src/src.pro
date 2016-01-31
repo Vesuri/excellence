@@ -25,7 +25,9 @@ SOURCES += main.cpp\
     buffer.cpp \
     bufferview.cpp \
     linetool.cpp \
-    undobuffer.cpp
+    undobuffer.cpp \
+    cleartool.cpp \
+    undotool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -38,7 +40,9 @@ HEADERS  += mainwindow.h \
     buffer.h \
     bufferview.h \
     linetool.h \
-    undobuffer.h
+    undobuffer.h \
+    cleartool.h \
+    undotool.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui
