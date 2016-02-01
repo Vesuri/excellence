@@ -22,6 +22,7 @@ public:
 
 protected:
     virtual void registerTool();
+    virtual void activate();
 
 private:
     QRect draw(const QPoint &point);
@@ -30,6 +31,7 @@ private:
     QPoint previousPoint;
 
     static DrawTool instance;
+    static const char* icons[];
 };
 
 #endif // DRAWTOOL_H

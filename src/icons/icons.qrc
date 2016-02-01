@@ -27,5 +27,7 @@
         <file>segment.png</file>
         <file>stencil.png</file>
         <file>transparent.png</file>
+        <file>draw.png</file>
+        <file>filledshape.png</file>
     </qresource>
 </RCC>

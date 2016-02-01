@@ -7,15 +7,21 @@
 #include "drawtool.h"
 
 DrawTool DrawTool::instance;
+const char *DrawTool::icons[] = {
+    ":/draw.png",
+    ":/connecteddraw.png",
+    ":/filledshape.png"
+};
 
-DrawTool::DrawTool(QObject *parent) : Tool(parent),
-    drawMode(ConnectedDraw)
+DrawTool::DrawTool(QObject *parent) : Tool(parent)
 {
 }
 
 void DrawTool::setDrawMode(const DrawMode &drawMode)
 {
     this->drawMode = drawMode;
+
+    button_->setIcon(QIcon(icons[drawMode]));
 }
 
 void DrawTool::setBuffer(Buffer *buffer)
@@ -74,10 +80,20 @@ void DrawTool::registerTool()
 {
     Tool::registerTool();
 
-    button_->setIcon(QIcon(":/connecteddraw.png"));
+    setDrawMode(ConnectedDraw);
     button_->setCheckable(true);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+}
+
+void DrawTool::activate()
+{
+    if (buffer_->tool() == this) {
+        setDrawMode((DrawMode)(((int)drawMode + 1) % ((int)FilledShape + 1)));
+        button_->setChecked(true);
+    }
+
+    Tool::activate();
 }
 
 void DrawTool::addButtonToGridLayout(QGridLayout *layout)

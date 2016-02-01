@@ -23,7 +23,8 @@ public:
     void press(const QPoint &point, const Qt::MouseButton &button);
     void move(const QPoint &point);
     void release(const QPoint &point);
-    void setTool(Tool *tool);
+    void setTool(Tool *tool_);
+    Tool *tool() const;
     void setPen(Pen *pen);
     Pen *pen() const;
 
@@ -33,7 +34,7 @@ public slots:
 
 signals:
     void modified(QRect area);
-    void toolChanged(Tool *tool);
+    void toolChanged(Tool *tool_);
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 8);
@@ -42,7 +43,7 @@ private:
     QRect modifiedArea;
     QImage preModificationImage;
     QList<UndoBuffer *> undoBuffers;
-    Tool *tool;
+    Tool *tool_;
     Pen *pen_;
 };
 

@@ -56,18 +56,18 @@ void Buffer::clear()
 
 void Buffer::press(const QPoint &point, const Qt::MouseButton &button)
 {
-    tool->setMode(button == Qt::LeftButton ? Tool::Paint : Tool::Erase);
+    tool_->setMode(button == Qt::LeftButton ? Tool::Paint : Tool::Erase);
 
     preModificationImage = image_.copy();
 
-    modifiedArea = tool->press(point);
+    modifiedArea = tool_->press(point);
 
     emit modified(modifiedArea);
 }
 
 void Buffer::move(const QPoint &point)
 {
-    QRect modification = tool->move(point);
+    QRect modification = tool_->move(point);
 
     modifiedArea = modifiedArea.united(modification);
 
@@ -76,7 +76,7 @@ void Buffer::move(const QPoint &point)
 
 void Buffer::release(const QPoint &point)
 {
-    QRect modification = tool->release(point);
+    QRect modification = tool_->release(point);
 
     modifiedArea = modifiedArea.united(modification);
 
@@ -100,7 +100,7 @@ void Buffer::undo()
 
 void Buffer::setPen(Pen *pen)
 {
-    this->pen_ = pen;
+    pen_ = pen;
 }
 
 Pen *Buffer::pen() const
@@ -110,9 +110,14 @@ Pen *Buffer::pen() const
 
 void Buffer::setTool(Tool *tool)
 {
-    if (this->tool != tool) {
-        this->tool = tool;
+    if (tool_ != tool) {
+        tool_ = tool;
 
         emit toolChanged(tool);
     }
+}
+
+Tool *Buffer::tool() const
+{
+    return tool_;
 }

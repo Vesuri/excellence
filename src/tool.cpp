@@ -30,9 +30,7 @@ void Tool::registerTool()
 
 void Tool::activate()
 {
-    if (buffer_ != 0) {
-        buffer_->setTool(this);
-    }
+    buffer_->setTool(this);
 }
 
 void Tool::setCheckedIfEqual(Tool *tool)
