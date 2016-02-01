@@ -15,38 +15,21 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     openDialog(new QFileDialog(NULL, tr("Open file"))),
     bufferView(new BufferView),
-    buffer(new Buffer(320, 256, 8, this)),
+    buffer(0),
     penTip(new PenTip(this))
 {
     ui->setupUi(this);
 
-    ui->currentColorsButton->setPaintColor(QColor(buffer->color(1)));
-    ui->currentColorsButton->setEraseColor(QColor(buffer->color(0)));
+    openFile("");
+
     penTip->setPaintColor(1);
     penTip->setEraseColor(0);
-    buffer->setPen(penTip);
     bufferView->setBuffer(buffer);
     bufferView->show();
 
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
     connect(ui->action_Quit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(ui->action_Open, SIGNAL(triggered()), openDialog, SLOT(show()));
-
-    static const int paletteButtonPerRow = 16;
-    for (unsigned i = 0, row = 0, column = 0; i < buffer->colorCount(); i++) {
-        PaletteButton *button = new PaletteButton();
-        connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(setPaintColor(unsigned)));
-        connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(setEraseColor(unsigned)));
-        button->setPaletteIndex(i);
-        button->setColor(QColor(buffer->color(i)));
-        button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
-        ui->paletteLayout->addWidget(button, row, column);
-        column++;
-        if (column >= paletteButtonPerRow) {
-            column = 0;
-            row++;
-        }
-    }
 
     QTimer::singleShot(1, this, SLOT(setupTools()));
 }
@@ -59,13 +42,13 @@ MainWindow::~MainWindow()
 void MainWindow::setPaintColor(unsigned paletteIndex)
 {
     penTip->setPaintColor(paletteIndex);
-    ui->currentColorsButton->setPaintColor(QColor(buffer->color(paletteIndex)));
+    ui->currentColorsButton->setPaintColor(QColor(buffer->image().color(paletteIndex)));
 }
 
 void MainWindow::setEraseColor(unsigned paletteIndex)
 {
     penTip->setEraseColor(paletteIndex);
-    ui->currentColorsButton->setEraseColor(QColor(buffer->color(paletteIndex)));
+    ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(paletteIndex)));
 }
 
 void MainWindow::setupTools()
@@ -86,8 +69,33 @@ void MainWindow::openFile(const QString &path)
         tools.at(i)->setBuffer(buffer);
     }
 
+    buffer->setPen(penTip);
     buffer->setTool(tools.at(0));
     bufferView->setBuffer(buffer);
+    ui->currentColorsButton->setPaintColor(QColor(buffer->image().color(1)));
+    ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(0)));
+
+    while (ui->paletteLayout->count() > 0) {
+        QLayoutItem *item = ui->paletteLayout->takeAt(0);
+        delete item->widget();
+        delete item;
+    }
+
+    static const int paletteButtonPerRow = 16;
+    for (int i = 0, row = 0, column = 0; i < buffer->image().colorCount(); i++) {
+        PaletteButton *button = new PaletteButton();
+        connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(setPaintColor(unsigned)));
+        connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(setEraseColor(unsigned)));
+        button->setPaletteIndex(i);
+        button->setColor(QColor(buffer->image().color(i)));
+        button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+        ui->paletteLayout->addWidget(button, row, column);
+        column++;
+        if (column >= paletteButtonPerRow) {
+            column = 0;
+            row++;
+        }
+    }
 
     delete oldBuffer;
 }

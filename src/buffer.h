@@ -8,7 +8,6 @@
 #include <QList>
 
 class Tool;
-template <class T> class QVector;
 class UndoBuffer;
 class Tool;
 class Pen;
@@ -21,8 +20,6 @@ public:
     explicit Buffer(const QString &path, QObject *parent = 0);
 
     QImage &image();
-    QRgb color(unsigned index) const;
-    unsigned colorCount() const;
     void press(const QPoint &point, const Qt::MouseButton &button);
     void move(const QPoint &point);
     void release(const QPoint &point);
@@ -39,8 +36,9 @@ signals:
     void toolChanged(Tool *tool);
 
 private:
+    void initialize(int width = 320, int height = 256, int colors = 8);
+
     QImage image_;
-    QVector<QRgb> palette_;
     QRect modifiedArea;
     QImage preModificationImage;
     QList<UndoBuffer *> undoBuffers;

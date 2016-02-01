@@ -3,20 +3,21 @@
 #include "tool.h"
 #include "buffer.h"
 
-Buffer::Buffer(int width, int height, int, QObject *parent) : QObject(parent),
-    image_(width, height, QImage::Format_Indexed8),
+static QRgb defaultPalette[] = {
+    0xff959595,
+    0xff000000,
+    0xffffffff,
+    0xff3b67a2,
+    0xff7b7b7b,
+    0xffafafaf,
+    0xffaa907c,
+    0xffffa997
+};
+
+Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
     pen_(0)
 {
-    palette_.append(0xff959595);
-    palette_.append(0xff000000);
-    palette_.append(0xffffffff);
-    palette_.append(0xff3b67a2);
-    palette_.append(0xff7b7b7b);
-    palette_.append(0xffafafaf);
-    palette_.append(0xffaa907c);
-    palette_.append(0xffffa997);
-    image_.setColorTable(palette_);
-    image_.fill(0);
+    initialize(width, height, colors);
 }
 
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
@@ -24,23 +25,24 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     pen_(0)
 {
     if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
-        image_ = QImage(320, 256, QImage::Format_Indexed8);
+        initialize();
     }
+}
+
+void Buffer::initialize(int width, int height, int colors)
+{
+    image_ = QImage(width, height, QImage::Format_Indexed8);
+    QVector<QRgb> colorTable;
+    for (int i = 0; i < colors; i++) {
+        colorTable.append(defaultPalette[i]);
+    }
+    image_.setColorTable(colorTable);
+    image_.fill(0);
 }
 
 QImage &Buffer::image()
 {
     return image_;
-}
-
-QRgb Buffer::color(unsigned int index) const
-{
-    return palette_.at(index);
-}
-
-unsigned Buffer::colorCount() const
-{
-    return palette_.count();
 }
 
 void Buffer::clear()
