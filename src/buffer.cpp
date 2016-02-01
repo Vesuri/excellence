@@ -99,5 +99,9 @@ Pen *Buffer::pen() const
 
 void Buffer::setTool(Tool *tool)
 {
-    this->tool = tool;
+    if (this->tool != tool) {
+        this->tool = tool;
+
+        emit toolChanged(tool);
+    }
 }

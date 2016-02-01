@@ -18,6 +18,19 @@ void DrawTool::setDrawMode(const DrawMode &drawMode)
     this->drawMode = drawMode;
 }
 
+void DrawTool::setBuffer(Buffer *buffer)
+{
+    if (buffer_ != 0) {
+        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    }
+
+    Tool::setBuffer(buffer);
+
+    if (buffer_ != 0) {
+        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    }
+}
+
 QRect DrawTool::press(const QPoint &point)
 {
     previousPoint = point;
@@ -62,6 +75,9 @@ void DrawTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/connecteddraw.png"));
+    button_->setCheckable(true);
+
+    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }
 
 void DrawTool::addButtonToGridLayout(QGridLayout *layout)

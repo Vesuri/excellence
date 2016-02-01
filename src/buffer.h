@@ -35,6 +35,7 @@ public slots:
 
 signals:
     void modified(QRect area);
+    void toolChanged(Tool *tool);
 
 private:
     QImage image_;

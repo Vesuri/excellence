@@ -14,6 +14,7 @@ public:
     explicit DrawTool(QObject *parent = 0);
 
     void setDrawMode(const DrawMode &drawMode);
+    virtual void setBuffer(Buffer *buffer);
     virtual QRect press(const QPoint &point);
     virtual QRect move(const QPoint &point);
     virtual QRect release(const QPoint &point);

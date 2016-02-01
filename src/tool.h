@@ -28,6 +28,8 @@ public:
 
 protected slots:
     virtual void registerTool();
+    virtual void activate();
+    virtual void setCheckedIfEqual(Tool *tool);
 
 protected:
     Mode mode_;

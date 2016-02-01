@@ -11,14 +11,21 @@
 LineTool LineTool::instance;
 
 LineTool::LineTool(QObject *parent) : Tool(parent),
-    pen(0),
     undoBuffer(0)
 {
 }
 
-void LineTool::setPen(Pen *pen)
+void LineTool::setBuffer(Buffer *buffer)
 {
-    this->pen = pen;
+    if (buffer_ != 0) {
+        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    }
+
+    Tool::setBuffer(buffer);
+
+    if (buffer_ != 0) {
+        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    }
 }
 
 QRect LineTool::press(const QPoint &point)
@@ -55,15 +62,15 @@ QRect LineTool::release(const QPoint &point)
 
 QRect LineTool::changes(const QPoint &point)
 {
-    return pen->rect(point);
+    return buffer_->pen()->rect(point);
 }
 
 QRect LineTool::draw(const QPoint &point)
 {
     if (mode_ == Paint) {
-        return pen->paint(point, buffer_);
+        return buffer_->pen()->paint(point, buffer_);
     } else {
-        return pen->erase(point, buffer_);
+        return buffer_->pen()->erase(point, buffer_);
     }
 }
 
@@ -72,6 +79,9 @@ void LineTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/line.png"));
+    button_->setCheckable(true);
+
+    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }
 
 void LineTool::addButtonToGridLayout(QGridLayout *layout)

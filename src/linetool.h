@@ -4,7 +4,6 @@
 #include <QPoint>
 #include "tool.h"
 
-class Pen;
 class UndoBuffer;
 
 class LineTool : public Tool
@@ -14,7 +13,7 @@ class LineTool : public Tool
 public:
     explicit LineTool(QObject *parent = 0);
 
-    void setPen(Pen *pen);
+    virtual void setBuffer(Buffer *buffer);
     virtual QRect press(const QPoint &point);
     virtual QRect move(const QPoint &point);
     virtual QRect release(const QPoint &point);
@@ -27,7 +26,6 @@ private:
     QRect changes(const QPoint &point);
     QRect draw(const QPoint &point);
 
-    Pen *pen;
     QPoint startPoint;
     UndoBuffer *undoBuffer;
 
