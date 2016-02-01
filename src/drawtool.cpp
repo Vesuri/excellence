@@ -39,6 +39,7 @@ void DrawTool::setBuffer(Buffer *buffer)
 
 QRect DrawTool::press(const QPoint &point)
 {
+    startingPoint = point;
     previousPoint = point;
     return draw(point);
 }
@@ -59,10 +60,14 @@ QRect DrawTool::release(const QPoint &point)
 {
     if (drawMode == Draw) {
         return draw(point);
+    } else if (drawMode == ConnectedDraw) {
+        QRect changedRect;
+        Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        return changedRect;
     } else {
         QRect changedRect;
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
-        previousPoint = point;
+        Algorithms::line(point, startingPoint, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         return changedRect;
     }
 }

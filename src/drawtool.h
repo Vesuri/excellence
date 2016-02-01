@@ -28,6 +28,7 @@ private:
     QRect draw(const QPoint &point);
 
     DrawMode drawMode;
+    QPoint startingPoint;
     QPoint previousPoint;
 
     static DrawTool instance;
