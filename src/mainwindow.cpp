@@ -26,6 +26,8 @@ MainWindow::MainWindow(QWidget *parent) :
     bufferView->setBuffer(buffer);
     bufferView->show();
 
+    connect(ui->action_Quit, SIGNAL(triggered()), qApp, SLOT(quit()));
+
     static const int paletteButtonPerRow = 16;
     for (unsigned i = 0, row = 0, column = 0; i < buffer->colorCount(); i++) {
         PaletteButton *button = new PaletteButton();
