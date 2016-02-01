@@ -7,6 +7,7 @@ namespace Ui {
 class MainWindow;
 }
 
+class QFileDialog;
 class QGraphicsScene;
 class PaletteItem;
 class BufferView;
@@ -25,9 +26,11 @@ private slots:
     void setPaintColor(unsigned paletteIndex);
     void setEraseColor(unsigned paletteIndex);
     void setupTools();
+    void openFile(const QString &path);
 
 private:
     Ui::MainWindow *ui;
+    QFileDialog *openDialog;
     BufferView *bufferView;
     Buffer *buffer;
     PenTip *penTip;

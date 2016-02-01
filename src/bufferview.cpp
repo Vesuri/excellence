@@ -40,6 +40,8 @@ void BufferView::setBuffer(Buffer *buffer)
     if (buffer != 0) {
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
+
+        setGeometry(geometry().x(), geometry().y(), buffer->image().width(), buffer->image().height());
     }
 }
 

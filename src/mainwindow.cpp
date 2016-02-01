@@ -1,6 +1,7 @@
 #include "palettebutton.h"
 #include <QSizePolicy>
 #include <QTimer>
+#include <QFileDialog>
 #include "buffer.h"
 #include "bufferview.h"
 #include "drawtool.h"
@@ -12,6 +13,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
+    openDialog(new QFileDialog(NULL, tr("Open file"))),
     bufferView(new BufferView),
     buffer(new Buffer(320, 256, 8, this)),
     penTip(new PenTip(this))
@@ -26,7 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
     bufferView->setBuffer(buffer);
     bufferView->show();
 
+    connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
     connect(ui->action_Quit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(ui->action_Open, SIGNAL(triggered()), openDialog, SLOT(show()));
 
     static const int paletteButtonPerRow = 16;
     for (unsigned i = 0, row = 0, column = 0; i < buffer->colorCount(); i++) {
@@ -72,4 +76,18 @@ void MainWindow::setupTools()
     }
 
     buffer->setTool(tools.at(0));
+}
+
+void MainWindow::openFile(const QString &path)
+{
+    Buffer *oldBuffer = buffer;
+    buffer = new Buffer(path, this);
+    for (int i = 0; i < tools.count(); i++) {
+        tools.at(i)->setBuffer(buffer);
+    }
+
+    buffer->setTool(tools.at(0));
+    bufferView->setBuffer(buffer);
+
+    delete oldBuffer;
 }

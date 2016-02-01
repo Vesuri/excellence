@@ -19,6 +19,15 @@ Buffer::Buffer(int width, int height, int, QObject *parent) : QObject(parent),
     image_.fill(0);
 }
 
+Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
+    image_(path),
+    pen_(0)
+{
+    if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
+        image_ = QImage(320, 256, QImage::Format_Indexed8);
+    }
+}
+
 QImage &Buffer::image()
 {
     return image_;

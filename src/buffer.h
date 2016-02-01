@@ -17,7 +17,8 @@ class Buffer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Buffer(int width, int height, int colors, QObject *parent = 0);
+    explicit Buffer(int width = 320, int height = 256, int colors = 8, QObject *parent = 0);
+    explicit Buffer(const QString &path, QObject *parent = 0);
 
     QImage &image();
     QRgb color(unsigned index) const;
