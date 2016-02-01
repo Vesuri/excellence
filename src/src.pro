@@ -11,7 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = excellence
 TEMPLATE = app
-
+macx:TARGET = Excellence
 
 SOURCES += main.cpp\
         mainwindow.cpp \
