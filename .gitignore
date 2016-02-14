@@ -2,6 +2,7 @@
 ui_*.h
 moc_*
 *.o
+*.a
 build-excellence*
 Makefile
 excellence

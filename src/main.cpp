@@ -1,5 +1,8 @@
 #include "mainwindow.h"
 #include <QApplication>
+#include <QtPlugin>
+
+Q_IMPORT_PLUGIN(ILBMPlugin)
 
 int main(int argc, char *argv[])
 {

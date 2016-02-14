@@ -49,3 +49,5 @@ FORMS    += mainwindow.ui \
 
 RESOURCES += \
     icons/icons.qrc
+
+LIBS += -Lplugins -lilbm
