@@ -20,18 +20,11 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    openFile("");
-
-    penTip->setPaintColor(1);
-    penTip->setEraseColor(0);
-    bufferView->setBuffer(buffer);
-    bufferView->show();
-
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
     connect(ui->action_Quit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(ui->action_Open, SIGNAL(triggered()), openDialog, SLOT(show()));
 
-    QTimer::singleShot(1, this, SLOT(setupTools()));
+    QTimer::singleShot(1, this, SLOT(initialize()));
 }
 
 MainWindow::~MainWindow()
@@ -51,8 +44,15 @@ void MainWindow::setEraseColor(unsigned paletteIndex)
     ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(paletteIndex)));
 }
 
-void MainWindow::setupTools()
+void MainWindow::initialize()
 {
+    openFile("");
+
+    penTip->setPaintColor(1);
+    penTip->setEraseColor(0);
+    bufferView->setBuffer(buffer);
+    bufferView->show();
+
     for (int i = 0; i < tools.count(); i++) {
         tools.at(i)->addButtonToGridLayout(ui->toolsLayout);
         tools.at(i)->setBuffer(buffer);

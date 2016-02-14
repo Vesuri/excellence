@@ -23,9 +23,9 @@ public:
     ~MainWindow();
 
 private slots:
+    void initialize();
     void setPaintColor(unsigned paletteIndex);
     void setEraseColor(unsigned paletteIndex);
-    void setupTools();
     void openFile(const QString &path);
 
 private:
