@@ -46,8 +46,8 @@ bool ILBMHandler::read(QImage *image)
     }
 
     int planes = 0;
-    Masking masking = MaskingNone;
-    Compression compression = CompressionNone;
+    BitmapHeader::Masking masking = BitmapHeader::MaskingNone;
+    BitmapHeader::Compression compression = BitmapHeader::CompressionNone;
     QImage tempImage;
     QVector<QRgb> colorTable;
     unsigned commodoreAmiga;
@@ -58,10 +58,11 @@ bool ILBMHandler::read(QImage *image)
                 Chunk chunk(form.data(offset));
 
                 if (chunk.id() == "BMHD") {
-                    tempImage = QImage(chunk.uword(0), chunk.uword(2), QImage::Format_Indexed8);
-                    planes = chunk.ubyte(8);
-                    masking = static_cast<Masking>(chunk.ubyte(9));
-                    compression = static_cast<Compression>(chunk.ubyte(10));
+                    BitmapHeader bitmapHeader(chunk);
+                    tempImage = QImage(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
+                    planes = bitmapHeader.planes();
+                    masking = bitmapHeader.masking();
+                    compression = bitmapHeader.compression();
                 } else if (chunk.id() == "CMAP") {
                     for (unsigned i = 0; i < chunk.size() / 3; i++) {
                         colorTable.append(0xff000000 | (chunk.ubyte(i * 3) << 16) | (chunk.ubyte(i * 3 + 1) << 8) | chunk.ubyte(i * 3 + 2));
@@ -69,20 +70,12 @@ bool ILBMHandler::read(QImage *image)
                     tempImage.setColorTable(colorTable);
                 } else if (chunk.id() == "BODY") {
                     int bytesPerPlane = ((tempImage.width() + 15) & 0xfff0) / 8;
-                    int planesPerRow = (planes + (masking != MaskingNone ? 1 : 0));
+                    int planesPerRow = (planes + (masking != BitmapHeader::MaskingNone ? 1 : 0));
                     int bytesPerRow = bytesPerPlane * planesPerRow;
-
-                    qWarning("XX IMAGE WIDTH %d", tempImage.width());
-                    qWarning("XX IMAGE HEIGHT %d", tempImage.height());
-                    qWarning("XX PLANES %d", planes);
-                    qWarning("XX MASK %d", masking);
-                    qWarning("XX BYTES PER PLANE %d", bytesPerPlane);
-                    qWarning("XX PLANES PER ROW %d", planesPerRow);
-                    qWarning("XX BYTES PER ROW %d", bytesPerRow);
 
                     unsigned char row[bytesPerRow];
                     for (int y = 0, rowOffset = 0; y < tempImage.height(); y++) {
-                        if (compression == CompressionNone) {
+                        if (compression == BitmapHeader::CompressionNone) {
                             for (int inputOffset = 0; inputOffset < bytesPerRow; inputOffset++) {
                                 row[inputOffset] = chunk.byte(rowOffset + inputOffset);
                             }
@@ -141,7 +134,11 @@ bool ILBMHandler::read(QImage *image)
 ILBMHandler::Chunk::Chunk(const QByteArray &chunk) :
     chunk(chunk)
 {
-    qWarning() << "GOT CHUNK" << id() << "OF SIZE" << size();
+}
+
+ILBMHandler::Chunk::Chunk(const Chunk &chunk) :
+    chunk(chunk.chunk)
+{
 }
 
 QByteArray ILBMHandler::Chunk::id() const
@@ -169,6 +166,11 @@ unsigned char ILBMHandler::Chunk::ubyte(int offset) const
     return (unsigned char)chunk.at(8 + offset);
 }
 
+short ILBMHandler::Chunk::word(int offset) const
+{
+    return ((char)chunk.at(8 + offset) << 8) | (char)chunk.at(9 + offset);
+}
+
 unsigned short ILBMHandler::Chunk::uword(int offset) const
 {
     return ((unsigned char)chunk.at(8 + offset) << 8) | (unsigned char)chunk.at(9 + offset);
@@ -177,4 +179,68 @@ unsigned short ILBMHandler::Chunk::uword(int offset) const
 unsigned ILBMHandler::Chunk::ulong(int offset) const
 {
     return ((unsigned char)chunk.at(8 + offset) << 24) | ((unsigned char)chunk.at(9 + offset) << 16) | ((unsigned char)chunk.at(10 + offset) << 8) | (unsigned char)chunk.at(11 + offset);
+}
+
+ILBMHandler::BitmapHeader::BitmapHeader(const Chunk &chunk) : Chunk(chunk)
+{
+}
+
+unsigned short ILBMHandler::BitmapHeader::width() const
+{
+    return uword(0);
+}
+
+unsigned short ILBMHandler::BitmapHeader::height() const
+{
+    return uword(2);
+}
+
+short ILBMHandler::BitmapHeader::x() const
+{
+    return word(4);
+}
+
+short ILBMHandler::BitmapHeader::y() const
+{
+    return word(6);
+}
+
+unsigned char ILBMHandler::BitmapHeader::planes() const
+{
+    return ubyte(8);
+}
+
+ILBMHandler::BitmapHeader::Masking ILBMHandler::BitmapHeader::masking() const
+{
+    return static_cast<Masking>(ubyte(9));
+}
+
+ILBMHandler::BitmapHeader::Compression ILBMHandler::BitmapHeader::compression() const
+{
+    return static_cast<Compression>(ubyte(10));
+}
+
+unsigned short ILBMHandler::BitmapHeader::transparentColor() const
+{
+    return uword(12);
+}
+
+unsigned char ILBMHandler::BitmapHeader::xAspect() const
+{
+    return ubyte(14);
+}
+
+unsigned char ILBMHandler::BitmapHeader::yAspect() const
+{
+    return ubyte(15);
+}
+
+short ILBMHandler::BitmapHeader::pageWidth() const
+{
+    return word(16);
+}
+
+short ILBMHandler::BitmapHeader::pageHeight() const
+{
+    return word(18);
 }

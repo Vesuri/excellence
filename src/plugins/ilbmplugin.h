@@ -17,18 +17,6 @@ public:
 
 class ILBMHandler : public QImageIOHandler
 {
-    enum Compression {
-        CompressionNone = 0,
-        CompressionByteRun1 = 1
-    };
-
-    enum Masking {
-        MaskingNone = 0,
-        MaskingHasMask = 1,
-        MaskingHasTransparentColor = 2,
-        MaskingLasso = 3
-    };
-
 public:
     ILBMHandler();
 
@@ -39,17 +27,49 @@ private:
     class Chunk {
     public:
         Chunk(const QByteArray &chunk);
+        Chunk(const Chunk &chunk);
 
         QByteArray id() const;
         unsigned size() const;
         QByteArray data(int offset = 0, int length = -1) const;
         char byte(int offset) const;
         unsigned char ubyte(int offset) const;
+        short word(int offset) const;
         unsigned short uword(int offset) const;
         unsigned ulong(int offset) const;
 
     private:
         QByteArray chunk;
+    };
+
+    class BitmapHeader : public Chunk {
+    public:
+        enum Compression {
+            CompressionNone = 0,
+            CompressionByteRun1 = 1
+        };
+
+        enum Masking {
+            MaskingNone = 0,
+            MaskingHasMask = 1,
+            MaskingHasTransparentColor = 2,
+            MaskingLasso = 3
+        };
+
+        BitmapHeader(const Chunk &chunk);
+
+        unsigned short width() const;
+        unsigned short height() const;
+        short x() const;
+        short y() const;
+        unsigned char planes() const;
+        Masking masking() const;
+        Compression compression() const;
+        unsigned short transparentColor() const;
+        unsigned char xAspect() const;
+        unsigned char yAspect() const;
+        short pageWidth() const;
+        short pageHeight() const;
     };
 };
 
