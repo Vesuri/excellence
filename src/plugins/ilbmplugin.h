@@ -2,6 +2,7 @@
 #define ILBMPLUGIN_H
 
 #include <QImageIOPlugin>
+#include <QColor>
 
 class ILBMPlugin : public QImageIOPlugin
 {
@@ -70,6 +71,15 @@ private:
         unsigned char yAspect() const;
         short pageWidth() const;
         short pageHeight() const;
+    };
+
+    class ColorMap : public Chunk {
+    public:
+        ColorMap(const Chunk &chunk);
+
+        unsigned count() const;
+        QRgb at(unsigned index) const;
+        QVector<QRgb> toVector() const;
     };
 };
 

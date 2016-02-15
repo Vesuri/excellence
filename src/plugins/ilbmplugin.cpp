@@ -64,9 +64,8 @@ bool ILBMHandler::read(QImage *image)
                     masking = bitmapHeader.masking();
                     compression = bitmapHeader.compression();
                 } else if (chunk.id() == "CMAP") {
-                    for (unsigned i = 0; i < chunk.size() / 3; i++) {
-                        colorTable.append(0xff000000 | (chunk.ubyte(i * 3) << 16) | (chunk.ubyte(i * 3 + 1) << 8) | chunk.ubyte(i * 3 + 2));
-                    }
+                    ColorMap colorMap(chunk);
+                    colorTable = colorMap.toVector();
                     tempImage.setColorTable(colorTable);
                 } else if (chunk.id() == "BODY") {
                     int bytesPerPlane = ((tempImage.width() + 15) & 0xfff0) / 8;
@@ -243,4 +242,27 @@ short ILBMHandler::BitmapHeader::pageWidth() const
 short ILBMHandler::BitmapHeader::pageHeight() const
 {
     return word(18);
+}
+
+ILBMHandler::ColorMap::ColorMap(const Chunk &chunk) : Chunk(chunk)
+{
+}
+
+unsigned ILBMHandler::ColorMap::count() const
+{
+    return size() / 3;
+}
+
+QRgb ILBMHandler::ColorMap::at(unsigned index) const
+{
+    return 0xff000000 | (ubyte(index * 3) << 16) | (ubyte(index * 3 + 1) << 8) | ubyte(index * 3 + 2);
+}
+
+QVector<QRgb> ILBMHandler::ColorMap::toVector() const
+{
+    QVector<QRgb> vector;
+    for (unsigned i = 0; i < count(); i++) {
+        vector.append(at(i));
+    }
+    return vector;
 }
