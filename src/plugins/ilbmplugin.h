@@ -15,4 +15,29 @@ public:
     virtual QImageIOHandler *create(QIODevice *device, const QByteArray & format = QByteArray()) const;
 };
 
+class ILBMHandler : public QImageIOHandler
+{
+public:
+    ILBMHandler();
+
+    virtual bool canRead() const;
+    virtual bool read(QImage *image);
+
+private:
+    class Chunk {
+    public:
+        Chunk(const QByteArray &chunk);
+
+        QByteArray id() const;
+        unsigned size() const;
+        QByteArray data(int offset = 0, int length = -1) const;
+        unsigned char ubyte(int offset) const;
+        unsigned short uword(int offset) const;
+        unsigned ulong(int offset) const;
+
+    private:
+        QByteArray chunk;
+    };
+};
+
 #endif // ILBMPLUGIN_H
