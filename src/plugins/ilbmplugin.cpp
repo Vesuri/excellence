@@ -138,7 +138,7 @@ bool ILBMHandler::read(QImage *outputImage)
 
 ILBMHandler::Chunk::Chunk()
 {
-    chunk.append("NONE");
+    chunk.append("    ");
     chunk.append((char)0);
     chunk.append((char)0);
     chunk.append((char)0);
