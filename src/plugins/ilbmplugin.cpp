@@ -68,32 +68,30 @@ bool ILBMHandler::read(QImage *outputImage)
                     int bytesPerRow = bytesPerPlane * planesPerRow;
 
                     unsigned char planarRow[bytesPerRow];
-                    for (int y = 0, rowOffset = 0; y < image.height(); y++) {
+                    for (int y = 0, index = 0; y < image.height(); y++) {
+                        unsigned char *planar = planarRow;
+                        unsigned char *planarEnd = planar + bytesPerRow;
+
                         if (bitmapHeader.compression() == BitmapHeader::CompressionNone) {
                             // No compression: copy a row of planar data as is
-                            for (int inputOffset = 0; inputOffset < bytesPerRow; inputOffset++) {
-                                planarRow[inputOffset] = chunk.byte(rowOffset + inputOffset);
+                            while (planar < planarEnd) {
+                                *planar++ = chunk.byte(index++);
                             }
-                            rowOffset += bytesPerRow;
                         } else {
                             // Runlength compression: convert encoded data until the row is full
-                            for (int inputOffset = 0, outputOffset = 0; outputOffset < bytesPerRow;) {
-                                int count = chunk.byte(rowOffset + inputOffset++);
+                            while (planar < planarEnd) {
+                                int count = chunk.byte(index++);
                                 if (count >= 0) {
                                     // Count positive: copy the following count + 1 bytes as is
                                     for (int i = 0; i < count + 1; i++) {
-                                        planarRow[outputOffset++] = chunk.byte(rowOffset + inputOffset++);
+                                        *planar++ = chunk.byte(index++);
                                     }
                                 } else {
                                     // Count negative: repeat the following byte (-count + 1) times
                                     for (int i = 0; i < -count + 1; i++) {
-                                        planarRow[outputOffset++] = chunk.byte(rowOffset + inputOffset);
+                                        *planar++ = chunk.byte(index);
                                     }
-                                    inputOffset++;
-                                }
-
-                                if (outputOffset >= bytesPerRow) {
-                                    rowOffset += inputOffset;
+                                    index++;
                                 }
                             }
                         }
