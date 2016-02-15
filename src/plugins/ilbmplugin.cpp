@@ -66,7 +66,7 @@ bool ILBMHandler::read(QImage *outputImage)
 
                     // Data is padded to word boundaries
                     int bytesPerPlane = ((bitmapHeader.width() + 15) & 0xfff0) / 8;
-                    int planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() != BitmapHeader::MaskingNone ? 1 : 0));
+                    int planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() == BitmapHeader::MaskingHasMask ? 1 : 0));
                     int bytesPerRow = bytesPerPlane * planesPerRow;
 
                     unsigned char planarRow[bytesPerRow];
