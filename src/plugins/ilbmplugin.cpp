@@ -117,9 +117,9 @@ bool ILBMHandler::read(QImage *outputImage)
     }
 
     if (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite) {
-        for (unsigned i = 0; i < colorMap.count() / 2; i++) {
+        for (int i = 0; i < image.colorCount() / 2; i++) {
             QRgb color = image.color(i);
-            image.setColor(i + colorMap.count() / 2, (color & 0xff000000) | ((color & 0x00fefefe) >> 1));
+            image.setColor(image.colorCount() / 2 + i, (color & 0xff000000) | ((color & 0x00fefefe) >> 1));
         }
     }
     *outputImage = image;
