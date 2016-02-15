@@ -17,6 +17,18 @@ public:
 
 class ILBMHandler : public QImageIOHandler
 {
+    enum Compression {
+        CompressionNone = 0,
+        CompressionByteRun1 = 1
+    };
+
+    enum Masking {
+        MaskingNone = 0,
+        MaskingHasMask = 1,
+        MaskingHasTransparentColor = 2,
+        MaskingLasso = 3
+    };
+
 public:
     ILBMHandler();
 
@@ -31,6 +43,7 @@ private:
         QByteArray id() const;
         unsigned size() const;
         QByteArray data(int offset = 0, int length = -1) const;
+        char byte(int offset) const;
         unsigned char ubyte(int offset) const;
         unsigned short uword(int offset) const;
         unsigned ulong(int offset) const;
