@@ -59,10 +59,25 @@ bool ILBMHandler::read(QImage *outputImage)
                     bitmapHeader = BitmapHeader(chunk);
                 } else if (chunk.id() == "CMAP") {
                     colorMap = ColorMap(chunk);
+                } else if (chunk.id() == "CAMG") {
+                    commodoreAmiga = CommodoreAmiga(chunk);
                 } else if (chunk.id() == "BODY") {
                     // Create a image based on the BODY chunk: the bitmap header and colormap should be valid at this point
                     image = QImage(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
-                    image.setColorTable(colorMap.toVector());
+
+                    QVector<QRgb> colorTable = colorMap.toVector();
+                    if (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite) {
+                        // Make sure Extra Halfbrite images have at least 64 colors
+                        while (colorTable.size() < 64) {
+                            colorTable.append(0);
+                        }
+
+                        // Halve the intensity of the latter half of the palette for Extra Halfbrite images
+                        for (int i = 0; i < colorTable.size() / 2; i++) {
+                            colorTable[colorTable.size() / 2 + i] = (colorTable[i] & 0xff000000) | ((colorTable[i] & 0x00fefefe) >> 1);
+                        }
+                    }
+                    image.setColorTable(colorTable);
 
                     // Data is padded to word boundaries
                     int bytesPerPlane = ((bitmapHeader.width() + 15) & 0xfff0) / 8;
@@ -109,20 +124,10 @@ bool ILBMHandler::read(QImage *outputImage)
                             }
                         }
                     }
-                } else if (chunk.id() == "CAMG") {
-                    commodoreAmiga = CommodoreAmiga(chunk);
                 }
 
                 offset += chunk.size() + 8;
             }
-        }
-    }
-
-    if (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite) {
-        // Halve the intensity of the latter half of the palette for Extra Halfbrite images
-        for (int i = 0; i < image.colorCount() / 2; i++) {
-            QRgb color = image.color(i);
-            image.setColor(image.colorCount() / 2 + i, (color & 0xff000000) | ((color & 0x00fefefe) >> 1));
         }
     }
 
