@@ -84,6 +84,22 @@ private:
         QRgb at(unsigned index) const;
         QVector<QRgb> toVector() const;
     };
+
+    class CommodoreAmiga : public Chunk {
+    public:
+        enum Modes {
+            Lace = 0x0004,
+            SuperHires = 0x0020,
+            ExtraHalfbrite = 0x0080,
+            HAM = 0x0800,
+            Hires = 0x8000
+        };
+
+        CommodoreAmiga();
+        CommodoreAmiga(const Chunk &chunk);
+
+        Modes modes() const;
+    };
 };
 
 #endif // ILBMPLUGIN_H

@@ -47,8 +47,8 @@ bool ILBMHandler::read(QImage *outputImage)
 
     BitmapHeader bitmapHeader;
     ColorMap colorMap;
+    CommodoreAmiga commodoreAmiga;
     QImage image;
-    unsigned commodoreAmiga;
     Chunk form(device()->readAll());
     if (form.id() == "FORM") {
         if (form.data(0, 4) == "ILBM") {
@@ -108,7 +108,7 @@ bool ILBMHandler::read(QImage *outputImage)
                         }
                     }
                 } else if (chunk.id() == "CAMG") {
-                    commodoreAmiga = chunk.ulong(0);
+                    commodoreAmiga = CommodoreAmiga(chunk);
                 }
 
                 offset += chunk.size() + 8;
@@ -116,11 +116,10 @@ bool ILBMHandler::read(QImage *outputImage)
         }
     }
 
-    // TODO only do this if commodoreAmiga has EHB set
-    if (colorMap.count() > 32) {
-        for (int i = 0; i < 32; i++) {
+    if (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite) {
+        for (unsigned i = 0; i < colorMap.count() / 2; i++) {
             QRgb color = image.color(i);
-            image.setColor(i + 32, (color & 0xff000000) | ((color & 0x00fefefe) >> 1));
+            image.setColor(i + colorMap.count() / 2, (color & 0xff000000) | ((color & 0x00fefefe) >> 1));
         }
     }
     *outputImage = image;
@@ -279,4 +278,17 @@ QVector<QRgb> ILBMHandler::ColorMap::toVector() const
         vector.append(at(i));
     }
     return vector;
+}
+
+ILBMHandler::CommodoreAmiga::CommodoreAmiga()
+{
+}
+
+ILBMHandler::CommodoreAmiga::CommodoreAmiga(const Chunk &chunk) : Chunk(chunk)
+{
+}
+
+ILBMHandler::CommodoreAmiga::Modes ILBMHandler::CommodoreAmiga::modes() const
+{
+    return static_cast<Modes>(ulong(0));
 }
