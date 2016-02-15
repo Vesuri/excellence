@@ -60,9 +60,11 @@ bool ILBMHandler::read(QImage *outputImage)
                 } else if (chunk.id() == "CMAP") {
                     colorMap = ColorMap(chunk);
                 } else if (chunk.id() == "BODY") {
+                    // Create a image based on the BODY chunk: the bitmap header and colormap should be valid at this point
                     image = QImage(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
                     image.setColorTable(colorMap.toVector());
 
+                    // Data is padded to word boundaries
                     int bytesPerPlane = ((bitmapHeader.width() + 15) & 0xfff0) / 8;
                     int planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() != BitmapHeader::MaskingNone ? 1 : 0));
                     int bytesPerRow = bytesPerPlane * planesPerRow;
@@ -117,11 +119,13 @@ bool ILBMHandler::read(QImage *outputImage)
     }
 
     if (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite) {
+        // Halve the intensity of the latter half of the palette for Extra Halfbrite images
         for (int i = 0; i < image.colorCount() / 2; i++) {
             QRgb color = image.color(i);
             image.setColor(image.colorCount() / 2 + i, (color & 0xff000000) | ((color & 0x00fefefe) >> 1));
         }
     }
+
     *outputImage = image;
     return !image.isNull();
 }
