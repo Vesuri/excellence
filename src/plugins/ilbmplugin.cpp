@@ -126,7 +126,8 @@ bool ILBMHandler::read(QImage *outputImage)
                     }
                 }
 
-                offset += chunk.size() + 8;
+                // A chunk's total physical size is ckSize rounded up to an even number plus the size of the header
+                offset += ((chunk.size() + 1) & 0xfffffffe) + 8;
             }
         }
     }
