@@ -39,17 +39,15 @@ bool ILBMHandler::canRead() const
     return isILBM;
 }
 
-bool ILBMHandler::read(QImage *image)
+bool ILBMHandler::read(QImage *outputImage)
 {
     if (device() == 0) {
         return false;
     }
 
-    int planes = 0;
-    BitmapHeader::Masking masking = BitmapHeader::MaskingNone;
-    BitmapHeader::Compression compression = BitmapHeader::CompressionNone;
-    QImage tempImage;
-    QVector<QRgb> colorTable;
+    BitmapHeader bitmapHeader;
+    ColorMap colorMap;
+    QImage image;
     unsigned commodoreAmiga;
     Chunk form(device()->readAll());
     if (form.id() == "FORM") {
@@ -58,23 +56,20 @@ bool ILBMHandler::read(QImage *image)
                 Chunk chunk(form.data(offset));
 
                 if (chunk.id() == "BMHD") {
-                    BitmapHeader bitmapHeader(chunk);
-                    tempImage = QImage(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
-                    planes = bitmapHeader.planes();
-                    masking = bitmapHeader.masking();
-                    compression = bitmapHeader.compression();
+                    bitmapHeader = BitmapHeader(chunk);
                 } else if (chunk.id() == "CMAP") {
-                    ColorMap colorMap(chunk);
-                    colorTable = colorMap.toVector();
-                    tempImage.setColorTable(colorTable);
+                    colorMap = ColorMap(chunk);
                 } else if (chunk.id() == "BODY") {
-                    int bytesPerPlane = ((tempImage.width() + 15) & 0xfff0) / 8;
-                    int planesPerRow = (planes + (masking != BitmapHeader::MaskingNone ? 1 : 0));
+                    image = QImage(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
+                    image.setColorTable(colorMap.toVector());
+
+                    int bytesPerPlane = ((bitmapHeader.width() + 15) & 0xfff0) / 8;
+                    int planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() != BitmapHeader::MaskingNone ? 1 : 0));
                     int bytesPerRow = bytesPerPlane * planesPerRow;
 
                     unsigned char row[bytesPerRow];
-                    for (int y = 0, rowOffset = 0; y < tempImage.height(); y++) {
-                        if (compression == BitmapHeader::CompressionNone) {
+                    for (int y = 0, rowOffset = 0; y < image.height(); y++) {
+                        if (bitmapHeader.compression() == BitmapHeader::CompressionNone) {
                             for (int inputOffset = 0; inputOffset < bytesPerRow; inputOffset++) {
                                 row[inputOffset] = chunk.byte(rowOffset + inputOffset);
                             }
@@ -99,14 +94,14 @@ bool ILBMHandler::read(QImage *image)
                             }
                         }
 
-                        for (int x = 0; x < tempImage.width(); x++) {
+                        for (int x = 0; x < image.width(); x++) {
                             unsigned char mask = 0x80 >> (x & 7);
                             unsigned char shift = 7 - (x & 7);
                             unsigned char pixel = 0;
-                            for (int plane = 0; plane < planes; plane++) {
+                            for (int plane = 0; plane < bitmapHeader.planes(); plane++) {
                                 pixel |= ((row[plane * bytesPerPlane + x / 8] & mask) >> shift) << plane;
                             }
-                            tempImage.setPixel(x, y, pixel);
+                            image.setPixel(x, y, pixel);
                         }
                     }
                 } else if (chunk.id() == "CAMG") {
@@ -119,15 +114,23 @@ bool ILBMHandler::read(QImage *image)
     }
 
     // TODO only do this if commodoreAmiga has EHB set
-    if (colorTable.count() > 32) {
+    if (colorMap.count() > 32) {
         for (int i = 0; i < 32; i++) {
-            QRgb color = colorTable[i];
-            colorTable[i + 32] = (color & 0xff000000) | ((color & 0x00fefefe) >> 1);
+            QRgb color = image.color(i);
+            image.setColor(i + 32, (color & 0xff000000) | ((color & 0x00fefefe) >> 1));
         }
     }
-    tempImage.setColorTable(colorTable);
-    *image = tempImage;
-    return !tempImage.isNull();
+    *outputImage = image;
+    return !image.isNull();
+}
+
+ILBMHandler::Chunk::Chunk()
+{
+    chunk.append("NONE");
+    chunk.append((char)0);
+    chunk.append((char)0);
+    chunk.append((char)0);
+    chunk.append((char)0);
 }
 
 ILBMHandler::Chunk::Chunk(const QByteArray &chunk) :
@@ -178,6 +181,10 @@ unsigned short ILBMHandler::Chunk::uword(int offset) const
 unsigned ILBMHandler::Chunk::ulong(int offset) const
 {
     return ((unsigned char)chunk.at(8 + offset) << 24) | ((unsigned char)chunk.at(9 + offset) << 16) | ((unsigned char)chunk.at(10 + offset) << 8) | (unsigned char)chunk.at(11 + offset);
+}
+
+ILBMHandler::BitmapHeader::BitmapHeader()
+{
 }
 
 ILBMHandler::BitmapHeader::BitmapHeader(const Chunk &chunk) : Chunk(chunk)
@@ -242,6 +249,10 @@ short ILBMHandler::BitmapHeader::pageWidth() const
 short ILBMHandler::BitmapHeader::pageHeight() const
 {
     return word(18);
+}
+
+ILBMHandler::ColorMap::ColorMap()
+{
 }
 
 ILBMHandler::ColorMap::ColorMap(const Chunk &chunk) : Chunk(chunk)

@@ -27,6 +27,7 @@ public:
 private:
     class Chunk {
     public:
+        Chunk();
         Chunk(const QByteArray &chunk);
         Chunk(const Chunk &chunk);
 
@@ -57,6 +58,7 @@ private:
             MaskingLasso = 3
         };
 
+        BitmapHeader();
         BitmapHeader(const Chunk &chunk);
 
         unsigned short width() const;
@@ -75,6 +77,7 @@ private:
 
     class ColorMap : public Chunk {
     public:
+        ColorMap();
         ColorMap(const Chunk &chunk);
 
         unsigned count() const;
