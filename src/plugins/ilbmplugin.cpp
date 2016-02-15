@@ -67,23 +67,27 @@ bool ILBMHandler::read(QImage *outputImage)
                     int planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() != BitmapHeader::MaskingNone ? 1 : 0));
                     int bytesPerRow = bytesPerPlane * planesPerRow;
 
-                    unsigned char row[bytesPerRow];
+                    unsigned char planarRow[bytesPerRow];
                     for (int y = 0, rowOffset = 0; y < image.height(); y++) {
                         if (bitmapHeader.compression() == BitmapHeader::CompressionNone) {
+                            // No compression: copy a row of planar data as is
                             for (int inputOffset = 0; inputOffset < bytesPerRow; inputOffset++) {
-                                row[inputOffset] = chunk.byte(rowOffset + inputOffset);
+                                planarRow[inputOffset] = chunk.byte(rowOffset + inputOffset);
                             }
                             rowOffset += bytesPerRow;
                         } else {
+                            // Runlength compression: convert encoded data until the row is full
                             for (int inputOffset = 0, outputOffset = 0; outputOffset < bytesPerRow;) {
                                 int count = chunk.byte(rowOffset + inputOffset++);
-                                if (count > 0) {
+                                if (count >= 0) {
+                                    // Count positive: copy the following count + 1 bytes as is
                                     for (int i = 0; i < count + 1; i++) {
-                                        row[outputOffset++] = chunk.byte(rowOffset + inputOffset++);
+                                        planarRow[outputOffset++] = chunk.byte(rowOffset + inputOffset++);
                                     }
                                 } else {
+                                    // Count negative: repeat the following byte (-count + 1) times
                                     for (int i = 0; i < -count + 1; i++) {
-                                        row[outputOffset++] = chunk.byte(rowOffset + inputOffset);
+                                        planarRow[outputOffset++] = chunk.byte(rowOffset + inputOffset);
                                     }
                                     inputOffset++;
                                 }
@@ -94,14 +98,15 @@ bool ILBMHandler::read(QImage *outputImage)
                             }
                         }
 
-                        for (int x = 0; x < image.width(); x++) {
+                        // Convert the planar data to chunky
+                        unsigned char *chunky = image.scanLine(y);
+                        for (int x = 0; x < image.width(); x++, chunky++) {
                             unsigned char mask = 0x80 >> (x & 7);
                             unsigned char shift = 7 - (x & 7);
-                            unsigned char pixel = 0;
+                            *chunky = 0;
                             for (int plane = 0; plane < bitmapHeader.planes(); plane++) {
-                                pixel |= ((row[plane * bytesPerPlane + x / 8] & mask) >> shift) << plane;
+                                *chunky |= ((planarRow[plane * bytesPerPlane + x / 8] & mask) >> shift) << plane;
                             }
-                            image.setPixel(x, y, pixel);
                         }
                     }
                 } else if (chunk.id() == "CAMG") {
