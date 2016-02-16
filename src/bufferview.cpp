@@ -2,6 +2,7 @@
 #include <QGraphicsScene>
 #include <QPixmap>
 #include <QGraphicsSceneMouseEvent>
+#include <QtCore/qmath.h>
 #include "tool.h"
 #include "buffer.h"
 #include "bufferview.h"
@@ -40,8 +41,18 @@ void BufferView::setBuffer(Buffer *buffer)
     if (buffer != 0) {
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
+        ui->graphicsView->resetTransform();
+        ui->graphicsView->setSceneRect(scene->itemsBoundingRect());
 
-        setGeometry(geometry().x(), geometry().y(), buffer->image().width(), buffer->image().height());
+        if (buffer->image().dotsPerMeterX() != buffer->image().dotsPerMeterY()) {
+            qreal aspectRatio = buffer->image().dotsPerMeterX() / (qreal)buffer->image().dotsPerMeterY();
+            qreal xAspect = aspectRatio > 1.0 ? 1.0 : (1.0 / aspectRatio);
+            qreal yAspect = aspectRatio > 1.0 ? aspectRatio : 1.0;
+            ui->graphicsView->scale(xAspect, yAspect);
+            setGeometry(geometry().x(), geometry().y(), qCeil(buffer->image().width() * xAspect), qCeil(buffer->image().height() * yAspect));
+        } else {
+            setGeometry(geometry().x(), geometry().y(), buffer->image().width(), buffer->image().height());
+        }
     }
 }
 

@@ -65,6 +65,10 @@ bool ILBMHandler::read(QImage *outputImage)
                     // Create a image based on the BODY chunk: the bitmap header and colormap should be valid at this point
                     image = QImage(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
 
+                    // Store the aspect ratio of the image
+                    float aspectRatio = bitmapHeader.xAspect() / (float)bitmapHeader.yAspect();
+                    image.setDotsPerMeterY(image.dotsPerMeterY() * aspectRatio);
+
                     QVector<QRgb> colorTable = colorMap.toVector();
                     if (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite) {
                         // Make sure Extra Halfbrite images have at least 64 colors
