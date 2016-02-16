@@ -31,6 +31,7 @@ private:
         Chunk(const QByteArray &chunk);
         Chunk(const Chunk &chunk);
 
+        bool isNull() const;
         QByteArray id() const;
         unsigned size() const;
         QByteArray data(int offset = 0, int length = -1) const;

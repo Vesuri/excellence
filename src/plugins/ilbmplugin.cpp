@@ -70,7 +70,7 @@ bool ILBMHandler::read(QImage *outputImage)
                     image.setDotsPerMeterY(image.dotsPerMeterY() * aspectRatio);
 
                     QVector<QRgb> colorTable = colorMap.toVector();
-                    if (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite) {
+                    if (!commodoreAmiga.isNull() && (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite)) {
                         // Make sure Extra Halfbrite images have at least 64 colors
                         while (colorTable.size() < 64) {
                             colorTable.append(0);
@@ -157,6 +157,11 @@ ILBMHandler::Chunk::Chunk(const QByteArray &chunk) :
 ILBMHandler::Chunk::Chunk(const Chunk &chunk) :
     chunk(chunk.chunk)
 {
+}
+
+bool ILBMHandler::Chunk::isNull() const
+{
+    return size() == 0;
 }
 
 QByteArray ILBMHandler::Chunk::id() const
