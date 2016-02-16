@@ -139,6 +139,15 @@ bool ILBMHandler::read(QImage *outputImage)
     return !image.isNull();
 }
 
+bool ILBMHandler::write(const QImage &image)
+{
+    if (device() == 0 || !device()->isWritable()) {
+        return false;
+    }
+
+    return true;
+}
+
 ILBMHandler::Chunk::Chunk()
 {
     chunk.append("    ");

@@ -27,6 +27,7 @@ private slots:
     void setPaintColor(unsigned paletteIndex);
     void setEraseColor(unsigned paletteIndex);
     void openFile(const QString &path);
+    void save();
 
 private:
     Ui::MainWindow *ui;

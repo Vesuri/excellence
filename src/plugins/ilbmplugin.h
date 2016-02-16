@@ -23,6 +23,7 @@ public:
 
     virtual bool canRead() const;
     virtual bool read(QImage *image);
+    virtual bool write(const QImage &image);
 
 private:
     class Chunk {

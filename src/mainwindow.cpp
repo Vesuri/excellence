@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
     connect(ui->action_Quit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(ui->action_Open, SIGNAL(triggered()), openDialog, SLOT(show()));
+    connect(ui->action_Save, SIGNAL(triggered()), this, SLOT(save()));
 
     QTimer::singleShot(1, this, SLOT(initialize()));
 }
@@ -98,4 +99,9 @@ void MainWindow::openFile(const QString &path)
     }
 
     delete oldBuffer;
+}
+
+void MainWindow::save()
+{
+    buffer->image().save("/tmp/test.iff", "ilbm");
 }
