@@ -1,5 +1,4 @@
 #include <QImage>
-#include <QDebug>
 #include "ilbmplugin.h"
 
 ILBMPlugin::ILBMPlugin(QObject *parent) : QImageIOPlugin(parent)
@@ -8,16 +7,16 @@ ILBMPlugin::ILBMPlugin(QObject *parent) : QImageIOPlugin(parent)
 
 QImageIOPlugin::Capabilities ILBMPlugin::capabilities(QIODevice *device, const QByteArray &format) const
 {
-    bool isILBM = false;
+    bool isReadable = device == 0 || device->isReadable();
+    bool isWritable = device == 0 || device->isWritable();
+    bool isILBM = format == "iff" || format == "ilbm";
 
-    if (device == 0) {
-        isILBM = format == "iff" || format == "ilbm";
-    } else {
+    if (device != 0 && device->isReadable()) {
         QByteArray header = device->peek(12);
         isILBM = header.length() == 12 && header.startsWith("FORM") && header.endsWith("ILBM");
     }
 
-    return isILBM ? (QImageIOPlugin::CanRead | QImageIOPlugin::CanWrite) : QImageIOPlugin::Capabilities();
+    return isILBM ? ((isReadable ? QImageIOPlugin::CanRead : Capabilities()) | (isWritable ? QImageIOPlugin::CanWrite : Capabilities())) : Capabilities();
 }
 
 QImageIOHandler *ILBMPlugin::create(QIODevice *device, const QByteArray &format) const
@@ -32,7 +31,7 @@ ILBMHandler::ILBMHandler() : QImageIOHandler()
 bool ILBMHandler::canRead() const
 {
     bool isILBM = false;
-    if (device() != 0) {
+    if (device() != 0 && device()->isReadable()) {
         QByteArray header = device()->peek(12);
         isILBM = header.length() == 12 && header.startsWith("FORM") && header.endsWith("ILBM");
     }
@@ -41,7 +40,7 @@ bool ILBMHandler::canRead() const
 
 bool ILBMHandler::read(QImage *outputImage)
 {
-    if (device() == 0) {
+    if (device() == 0 || !device()->isReadable()) {
         return false;
     }
 
