@@ -7,7 +7,7 @@ QList<Tool *> tools;
 
 Tool::Tool(QObject *parent) : QObject(parent),
     mode_(Paint),
-    buffer_(0)
+    buffer_(nullptr)
 {
     QTimer::singleShot(0, this, SLOT(registerTool()));
 }

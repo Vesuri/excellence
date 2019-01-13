@@ -26,13 +26,13 @@ void DrawTool::setDrawMode(const DrawMode &drawMode)
 
 void DrawTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
     }
 
     Tool::setBuffer(buffer);
 
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
     }
 }
@@ -94,7 +94,7 @@ void DrawTool::registerTool()
 void DrawTool::activate()
 {
     if (buffer_->tool() == this) {
-        setDrawMode((DrawMode)(((int)drawMode + 1) % ((int)FilledShape + 1)));
+        setDrawMode(static_cast<DrawMode>((drawMode + 1) % (FilledShape + 1)));
         button_->setChecked(true);
     }
 

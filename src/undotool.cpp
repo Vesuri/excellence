@@ -10,13 +10,13 @@ UndoTool::UndoTool(QObject *parent) : Tool(parent)
 
 void UndoTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         disconnect(button_, SIGNAL(clicked(bool)), buffer_, SLOT(undo()));
     }
 
     Tool::setBuffer(buffer);
 
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         connect(button_, SIGNAL(clicked(bool)), buffer_, SLOT(undo()));
     }
 }

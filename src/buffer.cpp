@@ -15,14 +15,14 @@ static QRgb defaultPalette[] = {
 };
 
 Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
-    pen_(0)
+    pen_(nullptr)
 {
     initialize(width, height, colors);
 }
 
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     image_(path),
-    pen_(0)
+    pen_(nullptr)
 {
     if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
         initialize();

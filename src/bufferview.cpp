@@ -13,7 +13,7 @@ BufferView::BufferView(QWidget *parent) :
     ui(new Ui::BufferView),
     scene(new QGraphicsScene(this)),
     pixmapItem(new QGraphicsPixmapItem),
-    buffer(0)
+    buffer(nullptr)
 {
     ui->setupUi(this);
 
@@ -32,20 +32,20 @@ BufferView::~BufferView()
 
 void BufferView::setBuffer(Buffer *buffer)
 {
-    if (this->buffer != 0) {
+    if (this->buffer != nullptr) {
         disconnect(this->buffer, SIGNAL(modified(QRect)));
     }
 
     this->buffer = buffer;
 
-    if (buffer != 0) {
+    if (buffer != nullptr) {
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
         ui->graphicsView->resetTransform();
         ui->graphicsView->setSceneRect(scene->itemsBoundingRect());
 
         if (buffer->image().dotsPerMeterX() != buffer->image().dotsPerMeterY()) {
-            qreal aspectRatio = buffer->image().dotsPerMeterX() / (qreal)buffer->image().dotsPerMeterY();
+            qreal aspectRatio = buffer->image().dotsPerMeterX() / static_cast<qreal>(buffer->image().dotsPerMeterY());
             qreal xAspect = aspectRatio > 1.0 ? 1.0 : (1.0 / aspectRatio);
             qreal yAspect = aspectRatio > 1.0 ? aspectRatio : 1.0;
             ui->graphicsView->scale(xAspect, yAspect);
@@ -64,7 +64,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
         case QEvent::GraphicsSceneMouseMove:
         case QEvent::GraphicsSceneMouseRelease:
         {
-            QGraphicsSceneMouseEvent *mouseEvent = (QGraphicsSceneMouseEvent *)event;
+            QGraphicsSceneMouseEvent *mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
 
             if (event->type() == QEvent::GraphicsSceneMouseMove && mouseEvent->buttons() != Qt::NoButton) {
                 buffer->move(mouseEvent->scenePos().toPoint());
@@ -80,6 +80,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                     break;
                 }
             }
+            break;
         }
         default:
             break;

@@ -27,7 +27,7 @@ void UndoBuffer::apply(Buffer *buffer) const
 {
     for (int y = 0; y < image_.height(); y++) {
         for (int x = 0; x < image_.width(); x++) {
-            buffer->image().setPixel(pos_.x() + x, pos_.y() + y, image_.pixelIndex(x, y));
+            buffer->image().setPixel(pos_.x() + x, pos_.y() + y, static_cast<uint>(image_.pixelIndex(x, y)));
         }
     }
 }

@@ -13,9 +13,9 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    openDialog(new QFileDialog(NULL, tr("Open file"))),
+    openDialog(new QFileDialog(nullptr, tr("Open file"))),
     bufferView(new BufferView),
-    buffer(0),
+    buffer(nullptr),
     penTip(new PenTip(this))
 {
     ui->setupUi(this);
@@ -36,13 +36,13 @@ MainWindow::~MainWindow()
 void MainWindow::setPaintColor(unsigned paletteIndex)
 {
     penTip->setPaintColor(paletteIndex);
-    ui->currentColorsButton->setPaintColor(QColor(buffer->image().color(paletteIndex)));
+    ui->currentColorsButton->setPaintColor(QColor(buffer->image().color(static_cast<int>(paletteIndex))));
 }
 
 void MainWindow::setEraseColor(unsigned paletteIndex)
 {
     penTip->setEraseColor(paletteIndex);
-    ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(paletteIndex)));
+    ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(static_cast<int>(paletteIndex))));
 }
 
 void MainWindow::initialize()
@@ -87,7 +87,7 @@ void MainWindow::openFile(const QString &path)
         PaletteButton *button = new PaletteButton();
         connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(setPaintColor(unsigned)));
         connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(setEraseColor(unsigned)));
-        button->setPaletteIndex(i);
+        button->setPaletteIndex(static_cast<unsigned>(i));
         button->setColor(QColor(buffer->image().color(i)));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
         ui->paletteLayout->addWidget(button, row, column);

@@ -10,13 +10,13 @@ ClearTool::ClearTool(QObject *parent) : Tool(parent)
 
 void ClearTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         disconnect(button_, SIGNAL(clicked(bool)), buffer_, SLOT(clear()));
     }
 
     Tool::setBuffer(buffer);
 
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         connect(button_, SIGNAL(clicked(bool)), buffer_, SLOT(clear()));
     }
 }

@@ -7,11 +7,11 @@ ILBMPlugin::ILBMPlugin(QObject *parent) : QImageIOPlugin(parent)
 
 QImageIOPlugin::Capabilities ILBMPlugin::capabilities(QIODevice *device, const QByteArray &format) const
 {
-    bool isReadable = device == 0 || device->isReadable();
-    bool isWritable = device == 0 || device->isWritable();
+    bool isReadable = device == nullptr || device->isReadable();
+    bool isWritable = device == nullptr || device->isWritable();
     bool isILBM = format == "iff" || format == "ilbm";
 
-    if (device != 0 && device->isReadable()) {
+    if (device != nullptr && device->isReadable()) {
         QByteArray header = device->peek(12);
         isILBM = header.length() == 12 && header.startsWith("FORM") && header.endsWith("ILBM");
     }
@@ -31,7 +31,7 @@ ILBMHandler::ILBMHandler() : QImageIOHandler()
 bool ILBMHandler::canRead() const
 {
     bool isILBM = false;
-    if (device() != 0 && device()->isReadable()) {
+    if (device() != nullptr && device()->isReadable()) {
         QByteArray header = device()->peek(12);
         isILBM = header.length() == 12 && header.startsWith("FORM") && header.endsWith("ILBM");
     }
@@ -40,7 +40,7 @@ bool ILBMHandler::canRead() const
 
 bool ILBMHandler::read(QImage *outputImage)
 {
-    if (device() == 0 || !device()->isReadable()) {
+    if (device() == nullptr || !device()->isReadable()) {
         return false;
     }
 
@@ -52,7 +52,7 @@ bool ILBMHandler::read(QImage *outputImage)
     if (form.id() == "FORM") {
         if (form.data(0, 4) == "ILBM") {
             for (unsigned offset = 4; offset < form.size();) {
-                Chunk chunk(form.data(offset));
+                Chunk chunk(form.data(static_cast<int>(offset)));
 
                 if (chunk.id() == "BMHD") {
                     bitmapHeader = BitmapHeader(chunk);
@@ -65,8 +65,8 @@ bool ILBMHandler::read(QImage *outputImage)
                     image = QImage(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
 
                     // Store the aspect ratio of the image
-                    float aspectRatio = bitmapHeader.xAspect() / (float)bitmapHeader.yAspect();
-                    image.setDotsPerMeterY(image.dotsPerMeterY() * aspectRatio);
+                    float aspectRatio = bitmapHeader.xAspect() / static_cast<float>(bitmapHeader.yAspect());
+                    image.setDotsPerMeterY(static_cast<int>(image.dotsPerMeterY() * aspectRatio));
 
                     QVector<QRgb> colorTable = colorMap.toVector();
                     if (!commodoreAmiga.isNull() && (commodoreAmiga.modes() & CommodoreAmiga::ExtraHalfbrite)) {
@@ -87,7 +87,7 @@ bool ILBMHandler::read(QImage *outputImage)
                     int planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() == BitmapHeader::MaskingHasMask ? 1 : 0));
                     int bytesPerRow = bytesPerPlane * planesPerRow;
 
-                    unsigned char planarRow[bytesPerRow];
+                    unsigned char *planarRow = new unsigned char[bytesPerRow];
                     for (int y = 0, index = 0; y < image.height(); y++) {
                         unsigned char *planar = planarRow;
                         unsigned char *planarEnd = planar + bytesPerRow;
@@ -95,21 +95,21 @@ bool ILBMHandler::read(QImage *outputImage)
                         if (bitmapHeader.compression() == BitmapHeader::CompressionNone) {
                             // No compression: copy a row of planar data as is
                             while (planar < planarEnd) {
-                                *planar++ = chunk.byte(index++);
+                                *planar++ = chunk.ubyte(index++);
                             }
                         } else {
                             // Runlength compression: convert encoded data until the row is full
                             while (planar < planarEnd) {
-                                int count = chunk.byte(index++);
+                                int count = chunk.ubyte(index++);
                                 if (count >= 0) {
                                     // Count positive: copy the following count + 1 bytes as is
                                     for (int i = 0; i < count + 1; i++) {
-                                        *planar++ = chunk.byte(index++);
+                                        *planar++ = chunk.ubyte(index++);
                                     }
                                 } else {
                                     // Count negative: repeat the following byte (-count + 1) times
                                     for (int i = 0; i < -count + 1; i++) {
-                                        *planar++ = chunk.byte(index);
+                                        *planar++ = chunk.ubyte(index);
                                     }
                                     index++;
                                 }
@@ -127,6 +127,7 @@ bool ILBMHandler::read(QImage *outputImage)
                             }
                         }
                     }
+                    delete[] planarRow;
                 }
 
                 // A chunk's total physical size is ckSize rounded up to an even number plus the size of the header
@@ -141,7 +142,7 @@ bool ILBMHandler::read(QImage *outputImage)
 
 bool ILBMHandler::write(const QImage &image)
 {
-    if (device() == 0 || !device()->isWritable()) {
+    if (device() == nullptr || !device()->isWritable()) {
         return false;
     }
 
@@ -151,10 +152,7 @@ bool ILBMHandler::write(const QImage &image)
 ILBMHandler::Chunk::Chunk()
 {
     chunk.append("    ");
-    chunk.append((char)0);
-    chunk.append((char)0);
-    chunk.append((char)0);
-    chunk.append((char)0);
+    chunk.append("\0\0\0\0");
 }
 
 ILBMHandler::Chunk::Chunk(const QByteArray &chunk) :
@@ -184,7 +182,7 @@ unsigned ILBMHandler::Chunk::size() const
 
 QByteArray ILBMHandler::Chunk::data(int offset, int length) const
 {
-    return chunk.mid(8 + offset, length >= 0 ? length : size());
+    return chunk.mid(8 + offset, length >= 0 ? length : static_cast<int>(size()));
 }
 
 char ILBMHandler::Chunk::byte(int offset) const
@@ -194,22 +192,22 @@ char ILBMHandler::Chunk::byte(int offset) const
 
 unsigned char ILBMHandler::Chunk::ubyte(int offset) const
 {
-    return (unsigned char)chunk.at(8 + offset);
+    return static_cast<unsigned char>(chunk.at(8 + offset));
 }
 
 short ILBMHandler::Chunk::word(int offset) const
 {
-    return ((char)chunk.at(8 + offset) << 8) | (char)chunk.at(9 + offset);
+    return static_cast<short>((static_cast<char>(chunk.at(8 + offset)) << 8) | static_cast<char>(chunk.at(9 + offset)));
 }
 
 unsigned short ILBMHandler::Chunk::uword(int offset) const
 {
-    return ((unsigned char)chunk.at(8 + offset) << 8) | (unsigned char)chunk.at(9 + offset);
+    return static_cast<unsigned short>((static_cast<unsigned char>(chunk.at(8 + offset)) << 8) | static_cast<unsigned char>(chunk.at(9 + offset)));
 }
 
 unsigned ILBMHandler::Chunk::ulong(int offset) const
 {
-    return ((unsigned char)chunk.at(8 + offset) << 24) | ((unsigned char)chunk.at(9 + offset) << 16) | ((unsigned char)chunk.at(10 + offset) << 8) | (unsigned char)chunk.at(11 + offset);
+    return static_cast<unsigned>((static_cast<unsigned char>(chunk.at(8 + offset)) << 24) | (static_cast<unsigned char>(chunk.at(9 + offset)) << 16) | (static_cast<unsigned char>(chunk.at(10 + offset)) << 8) | static_cast<unsigned char>(chunk.at(11 + offset)));
 }
 
 ILBMHandler::BitmapHeader::BitmapHeader()
@@ -295,7 +293,8 @@ unsigned ILBMHandler::ColorMap::count() const
 
 QRgb ILBMHandler::ColorMap::at(unsigned index) const
 {
-    return 0xff000000 | (ubyte(index * 3) << 16) | (ubyte(index * 3 + 1) << 8) | ubyte(index * 3 + 2);
+    int offset = static_cast<int>(index * 3);
+    return 0xff000000u | static_cast<unsigned>(ubyte(offset) << 16) | static_cast<unsigned>(ubyte(offset + 1) << 8) | ubyte(offset + 2);
 }
 
 QVector<QRgb> ILBMHandler::ColorMap::toVector() const

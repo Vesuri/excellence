@@ -11,19 +11,19 @@
 LineTool LineTool::instance;
 
 LineTool::LineTool(QObject *parent) : Tool(parent),
-    undoBuffer(0)
+    undoBuffer(nullptr)
 {
 }
 
 void LineTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
     }
 
     Tool::setBuffer(buffer);
 
-    if (buffer_ != 0) {
+    if (buffer_ != nullptr) {
         connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
     }
 }
@@ -53,7 +53,7 @@ QRect LineTool::release(const QPoint &point)
 {
     undoBuffer->apply(buffer_);
     delete undoBuffer;
-    undoBuffer = 0;
+    undoBuffer = nullptr;
 
     QRect changedRect;
     Algorithms::line(startPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
