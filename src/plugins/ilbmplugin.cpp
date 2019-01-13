@@ -19,7 +19,7 @@ QImageIOPlugin::Capabilities ILBMPlugin::capabilities(QIODevice *device, const Q
     return isILBM ? ((isReadable ? QImageIOPlugin::CanRead : Capabilities()) | (isWritable ? QImageIOPlugin::CanWrite : Capabilities())) : Capabilities();
 }
 
-QImageIOHandler *ILBMPlugin::create(QIODevice *device, const QByteArray &format) const
+QImageIOHandler *ILBMPlugin::create(QIODevice */*device*/, const QByteArray &/*format*/) const
 {
     return new ILBMHandler();
 }
