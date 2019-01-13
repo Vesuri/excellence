@@ -50,4 +50,6 @@ FORMS    += mainwindow.ui \
 RESOURCES += \
     icons/icons.qrc
 
-LIBS += -Lplugins -lilbm
+LIBS += -Lplugins
+CONFIG(release, debug|release): LIBS += -lilbm
+else:CONFIG(debug, debug|release): LIBS += -lilbm_debug
