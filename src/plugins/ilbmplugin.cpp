@@ -100,7 +100,7 @@ bool ILBMHandler::read(QImage *outputImage)
                         } else {
                             // Runlength compression: convert encoded data until the row is full
                             while (planar < planarEnd) {
-                                int count = chunk.ubyte(index++);
+                                int count = chunk.byte(index++);
                                 if (count >= 0) {
                                     // Count positive: copy the following count + 1 bytes as is
                                     for (int i = 0; i < count + 1; i++) {
