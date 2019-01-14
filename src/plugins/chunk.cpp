@@ -119,3 +119,23 @@ void Chunk::setUlong(int offset, unsigned ulong)
     data_[offset + 2] = static_cast<char>(ulong >> 8);
     data_[offset + 3] = static_cast<char>(ulong);
 }
+
+QByteArray Chunk::toByteArray() const
+{
+    QByteArray array;
+    array.append(id_);
+
+    quint32 msbSize = qToBigEndian<quint32>(static_cast<quint32>(data_.size()));
+    array.append(static_cast<char>(msbSize >> 24));
+    array.append(static_cast<char>(msbSize >> 16));
+    array.append(static_cast<char>(msbSize >> 8));
+    array.append(static_cast<char>(msbSize));
+
+    array.append(data_);
+    if (data_.size() % 2 == 1) {
+        // Pad to even length
+        array.append(static_cast<char>(0));
+    }
+
+    return array;
+}

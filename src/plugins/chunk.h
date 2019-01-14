@@ -29,6 +29,8 @@ public:
     void setUword(int offset, unsigned short uword);
     void setUlong(int offset, unsigned ulong);
 
+    QByteArray toByteArray() const;
+
 private:
     QByteArray id_;
     QByteArray data_;

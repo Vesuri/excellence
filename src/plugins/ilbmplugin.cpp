@@ -153,5 +153,15 @@ bool ILBMHandler::write(const QImage &image)
         return false;
     }
 
+    BitmapHeader bitmapHeader;
+    ColorMap colorMap;
+    CommodoreAmiga commodoreAmiga;
+    QByteArray ilbm("ILBM");
+    ilbm.append(bitmapHeader.toByteArray());
+    ilbm.append(colorMap.toByteArray());
+    ilbm.append(commodoreAmiga.toByteArray());
+    Chunk form("FORM", ilbm);
+    device()->write(form.toByteArray());
+
     return true;
 }
