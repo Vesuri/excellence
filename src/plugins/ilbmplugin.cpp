@@ -128,6 +128,8 @@ bool ILBMHandler::read(QImage *outputImage)
                         }
                     }
                     delete[] planarRow;
+                } else {
+                    image.setText(QString(chunk.id()), QString(chunk.data().toBase64()));
                 }
 
                 // A chunk's total physical size is ckSize rounded up to an even number plus the size of the header
