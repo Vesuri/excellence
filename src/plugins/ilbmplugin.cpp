@@ -158,6 +158,7 @@ ILBMHandler::Chunk::Chunk()
 ILBMHandler::Chunk::Chunk(const QByteArray &chunk) :
     chunk(chunk)
 {
+    this->chunk.resize(static_cast<int>(size()) + 8);
 }
 
 ILBMHandler::Chunk::Chunk(const Chunk &chunk) :
