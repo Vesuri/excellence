@@ -1,9 +1,7 @@
 #include "commodoreamiga.h"
 
-CommodoreAmiga::CommodoreAmiga()
+CommodoreAmiga::CommodoreAmiga() : Chunk("CAMG", QByteArray(4, 0))
 {
-    setId(QByteArray("CAMG"));
-    setData(QByteArray(4, 0));
 }
 
 CommodoreAmiga::CommodoreAmiga(const Chunk &chunk) : Chunk(chunk)

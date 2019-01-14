@@ -2,10 +2,8 @@
 
 #include "bitmapheader.h"
 
-BitmapHeader::BitmapHeader() : Chunk()
+BitmapHeader::BitmapHeader() : Chunk("BMHD", QByteArray(20, 0))
 {
-    setId(QByteArray("BMHD"));
-    setData(QByteArray(20, 0));
 }
 
 BitmapHeader::BitmapHeader(const Chunk &chunk) : Chunk(chunk)

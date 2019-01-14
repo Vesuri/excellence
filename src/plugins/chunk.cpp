@@ -2,21 +2,25 @@
 
 #include "chunk.h"
 
-Chunk::Chunk() :
-    id_("    "),
-    data_()
+Chunk::Chunk()
 {
 }
 
-Chunk::Chunk(const QByteArray &data) : Chunk()
+Chunk::Chunk(const QByteArray &id, const QByteArray &data) :
+    id_(id),
+    data_(data)
 {
-    if (data.size() >= 4) {
-        id_ = data.left(4);
+}
+
+Chunk::Chunk(const QByteArray &chunkData) : Chunk()
+{
+    if (chunkData.size() >= 4) {
+        id_ = chunkData.left(4);
     }
 
-    if (data.size() >= 8) {
-        qint32 size = qFromBigEndian<qint32>(data.data() + 4);
-        data_ = data.mid(8, size);
+    if (chunkData.size() >= 8) {
+        qint32 size = qFromBigEndian<qint32>(chunkData.data() + 4);
+        data_ = chunkData.mid(8, size);
     }
 }
 
@@ -28,7 +32,7 @@ Chunk::Chunk(const Chunk &chunk) :
 
 bool Chunk::isNull() const
 {
-    return size() == 0;
+    return id_.size() != 4 || size() == 0;
 }
 
 QByteArray Chunk::id() const

@@ -6,7 +6,8 @@
 class Chunk {
 public:
     Chunk();
-    Chunk(const QByteArray &chunk);
+    Chunk(const QByteArray &id, const QByteArray &data);
+    Chunk(const QByteArray &chunkData);
     Chunk(const Chunk &chunk);
 
     bool isNull() const;

@@ -1,9 +1,7 @@
 #include "colormap.h"
 
-ColorMap::ColorMap()
+ColorMap::ColorMap() : Chunk("CMAP", QByteArray(6, 0))
 {
-    setId(QByteArray("CMAP"));
-    setData(QByteArray(6, 0));
 }
 
 ColorMap::ColorMap(const Chunk &chunk) : Chunk(chunk)
