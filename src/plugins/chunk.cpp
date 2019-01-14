@@ -45,32 +45,32 @@ unsigned Chunk::size() const
     return static_cast<unsigned>(data_.size());
 }
 
-QByteArray Chunk::data(int offset, int length) const
+QByteArray Chunk::data(unsigned offset, int length) const
 {
-    return data_.mid(offset, length);
+    return data_.mid(static_cast<int>(offset), length);
 }
 
-char Chunk::byte(int offset) const
+char Chunk::byte(unsigned offset) const
 {
-    return data_.at(offset);
+    return data_.at(static_cast<int>(offset));
 }
 
-unsigned char Chunk::ubyte(int offset) const
+unsigned char Chunk::ubyte(unsigned offset) const
 {
-    return static_cast<unsigned char>(data_.at(offset));
+    return static_cast<unsigned char>(data_.at(static_cast<int>(offset)));
 }
 
-short Chunk::word(int offset) const
+short Chunk::word(unsigned offset) const
 {
     return qFromBigEndian<qint16>(data_.data() + offset);
 }
 
-unsigned short Chunk::uword(int offset) const
+unsigned short Chunk::uword(unsigned offset) const
 {
     return qFromBigEndian<quint16>(data_.data() + offset);
 }
 
-unsigned Chunk::ulong(int offset) const
+unsigned Chunk::ulong(unsigned offset) const
 {
     return qFromBigEndian<quint32>(data_.data() + offset);
 }
@@ -82,7 +82,7 @@ void Chunk::setId(const QByteArray &id)
 
 void Chunk::setSize(const unsigned size)
 {
-    data_.resize(size);
+    data_.resize(static_cast<int>(size));
 }
 
 void Chunk::setData(const QByteArray &data)
@@ -90,29 +90,29 @@ void Chunk::setData(const QByteArray &data)
     data_ = data;
 }
 
-void Chunk::setByte(int offset, char byte)
+void Chunk::setByte(unsigned offset, char byte)
 {
     data_[offset] = byte;
 }
 
-void Chunk::setUbyte(int offset, unsigned char ubyte)
+void Chunk::setUbyte(unsigned offset, unsigned char ubyte)
 {
     data_[offset] = static_cast<char>(ubyte);
 }
 
-void Chunk::setWord(int offset, short word)
+void Chunk::setWord(unsigned offset, short word)
 {
     data_[offset] = static_cast<char>(word >> 8);
     data_[offset + 1] = static_cast<char>(word);
 }
 
-void Chunk::setUword(int offset, unsigned short uword)
+void Chunk::setUword(unsigned offset, unsigned short uword)
 {
     data_[offset] = static_cast<char>(uword >> 8);
     data_[offset + 1] = static_cast<char>(uword);
 }
 
-void Chunk::setUlong(int offset, unsigned ulong)
+void Chunk::setUlong(unsigned offset, unsigned ulong)
 {
     data_[offset] = static_cast<char>(ulong >> 24);
     data_[offset + 1] = static_cast<char>(ulong >> 16);
@@ -125,11 +125,11 @@ QByteArray Chunk::toByteArray() const
     QByteArray array;
     array.append(id_);
 
-    quint32 msbSize = qToBigEndian<quint32>(static_cast<quint32>(data_.size()));
-    array.append(static_cast<char>(msbSize >> 24));
-    array.append(static_cast<char>(msbSize >> 16));
-    array.append(static_cast<char>(msbSize >> 8));
-    array.append(static_cast<char>(msbSize));
+    int size = data_.size();
+    array.append(static_cast<char>(size >> 24));
+    array.append(static_cast<char>(size >> 16));
+    array.append(static_cast<char>(size >> 8));
+    array.append(static_cast<char>(size));
 
     array.append(data_);
     if (data_.size() % 2 == 1) {

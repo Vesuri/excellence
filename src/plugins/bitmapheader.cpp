@@ -5,8 +5,14 @@
 
 BitmapHeader::BitmapHeader(const QImage &image) : Chunk("BMHD", QByteArray(20, 0))
 {
+    unsigned char planes = 1;
+    for (unsigned maxColorsWithPlanes = 2; maxColorsWithPlanes < static_cast<unsigned>(image.colorCount()); maxColorsWithPlanes *= 2, planes++);
+
     setUword(0, static_cast<unsigned short>(image.width()));
     setUword(2, static_cast<unsigned short>(image.height()));
+    setUbyte(8, planes);
+    setUbyte(14, 1);
+    setUbyte(15, 1);
     setWord(16, static_cast<short>(image.width()));
     setWord(18, static_cast<short>(image.height()));
 }

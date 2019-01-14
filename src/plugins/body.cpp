@@ -1,12 +1,46 @@
 #include <QByteArray>
+#include <QImage>
 
 #include "bitmapheader.h"
 #include "colormap.h"
 #include "commodoreamiga.h"
 #include "body.h"
 
-Body::Body(const QImage &/*image*/) : Chunk("BODY", QByteArray())
+Body::Body(const QImage &image) : Chunk("BODY", QByteArray())
 {
+    // Data is padded to word boundaries
+    unsigned bytesPerPlane = ((image.width() + 15) & 0xfff0) / 8;
+    unsigned planesPerRow = 1;
+    for (unsigned maxColorsWithPlanes = 2; maxColorsWithPlanes < static_cast<unsigned>(image.colorCount()); maxColorsWithPlanes *= 2, planesPerRow++);
+    unsigned bytesPerRow = bytesPerPlane * planesPerRow;
+
+    setSize(bytesPerRow * static_cast<unsigned>(image.height()));
+
+    unsigned char *planarRow = new unsigned char[bytesPerPlane];
+    for (unsigned y = 0, index = 0; y < static_cast<unsigned>(image.height()); y++) {
+        for (unsigned plane = 0; plane < planesPerRow; plane++) {
+            // Convert the chunky data to planar
+            const unsigned char *chunky = image.scanLine(static_cast<int>(y));
+            unsigned char *planar = planarRow;
+            for (unsigned x = 0; x < static_cast<unsigned>(image.width()); x++, chunky++) {
+                if ((x & 7) == 0) {
+                    *planar = 0;
+                }
+
+                unsigned mask = 0x01 << plane;
+                unsigned shift = 7 - (x & 7);
+                *planar |= ((*chunky & mask) >> plane) << shift;
+                if ((x & 7) == 7) {
+                    planar++;
+                }
+            }
+
+            for (unsigned x = 0; x < bytesPerPlane; x++) {
+                setUbyte(index++, planarRow[x]);
+            }
+        }
+    }
+    delete[] planarRow;
 }
 
 Body::Body(const Chunk &chunk) : Chunk(chunk)
@@ -36,12 +70,12 @@ QImage Body::toImage(const BitmapHeader &bitmapHeader, const ColorMap &colorMap,
     image.setColorTable(colorTable);
 
     // Data is padded to word boundaries
-    int bytesPerPlane = ((bitmapHeader.width() + 15) & 0xfff0) / 8;
-    int planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() == BitmapHeader::MaskingHasMask ? 1 : 0));
-    int bytesPerRow = bytesPerPlane * planesPerRow;
+    unsigned bytesPerPlane = ((bitmapHeader.width() + 15) & 0xfff0) / 8;
+    unsigned planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() == BitmapHeader::MaskingHasMask ? 1 : 0));
+    unsigned bytesPerRow = bytesPerPlane * planesPerRow;
 
     unsigned char *planarRow = new unsigned char[bytesPerRow];
-    for (int y = 0, index = 0; y < image.height(); y++) {
+    for (unsigned y = 0, index = 0; y < static_cast<unsigned>(image.height()); y++) {
         unsigned char *planar = planarRow;
         unsigned char *planarEnd = planar + bytesPerRow;
 
@@ -70,12 +104,12 @@ QImage Body::toImage(const BitmapHeader &bitmapHeader, const ColorMap &colorMap,
         }
 
         // Convert the planar data to chunky
-        unsigned char *chunky = image.scanLine(y);
-        for (int x = 0; x < image.width(); x++, chunky++) {
+        unsigned char *chunky = image.scanLine(static_cast<int>(y));
+        for (unsigned x = 0; x < static_cast<unsigned>(image.width()); x++, chunky++) {
             unsigned char mask = 0x80 >> (x & 7);
-            unsigned char shift = 7 - (x & 7);
+            unsigned shift = 7 - (x & 7);
             *chunky = 0;
-            for (int plane = 0; plane < bitmapHeader.planes(); plane++) {
+            for (unsigned plane = 0; plane < bitmapHeader.planes(); plane++) {
                 *chunky |= ((planarRow[plane * bytesPerPlane + x / 8] & mask) >> shift) << plane;
             }
         }

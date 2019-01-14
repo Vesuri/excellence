@@ -59,7 +59,7 @@ bool ILBMHandler::read(QImage *outputImage)
     if (form.id() == "FORM") {
         if (form.data(0, 4) == "ILBM") {
             for (unsigned offset = 4; offset < form.size();) {
-                Chunk chunk(form.data(static_cast<int>(offset)));
+                Chunk chunk(form.data(offset));
 
                 if (chunk.id() == "BMHD") {
                     bitmapHeader.reset(new BitmapHeader(chunk));
