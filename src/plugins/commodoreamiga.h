@@ -3,6 +3,8 @@
 
 #include "chunk.h"
 
+class QImage;
+
 class CommodoreAmiga : public Chunk {
 public:
     enum Modes {
@@ -13,7 +15,7 @@ public:
         Hires = 0x8000
     };
 
-    CommodoreAmiga();
+    CommodoreAmiga(const QImage &image);
     CommodoreAmiga(const Chunk &chunk);
 
     Modes modes() const;

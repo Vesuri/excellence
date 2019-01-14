@@ -1,9 +1,14 @@
 #include <QByteArray>
+#include <QImage>
 
 #include "bitmapheader.h"
 
-BitmapHeader::BitmapHeader() : Chunk("BMHD", QByteArray(20, 0))
+BitmapHeader::BitmapHeader(const QImage &image) : Chunk("BMHD", QByteArray(20, 0))
 {
+    setUword(0, static_cast<unsigned short>(image.width()));
+    setUword(2, static_cast<unsigned short>(image.height()));
+    setWord(16, static_cast<short>(image.width()));
+    setWord(18, static_cast<short>(image.height()));
 }
 
 BitmapHeader::BitmapHeader(const Chunk &chunk) : Chunk(chunk)

@@ -1,6 +1,8 @@
+#include <QByteArray>
+
 #include "commodoreamiga.h"
 
-CommodoreAmiga::CommodoreAmiga() : Chunk("CAMG", QByteArray(4, 0))
+CommodoreAmiga::CommodoreAmiga(const QImage &/*image*/) : Chunk("CAMG", QByteArray(4, 0))
 {
 }
 

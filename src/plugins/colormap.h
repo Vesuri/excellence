@@ -6,9 +6,11 @@
 
 #include "chunk.h"
 
+class QImage;
+
 class ColorMap : public Chunk {
 public:
-    ColorMap();
+    ColorMap(const QImage &image);
     ColorMap(const Chunk &chunk);
 
     unsigned count() const;

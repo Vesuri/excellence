@@ -3,6 +3,8 @@
 
 #include "chunk.h"
 
+class QImage;
+
 class BitmapHeader : public Chunk {
 public:
     enum Compression {
@@ -17,7 +19,7 @@ public:
         MaskingLasso = 3
     };
 
-    BitmapHeader();
+    BitmapHeader(const QImage &image);
     BitmapHeader(const Chunk &chunk);
 
     unsigned short width() const;

@@ -1,7 +1,16 @@
+#include <QByteArray>
+#include <QImage>
+
 #include "colormap.h"
 
-ColorMap::ColorMap() : Chunk("CMAP", QByteArray(6, 0))
+ColorMap::ColorMap(const QImage &image) : Chunk("CMAP", QByteArray(image.colorCount() * 3, 0))
 {
+    QVector<QRgb> colorTable = image.colorTable();
+    for (int i = 0; i < image.colorCount(); i++) {
+        setUbyte(i * 3, static_cast<unsigned char>(colorTable.at(i) >> 16));
+        setUbyte(i * 3 + 1, static_cast<unsigned char>(colorTable.at(i) >> 8));
+        setUbyte(i * 3 + 2, static_cast<unsigned char>(colorTable.at(i)));
+    }
 }
 
 ColorMap::ColorMap(const Chunk &chunk) : Chunk(chunk)
