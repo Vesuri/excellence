@@ -8,7 +8,7 @@ class PaletteButton : public QAbstractButton
     Q_OBJECT
 
 public:
-    explicit PaletteButton(QWidget *parent = 0);
+    explicit PaletteButton(QWidget *parent = nullptr);
 
     unsigned paletteIndex() const;
     void setPaletteIndex(unsigned paletteIndex);

@@ -12,7 +12,7 @@ class UndoBuffer : public QObject
 {
     Q_OBJECT
 public:
-    explicit UndoBuffer(const QPoint &pos, const QImage &image, QObject *parent = 0);
+    explicit UndoBuffer(const QPoint &pos, const QImage &image, QObject *parent = nullptr);
 
     QPoint pos() const;
     QImage image() const;

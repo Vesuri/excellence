@@ -8,7 +8,7 @@ class ClearTool : public Tool
     Q_OBJECT
 
 public:
-    explicit ClearTool(QObject *parent = 0);
+    explicit ClearTool(QObject *parent = nullptr);
 
     virtual void setBuffer(Buffer *buffer);
     virtual QRect press(const QPoint &point);

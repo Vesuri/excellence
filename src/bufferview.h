@@ -17,7 +17,7 @@ class BufferView : public QWidget
     Q_OBJECT
 
 public:
-    explicit BufferView(QWidget *parent = 0);
+    explicit BufferView(QWidget *parent = nullptr);
     ~BufferView();
 
     void setBuffer(Buffer *buffer);

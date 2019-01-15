@@ -11,7 +11,7 @@ class LineTool : public Tool
     Q_OBJECT
 
 public:
-    explicit LineTool(QObject *parent = 0);
+    explicit LineTool(QObject *parent = nullptr);
 
     virtual void setBuffer(Buffer *buffer);
     virtual QRect press(const QPoint &point);

@@ -16,8 +16,8 @@ class Buffer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Buffer(int width = 320, int height = 256, int colors = 8, QObject *parent = 0);
-    explicit Buffer(const QString &path, QObject *parent = 0);
+    explicit Buffer(int width = 320, int height = 256, int colors = 8, QObject *parent = nullptr);
+    explicit Buffer(const QString &path, QObject *parent = nullptr);
 
     QImage &image();
     void press(const QPoint &point, const Qt::MouseButton &button);

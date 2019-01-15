@@ -9,7 +9,7 @@ class PenTip : public Pen
 {
     Q_OBJECT
 public:
-    explicit PenTip(QObject *parent = 0);
+    explicit PenTip(QObject *parent = nullptr);
 
     void setPaintColor(unsigned paintColor);
     void setEraseColor(unsigned eraseColor);

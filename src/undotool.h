@@ -8,7 +8,7 @@ class UndoTool : public Tool
     Q_OBJECT
 
 public:
-    explicit UndoTool(QObject *parent = 0);
+    explicit UndoTool(QObject *parent = nullptr);
 
     virtual void setBuffer(Buffer *buffer);
     virtual QRect press(const QPoint &point);

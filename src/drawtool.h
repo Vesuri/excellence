@@ -11,7 +11,7 @@ class DrawTool : public Tool
 public:
     enum DrawMode { Draw, ConnectedDraw, FilledShape };
 
-    explicit DrawTool(QObject *parent = 0);
+    explicit DrawTool(QObject *parent = nullptr);
 
     void setDrawMode(const DrawMode &drawMode);
     virtual void setBuffer(Buffer *buffer);

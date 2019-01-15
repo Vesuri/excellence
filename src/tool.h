@@ -16,7 +16,7 @@ class Tool : public QObject
 public:
     enum Mode { Paint, Erase };
 
-    explicit Tool(QObject *parent = 0);
+    explicit Tool(QObject *parent = nullptr);
 
     void setMode(const Mode &mode);
     virtual void setBuffer(Buffer *buffer);

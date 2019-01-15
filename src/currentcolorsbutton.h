@@ -7,7 +7,7 @@ class CurrentColorsButton : public QAbstractButton
 {
     Q_OBJECT
 public:
-    explicit CurrentColorsButton(QWidget *parent = 0);
+    explicit CurrentColorsButton(QWidget *parent = nullptr);
 
     void setPaintColor(const QColor &color);
     void setEraseColor(const QColor &color);

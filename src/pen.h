@@ -9,7 +9,7 @@ class Pen : public QObject
 {
     Q_OBJECT
 public:
-    explicit Pen(QObject *parent = 0);
+    explicit Pen(QObject *parent = nullptr);
 
     virtual QRect paint(const QPoint &point, Buffer *buffer) const = 0;
     virtual QRect erase(const QPoint &point, Buffer *buffer) const = 0;
