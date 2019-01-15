@@ -53,7 +53,7 @@ bool ILBMHandler::read(QImage *outputImage)
 
     QSharedPointer<BitmapHeader> bitmapHeader;
     QSharedPointer<ColorMap> colorMap;
-    QSharedPointer<CommodoreAmiga> commodoreAmiga;
+    QSharedPointer<CommodoreAmiga> commodoreAmiga(new CommodoreAmiga());
     QImage image;
     QByteArray asIsChunks;
     Chunk form(device()->readAll());

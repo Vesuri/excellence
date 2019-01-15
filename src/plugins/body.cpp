@@ -14,14 +14,14 @@ Body::Body(const QImage &image) : Chunk("BODY", QByteArray())
     for (unsigned maxColorsWithPlanes = 2; maxColorsWithPlanes < static_cast<unsigned>(image.colorCount()); maxColorsWithPlanes *= 2, planesPerRow++);
     unsigned bytesPerRow = bytesPerPlane * planesPerRow;
 
-    setSize(bytesPerRow * static_cast<unsigned>(image.height()));
+    QByteArray data;
 
-    unsigned char *planarRow = new unsigned char[bytesPerPlane];
-    for (unsigned y = 0, index = 0; y < static_cast<unsigned>(image.height()); y++) {
+    unsigned char *planarRow = new unsigned char[bytesPerRow];
+    for (unsigned y = 0; y < static_cast<unsigned>(image.height()); y++) {
+        unsigned char *planar = planarRow;
         for (unsigned plane = 0; plane < planesPerRow; plane++) {
             // Convert the chunky data to planar
             const unsigned char *chunky = image.scanLine(static_cast<int>(y));
-            unsigned char *planar = planarRow;
             for (unsigned x = 0; x < static_cast<unsigned>(image.width()); x++, chunky++) {
                 if ((x & 7) == 0) {
                     *planar = 0;
@@ -34,13 +34,70 @@ Body::Body(const QImage &image) : Chunk("BODY", QByteArray())
                     planar++;
                 }
             }
+        }
 
-            for (unsigned x = 0; x < bytesPerPlane; x++) {
-                setUbyte(index++, planarRow[x]);
+        enum RunLengthMode {
+            RunLengthModeNotSet = 0,
+            RunLengthModeCopy = 1,
+            RunLengthModeRepeat = 2
+        };
+
+        RunLengthMode runLengthMode = RunLengthModeNotSet;
+        unsigned runLengthStart = 0;
+        for (unsigned x = 1, sameCount = 0; x < bytesPerRow; x++) {
+            unsigned runLength = x - runLengthStart;
+            sameCount = planarRow[x] == planarRow[x - 1] ? (sameCount + 1) : 0;
+
+            switch (runLengthMode) {
+            case RunLengthModeCopy:
+                if (sameCount >= 2 || runLength == 128) {
+                    if (runLength != sameCount) {
+                        data.append(static_cast<char>(runLength - sameCount - 1));
+                        for (unsigned i = runLengthStart; i < x - sameCount; i++) {
+                            data.append(static_cast<char>(planarRow[i]));
+                        }
+                        runLengthStart = x - sameCount;
+                    }
+                    if (sameCount >= 2) {
+                        runLengthMode = RunLengthModeRepeat;
+                    }
+                }
+                break;
+            case RunLengthModeRepeat:
+                if (sameCount == 0 || runLength == 128) {
+                    data.append(-static_cast<char>(runLength - 1));
+                    data.append(static_cast<char>(planarRow[runLengthStart]));
+                    runLengthStart = x;
+                    if (sameCount == 0) {
+                        runLengthMode = RunLengthModeCopy;
+                    } else {
+                        sameCount = 0;
+                    }
+                }
+                break;
+            default:
+                runLengthMode = planarRow[x] == planarRow[runLengthStart] ? RunLengthModeRepeat : RunLengthModeCopy;
+                break;
+            }
+        }
+
+        if (runLengthMode != RunLengthModeNotSet) {
+            unsigned runLength = bytesPerRow - runLengthStart;
+
+            if (runLengthMode == RunLengthModeCopy) {
+                data.append(static_cast<char>(runLength) - 1);
+                while (runLengthStart < bytesPerRow) {
+                    data.append(static_cast<char>(planarRow[runLengthStart++]));
+                }
+            } else {
+                data.append(-static_cast<char>(runLength - 1));
+                data.append(static_cast<char>(planarRow[runLengthStart]));
             }
         }
     }
     delete[] planarRow;
+
+    setData(data);
 }
 
 Body::Body(const Chunk &chunk) : Chunk(chunk)
@@ -90,12 +147,12 @@ QImage Body::toImage(const BitmapHeader &bitmapHeader, const ColorMap &colorMap,
                 int count = byte(index++);
                 if (count >= 0) {
                     // Count positive: copy the following count + 1 bytes as is
-                    for (int i = 0; i < count + 1; i++) {
+                    for (int i = 0; i < count + 1 && planar < planarEnd; i++) {
                         *planar++ = ubyte(index++);
                     }
                 } else {
                     // Count negative: repeat the following byte (-count + 1) times
-                    for (int i = 0; i < -count + 1; i++) {
+                    for (int i = 0; i < -count + 1 && planar < planarEnd; i++) {
                         *planar++ = ubyte(index);
                     }
                     index++;

@@ -15,7 +15,7 @@ public:
         Hires = 0x8000
     };
 
-    CommodoreAmiga(const QImage &image);
+    CommodoreAmiga();
     CommodoreAmiga(const Chunk &chunk);
 
     Modes modes() const;
