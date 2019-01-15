@@ -55,6 +55,7 @@ bool ILBMHandler::read(QImage *outputImage)
     QSharedPointer<ColorMap> colorMap;
     QSharedPointer<CommodoreAmiga> commodoreAmiga;
     QImage image;
+    QByteArray asIsChunks;
     Chunk form(device()->readAll());
     if (form.id() == "FORM") {
         if (form.data(0, 4) == "ILBM") {
@@ -73,13 +74,21 @@ bool ILBMHandler::read(QImage *outputImage)
                     // The bitmap header and colormap must be valid at this point
                     image = body.toImage(*bitmapHeader, *colorMap, *commodoreAmiga);
                 } else {
-                    image.setText(QString(chunk.id()), QString(chunk.data().toBase64()));
+                    asIsChunks.append(chunk.toByteArray());
                 }
 
                 // A chunk's total physical size is ckSize rounded up to an even number plus the size of the header
                 offset += ((chunk.size() + 1) & 0xfffffffe) + 8;
             }
         }
+    }
+
+    if (!commodoreAmiga.isNull()) {
+        asIsChunks.append(commodoreAmiga->toByteArray());
+    }
+
+    if (asIsChunks.size() > 0) {
+        image.setText(QString(), QString(asIsChunks.toBase64()));
     }
 
     *outputImage = image;
@@ -94,13 +103,25 @@ bool ILBMHandler::write(const QImage &image)
 
     BitmapHeader bitmapHeader(image);
     ColorMap colorMap(image);
-    CommodoreAmiga commodoreAmiga(image);
     Body body(image);
 
     QByteArray ilbm("ILBM");
     ilbm.append(bitmapHeader.toByteArray());
     ilbm.append(colorMap.toByteArray());
-    ilbm.append(commodoreAmiga.toByteArray());
+
+    QString imageText = image.text();
+    if (!imageText.isEmpty()) {
+        QByteArray asIsChunks = QByteArray::fromBase64(imageText.toLocal8Bit());
+
+        for (unsigned offset = 0; offset < static_cast<unsigned>(asIsChunks.size());) {
+            Chunk chunk(asIsChunks.mid(static_cast<int>(offset)));
+
+            ilbm.append(chunk.toByteArray());
+
+            offset += ((chunk.size() + 1) & 0xfffffffe) + 8;
+        }
+    }
+
     ilbm.append(body.toByteArray());
     Chunk form("FORM", ilbm);
     device()->write(form.toByteArray());
