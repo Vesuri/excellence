@@ -21,6 +21,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
 }
 
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
+    path_(path),
     image_(path),
     pen_(nullptr)
 {
@@ -38,6 +39,18 @@ void Buffer::initialize(int width, int height, int colors)
     }
     image_.setColorTable(colorTable);
     image_.fill(0);
+}
+
+void Buffer::setPath(const QString &path)
+{
+    path_ = path;
+
+    emit pathChanged(path);
+}
+
+QString Buffer::path() const
+{
+    return path_;
 }
 
 QImage &Buffer::image()

@@ -19,6 +19,8 @@ public:
     explicit Buffer(int width = 320, int height = 256, int colors = 8, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);
 
+    void setPath(const QString &path);
+    QString path() const;
     QImage &image();
     void press(const QPoint &point, const Qt::MouseButton &button);
     void move(const QPoint &point);
@@ -33,12 +35,14 @@ public slots:
     void undo();
 
 signals:
+    void pathChanged(QString path);
     void modified(QRect area);
     void toolChanged(Tool *tool_);
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 8);
 
+    QString path_;
     QImage image_;
     QRect modifiedArea;
     QImage preModificationImage;

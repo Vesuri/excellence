@@ -25,6 +25,7 @@ public:
 
 private slots:
     void setPixmap(const QRect &area);
+    void updateWindowTitle();
 
 private:
     Ui::BufferView *ui;

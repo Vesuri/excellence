@@ -22,9 +22,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
-    connect(ui->action_Quit, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(ui->action_Open, SIGNAL(triggered()), openDialog, SLOT(show()));
-    connect(ui->action_Save, SIGNAL(triggered()), this, SLOT(save()));
+    connect(ui->actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(ui->actionOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
+    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveFile()));
+    connect(ui->actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
 
     QTimer::singleShot(1, this, SLOT(initialize()));
 }
@@ -102,9 +103,27 @@ void MainWindow::openFile(const QString &path)
     delete oldBuffer;
 }
 
-void MainWindow::save()
+void MainWindow::saveFile(const QString &savePath)
 {
-    QImageWriter imageWriter("/tmp/test.iff", "ilbm");
-    imageWriter.setCompression(1);
-    imageWriter.write(buffer->image());
+    if (!savePath.isEmpty()) {
+        buffer->setPath(savePath);
+    }
+
+    QString path = buffer->path();
+    if (path.isEmpty()) {
+        saveAs();
+    } else {
+        QImageWriter imageWriter(path, "ilbm");
+        imageWriter.setCompression(1);
+        imageWriter.write(buffer->image());
+    }
+}
+
+void MainWindow::saveAs()
+{
+    QString path = QFileDialog::getSaveFileName(nullptr, tr("Open file"));
+
+    if (!path.isEmpty()) {
+        saveFile(path);
+    }
 }

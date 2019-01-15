@@ -33,13 +33,16 @@ BufferView::~BufferView()
 void BufferView::setBuffer(Buffer *buffer)
 {
     if (this->buffer != nullptr) {
+        disconnect(this->buffer, SIGNAL(pathChanged(QString)));
         disconnect(this->buffer, SIGNAL(modified(QRect)));
     }
 
     this->buffer = buffer;
 
     if (buffer != nullptr) {
+        connect(buffer, SIGNAL(pathChanged(QString)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
+        updateWindowTitle();
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
         ui->graphicsView->resetTransform();
         ui->graphicsView->setSceneRect(scene->itemsBoundingRect());
@@ -94,4 +97,10 @@ void BufferView::setPixmap(const QRect &area)
     if (!area.isEmpty()) {
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
     }
+}
+
+void BufferView::updateWindowTitle()
+{
+    QString path = buffer->path();
+    setWindowTitle(QString("[%1]").arg(path.isEmpty() ? "Untitled" : path));
 }
