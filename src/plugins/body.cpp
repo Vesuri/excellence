@@ -1,12 +1,11 @@
 #include <QByteArray>
 #include <QImage>
 
-#include "bitmapheader.h"
 #include "colormap.h"
 #include "commodoreamiga.h"
 #include "body.h"
 
-Body::Body(const QImage &image) : Chunk("BODY", QByteArray())
+Body::Body(const QImage &image, const BitmapHeader::Compression compression) : Chunk("BODY", QByteArray())
 {
     // Data is padded to word boundaries
     unsigned bytesPerPlane = ((image.width() + 15) & 0xfff0) / 8;
@@ -36,85 +35,89 @@ Body::Body(const QImage &image) : Chunk("BODY", QByteArray())
             }
         }
 
-        enum RunLengthMode {
-            RunLengthModeNotSet = 0,
-            RunLengthModeCopy = 1,
-            RunLengthModeRepeat = 2
-        };
+        if (compression == BitmapHeader::CompressionNone) {
+            data.append(reinterpret_cast<char *>(planarRow), static_cast<int>(bytesPerRow));
+        } else if (compression == BitmapHeader::CompressionByteRun1) {
+            enum RunLengthMode {
+                RunLengthModeNotSet = 0,
+                RunLengthModeCopy = 1,
+                RunLengthModeRepeat = 2
+            };
 
-        RunLengthMode runLengthMode = RunLengthModeNotSet;
-        unsigned runLengthStart = 0;
-        for (unsigned x = 1, sameCount = 0; x < bytesPerRow; x++) {
-            unsigned runLength = x - runLengthStart;
-            sameCount = planarRow[x] == planarRow[x - 1] ? (sameCount + 1) : 0;
+            RunLengthMode runLengthMode = RunLengthModeNotSet;
+            unsigned runLengthStart = 0;
+            for (unsigned x = 1, sameCount = 0; x < bytesPerRow; x++) {
+                unsigned runLength = x - runLengthStart;
+                sameCount = planarRow[x] == planarRow[x - 1] ? (sameCount + 1) : 0;
 
-            switch (runLengthMode) {
-            case RunLengthModeCopy:
-                // 3 or more similar bytes or maximum copy block size of 128
-                if (sameCount >= 2 || runLength == 128) {
-                    // Only write copy block if it exists
-                    if (runLength - sameCount != 0) {
-                        // Copy count (positive): Bytes to be copied - 1
-                        data.append(static_cast<char>(runLength - sameCount - 1));
+                switch (runLengthMode) {
+                case RunLengthModeCopy:
+                    // 3 or more similar bytes or maximum copy block size of 128
+                    if (sameCount >= 2 || runLength == 128) {
+                        // Only write copy block if it exists
+                        if (runLength - sameCount != 0) {
+                            // Copy count (positive): Bytes to be copied - 1
+                            data.append(static_cast<char>(runLength - sameCount - 1));
 
-                        // The bytes as they are
-                        for (unsigned i = runLengthStart; i < x - sameCount; i++) {
-                            data.append(static_cast<char>(planarRow[i]));
+                            // The bytes as they are
+                            for (unsigned i = runLengthStart; i < x - sameCount; i++) {
+                                data.append(static_cast<char>(planarRow[i]));
+                            }
+
+                            // Next block starts from the end of the copied bytes
+                            runLengthStart = x - sameCount;
                         }
 
-                        // Next block starts from the end of the copied bytes
-                        runLengthStart = x - sameCount;
+                        if (sameCount >= 2) {
+                            // 3 or more similar bytes: switch to repeat mode
+                            runLengthMode = RunLengthModeRepeat;
+                        } else {
+                            // Reset same byte count
+                            sameCount = 0;
+                        }
                     }
+                    break;
+                case RunLengthModeRepeat:
+                    // A different byte or maximum repeat block size of 128
+                    if (sameCount == 0 || runLength == 128) {
+                        // Repeat count (negative): -(Bytes to be copied - 1)
+                        data.append(-static_cast<char>(runLength - 1));
 
-                    if (sameCount >= 2) {
-                        // 3 or more similar bytes: switch to repeat mode
-                        runLengthMode = RunLengthModeRepeat;
-                    } else {
-                        // Reset same byte count
-                        sameCount = 0;
+                        // The byte to be repeated
+                        data.append(static_cast<char>(planarRow[runLengthStart]));
+
+                        // Next block starts from the end of the repeated bytes
+                        runLengthStart = x;
+
+                        if (sameCount == 0) {
+                            // A different byte: switch to copy mode
+                            runLengthMode = RunLengthModeCopy;
+                        } else {
+                            // Reset same byte count
+                            sameCount = 0;
+                        }
                     }
+                    break;
+                default:
+                    // Choose a mode if not yet set
+                    runLengthMode = planarRow[x] == planarRow[runLengthStart] ? RunLengthModeRepeat : RunLengthModeCopy;
+                    break;
                 }
-                break;
-            case RunLengthModeRepeat:
-                // A different byte or maximum repeat block size of 128
-                if (sameCount == 0 || runLength == 128) {
-                    // Repeat count (negative): -(Bytes to be copied - 1)
-                    data.append(-static_cast<char>(runLength - 1));
-
-                    // The byte to be repeated
-                    data.append(static_cast<char>(planarRow[runLengthStart]));
-
-                    // Next block starts from the end of the repeated bytes
-                    runLengthStart = x;
-
-                    if (sameCount == 0) {
-                        // A different byte: switch to copy mode
-                        runLengthMode = RunLengthModeCopy;
-                    } else {
-                        // Reset same byte count
-                        sameCount = 0;
-                    }
-                }
-                break;
-            default:
-                // Choose a mode if not yet set
-                runLengthMode = planarRow[x] == planarRow[runLengthStart] ? RunLengthModeRepeat : RunLengthModeCopy;
-                break;
             }
-        }
 
-        // Write any remaining bytes
-        if (runLengthMode != RunLengthModeNotSet) {
-            unsigned runLength = bytesPerRow - runLengthStart;
+            // Write any remaining bytes
+            if (runLengthMode != RunLengthModeNotSet) {
+                unsigned runLength = bytesPerRow - runLengthStart;
 
-            if (runLengthMode == RunLengthModeCopy) {
-                data.append(static_cast<char>(runLength) - 1);
-                while (runLengthStart < bytesPerRow) {
-                    data.append(static_cast<char>(planarRow[runLengthStart++]));
+                if (runLengthMode == RunLengthModeCopy) {
+                    data.append(static_cast<char>(runLength) - 1);
+                    while (runLengthStart < bytesPerRow) {
+                        data.append(static_cast<char>(planarRow[runLengthStart++]));
+                    }
+                } else {
+                    data.append(-static_cast<char>(runLength - 1));
+                    data.append(static_cast<char>(planarRow[runLengthStart]));
                 }
-            } else {
-                data.append(-static_cast<char>(runLength - 1));
-                data.append(static_cast<char>(planarRow[runLengthStart]));
             }
         }
     }

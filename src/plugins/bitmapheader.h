@@ -19,7 +19,7 @@ public:
         MaskingLasso = 3
     };
 
-    BitmapHeader(const QImage &image);
+    BitmapHeader(const QImage &image, const Compression compression = CompressionNone);
     BitmapHeader(const Chunk &chunk);
 
     unsigned short width() const;

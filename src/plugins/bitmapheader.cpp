@@ -3,7 +3,7 @@
 
 #include "bitmapheader.h"
 
-BitmapHeader::BitmapHeader(const QImage &image) : Chunk("BMHD", QByteArray(20, 0))
+BitmapHeader::BitmapHeader(const QImage &image, const Compression compression) : Chunk("BMHD", QByteArray(20, 0))
 {
     unsigned char planes = 1;
     for (unsigned maxColorsWithPlanes = 2; maxColorsWithPlanes < static_cast<unsigned>(image.colorCount()); maxColorsWithPlanes *= 2, planes++);
@@ -11,7 +11,7 @@ BitmapHeader::BitmapHeader(const QImage &image) : Chunk("BMHD", QByteArray(20, 0
     setUword(0, static_cast<unsigned short>(image.width()));
     setUword(2, static_cast<unsigned short>(image.height()));
     setUbyte(8, planes);
-    setUbyte(10, CompressionByteRun1);
+    setUbyte(10, compression);
     setUbyte(14, 1);
     setUbyte(15, 1);
     setWord(16, static_cast<short>(image.width()));

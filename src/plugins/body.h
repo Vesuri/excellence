@@ -3,16 +3,16 @@
 
 #include <QImage>
 
+#include "bitmapheader.h"
 #include "chunk.h"
 
-class BitmapHeader;
 class ColorMap;
 class CommodoreAmiga;
 
 class Body : public Chunk
 {
 public:
-    Body(const QImage &image);
+    Body(const QImage &image, const BitmapHeader::Compression compression = BitmapHeader::CompressionNone);
     Body(const Chunk &chunk);
 
     QImage toImage(const BitmapHeader &bitmapHeader, const ColorMap &colorMap, const CommodoreAmiga &commodoreAmiga) const;

@@ -31,7 +31,8 @@ QImageIOHandler *ILBMPlugin::create(QIODevice */*device*/, const QByteArray &/*f
     return new ILBMHandler();
 }
 
-ILBMHandler::ILBMHandler() : QImageIOHandler()
+ILBMHandler::ILBMHandler() : QImageIOHandler(),
+    compressionRatio(0)
 {
 }
 
@@ -101,9 +102,10 @@ bool ILBMHandler::write(const QImage &image)
         return false;
     }
 
-    BitmapHeader bitmapHeader(image);
+    BitmapHeader::Compression compression(static_cast<BitmapHeader::Compression>(compressionRatio.toInt()));
+    BitmapHeader bitmapHeader(image, compression);
     ColorMap colorMap(image);
-    Body body(image);
+    Body body(image, compression);
 
     QByteArray ilbm("ILBM");
     ilbm.append(bitmapHeader.toByteArray());
@@ -127,4 +129,31 @@ bool ILBMHandler::write(const QImage &image)
     device()->write(form.toByteArray());
 
     return true;
+}
+
+QVariant ILBMHandler::option(QImageIOHandler::ImageOption option) const
+{
+    if (option == QImageIOHandler::CompressionRatio) {
+        return compressionRatio;
+    } else {
+        return QImageIOHandler::option(option);
+    }
+}
+
+void ILBMHandler::setOption(QImageIOHandler::ImageOption option, const QVariant &value)
+{
+    if (option == QImageIOHandler::CompressionRatio) {
+        compressionRatio = value;
+    } else {
+        QImageIOHandler::setOption(option, value);
+    }
+}
+
+bool ILBMHandler::supportsOption(QImageIOHandler::ImageOption option) const
+{
+    if (option == QImageIOHandler::CompressionRatio) {
+        return true;
+    } else {
+        return QImageIOHandler::supportsOption(option);
+    }
 }

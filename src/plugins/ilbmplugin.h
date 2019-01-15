@@ -3,6 +3,7 @@
 
 #include <QImageIOPlugin>
 #include <QColor>
+#include <QVariant>
 
 class ILBMPlugin : public QImageIOPlugin
 {
@@ -10,7 +11,7 @@ class ILBMPlugin : public QImageIOPlugin
     Q_PLUGIN_METADATA(IID "org.qt-project.Qt.QImageIOHandlerFactoryInterface" FILE "ilbm.json")
 
 public:
-    ILBMPlugin(QObject *parent = 0);
+    ILBMPlugin(QObject *parent = nullptr);
 
     virtual Capabilities capabilities(QIODevice *device, const QByteArray & format) const;
     virtual QImageIOHandler *create(QIODevice *device, const QByteArray & format = QByteArray()) const;
@@ -24,6 +25,12 @@ public:
     virtual bool canRead() const;
     virtual bool read(QImage *image);
     virtual bool write(const QImage &image);
+    virtual QVariant option(QImageIOHandler::ImageOption option) const;
+    virtual void setOption(QImageIOHandler::ImageOption option, const QVariant &value);
+    virtual bool supportsOption(QImageIOHandler::ImageOption option) const;
+
+private:
+    QVariant compressionRatio;
 };
 
 #endif // ILBMPLUGIN_H

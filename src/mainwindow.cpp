@@ -2,6 +2,7 @@
 #include <QSizePolicy>
 #include <QTimer>
 #include <QFileDialog>
+#include <QImageWriter>
 #include "buffer.h"
 #include "bufferview.h"
 #include "drawtool.h"
@@ -103,5 +104,7 @@ void MainWindow::openFile(const QString &path)
 
 void MainWindow::save()
 {
-    buffer->image().save("/tmp/test.iff", "ilbm");
+    QImageWriter imageWriter("/tmp/test.iff", "ilbm");
+    imageWriter.setCompression(1);
+    imageWriter.write(buffer->image());
 }
