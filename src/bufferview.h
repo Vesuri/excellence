@@ -21,7 +21,7 @@ public:
     ~BufferView();
 
     void setBuffer(Buffer *buffer);
-    virtual bool eventFilter(QObject *watched, QEvent *event);
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private slots:
     void setPixmap(const QRect &area);

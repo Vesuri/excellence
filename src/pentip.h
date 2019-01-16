@@ -14,9 +14,9 @@ public:
     void setPaintColor(unsigned paintColor);
     void setEraseColor(unsigned eraseColor);
 
-    virtual QRect paint(const QPoint &point, Buffer *buffer) const;
-    virtual QRect erase(const QPoint &point, Buffer *buffer) const;
-    virtual QRect rect(const QPoint &point) const;
+    QRect paint(const QPoint &point, Buffer *buffer) const override;
+    QRect erase(const QPoint &point, Buffer *buffer) const override;
+    QRect rect(const QPoint &point) const override;
 
 private:
     unsigned paintColor_;

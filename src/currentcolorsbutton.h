@@ -12,7 +12,7 @@ public:
     void setPaintColor(const QColor &color);
     void setEraseColor(const QColor &color);
 
-    virtual void paintEvent(QPaintEvent *e);
+    void paintEvent(QPaintEvent *e) override;
 
 private:
     QColor paintColor;

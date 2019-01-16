@@ -14,9 +14,9 @@ public:
     void setPaletteIndex(unsigned paletteIndex);
     void setColor(const QColor &color);
 
-    virtual void paintEvent(QPaintEvent *e);
-    virtual void mousePressEvent(QMouseEvent *e);
-    virtual void mouseReleaseEvent(QMouseEvent *e);
+    void paintEvent(QPaintEvent *e) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
 
 signals:
     void paintColorSelected(unsigned paletteIndex);

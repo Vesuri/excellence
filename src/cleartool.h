@@ -10,14 +10,14 @@ class ClearTool : public Tool
 public:
     explicit ClearTool(QObject *parent = nullptr);
 
-    virtual void setBuffer(Buffer *buffer);
-    virtual QRect press(const QPoint &point);
-    virtual QRect move(const QPoint &point);
-    virtual QRect release(const QPoint &point);
-    virtual void addButtonToGridLayout(QGridLayout *layout);
+    void setBuffer(Buffer *buffer) override;
+    QRect press(const QPoint &point) override;
+    QRect move(const QPoint &point) override;
+    QRect release(const QPoint &point) override;
+    void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
-    virtual void registerTool();
+    void registerTool() override;
 
 private:
     static ClearTool instance;

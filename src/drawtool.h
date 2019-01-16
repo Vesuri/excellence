@@ -14,15 +14,15 @@ public:
     explicit DrawTool(QObject *parent = nullptr);
 
     void setDrawMode(const DrawMode &drawMode);
-    virtual void setBuffer(Buffer *buffer);
-    virtual QRect press(const QPoint &point);
-    virtual QRect move(const QPoint &point);
-    virtual QRect release(const QPoint &point);
-    virtual void addButtonToGridLayout(QGridLayout *layout);
+    void setBuffer(Buffer *buffer) override;
+    QRect press(const QPoint &point) override;
+    QRect move(const QPoint &point) override;
+    QRect release(const QPoint &point) override;
+    void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
-    virtual void registerTool();
-    virtual void activate();
+    void registerTool() override;
+    void activate() override;
 
 private:
     QRect draw(const QPoint &point);

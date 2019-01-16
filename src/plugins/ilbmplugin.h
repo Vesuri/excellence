@@ -13,8 +13,8 @@ class ILBMPlugin : public QImageIOPlugin
 public:
     ILBMPlugin(QObject *parent = nullptr);
 
-    virtual Capabilities capabilities(QIODevice *device, const QByteArray & format) const;
-    virtual QImageIOHandler *create(QIODevice *device, const QByteArray & format = QByteArray()) const;
+    Capabilities capabilities(QIODevice *device, const QByteArray & format) const override;
+    QImageIOHandler *create(QIODevice *device, const QByteArray & format = QByteArray()) const override;
 };
 
 class ILBMHandler : public QImageIOHandler
@@ -22,12 +22,12 @@ class ILBMHandler : public QImageIOHandler
 public:
     ILBMHandler();
 
-    virtual bool canRead() const;
-    virtual bool read(QImage *image);
-    virtual bool write(const QImage &image);
-    virtual QVariant option(QImageIOHandler::ImageOption option) const;
-    virtual void setOption(QImageIOHandler::ImageOption option, const QVariant &value);
-    virtual bool supportsOption(QImageIOHandler::ImageOption option) const;
+    bool canRead() const override;
+    bool read(QImage *image) override;
+    bool write(const QImage &image) override;
+    QVariant option(QImageIOHandler::ImageOption option) const override;
+    void setOption(QImageIOHandler::ImageOption option, const QVariant &value) override;
+    bool supportsOption(QImageIOHandler::ImageOption option) const override;
 
 private:
     QVariant compressionRatio;
