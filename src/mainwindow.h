@@ -22,6 +22,9 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *ev) override;
+
 private slots:
     void initialize();
     void setPaintColor(unsigned paletteIndex);
@@ -29,11 +32,14 @@ private slots:
     void openFile(const QString &path = QString());
     void saveFile(const QString &path = QString());
     void saveAs();
+    void newWindow();
+    void closeWindow();
 
 private:
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
-    BufferView *bufferView;
+    QVector<BufferView *> bufferViews;
+    BufferView *activeBufferView;
     Buffer *buffer;
     PenTip *penTip;
 };

@@ -15,18 +15,19 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     openDialog(new QFileDialog(nullptr, tr("Open file"))),
-    bufferView(new BufferView),
     buffer(nullptr),
     penTip(new PenTip(this))
 {
     ui->setupUi(this);
 
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
-    connect(ui->actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(openFile()));
-    connect(ui->actionOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
-    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveFile()));
-    connect(ui->actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    connect(ui->actionFileQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(ui->actionFileNew, SIGNAL(triggered()), this, SLOT(openFile()));
+    connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
+    connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
+    connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
+    connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
 
     QTimer::singleShot(1, this, SLOT(initialize()));
 }
@@ -54,8 +55,8 @@ void MainWindow::initialize()
 
     penTip->setPaintColor(1);
     penTip->setEraseColor(0);
-    bufferView->setBuffer(buffer);
-    bufferView->show();
+
+    newWindow();
 
     for (int i = 0; i < tools.count(); i++) {
         tools.at(i)->addButtonToGridLayout(ui->toolsLayout);
@@ -75,7 +76,11 @@ void MainWindow::openFile(const QString &path)
 
     buffer->setPen(penTip);
     buffer->setTool(tools.at(0));
-    bufferView->setBuffer(buffer);
+
+    foreach (BufferView *bufferView, bufferViews) {
+        bufferView->setBuffer(buffer);
+    }
+
     ui->currentColorsButton->setPaintColor(QColor(buffer->image().color(1)));
     ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(0)));
 
@@ -127,4 +132,38 @@ void MainWindow::saveAs()
     if (!path.isEmpty()) {
         saveFile(path);
     }
+}
+
+void MainWindow::newWindow()
+{
+    BufferView *bufferView = new BufferView();
+    bufferView->installEventFilter(this);
+    bufferView->setBuffer(buffer);
+    bufferView->show();
+    bufferViews.append(bufferView);
+}
+
+void MainWindow::closeWindow()
+{
+    if (bufferViews.length() > 1) {
+        if (activeBufferView) {
+            bufferViews.removeAll(activeBufferView);
+            delete activeBufferView;
+            activeBufferView = nullptr;
+        }
+    } else {
+        openFile();
+    }
+}
+
+bool MainWindow::eventFilter(QObject *watched, QEvent *event)
+{
+    if (event->type() == QEvent::WindowActivate) {
+        foreach (BufferView *bufferView, bufferViews) {
+            if (watched == bufferView) {
+                activeBufferView = bufferView;
+            }
+        }
+    }
+    return QObject::eventFilter(watched, event);
 }

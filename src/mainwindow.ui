@@ -75,17 +75,25 @@
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <addaction name="actionNew"/>
-    <addaction name="actionOpen"/>
+    <addaction name="actionFileNew"/>
+    <addaction name="actionFileOpen"/>
     <addaction name="separator"/>
-    <addaction name="actionSave"/>
-    <addaction name="actionSaveAs"/>
+    <addaction name="actionFileSave"/>
+    <addaction name="actionFileSaveAs"/>
     <addaction name="separator"/>
-    <addaction name="actionQuit"/>
+    <addaction name="actionFileQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionWindowNewWindow"/>
+    <addaction name="actionWindowCloseWindow"/>
    </widget>
    <addaction name="menu_File"/>
+   <addaction name="menuWindow"/>
   </widget>
-  <action name="actionOpen">
+  <action name="actionFileOpen">
    <property name="text">
     <string>Open</string>
    </property>
@@ -93,7 +101,7 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="actionFileSave">
    <property name="text">
     <string>Save</string>
    </property>
@@ -101,7 +109,7 @@
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="actionSaveAs">
+  <action name="actionFileSaveAs">
    <property name="text">
     <string>Save As</string>
    </property>
@@ -109,7 +117,7 @@
     <string>Ctrl+Shift+S</string>
    </property>
   </action>
-  <action name="actionQuit">
+  <action name="actionFileQuit">
    <property name="text">
     <string>Quit</string>
    </property>
@@ -117,12 +125,12 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="actionOpen_in_New_Window">
+  <action name="actionWindowNewWindow">
    <property name="text">
-    <string>Open in New Window</string>
+    <string>New Window</string>
    </property>
   </action>
-  <action name="actionClose_Window">
+  <action name="actionWindowCloseWindow">
    <property name="text">
     <string>Close Window</string>
    </property>
@@ -130,7 +138,7 @@
     <string>Ctrl+W</string>
    </property>
   </action>
-  <action name="actionNew">
+  <action name="actionFileNew">
    <property name="text">
     <string>New</string>
    </property>
