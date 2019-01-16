@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
     connect(ui->actionQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(ui->actionNew, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->actionOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
