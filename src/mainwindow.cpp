@@ -3,6 +3,7 @@
 #include <QTimer>
 #include <QFileDialog>
 #include <QImageWriter>
+#include <QMessageBox>
 #include "buffer.h"
 #include "bufferview.h"
 #include "drawtool.h"
@@ -119,8 +120,11 @@ void MainWindow::saveFile(const QString &savePath)
     if (path.isEmpty()) {
         saveAs();
     } else {
-        QImageWriter imageWriter(path, "ilbm");
-        imageWriter.write(buffer->image());
+        QImageWriter imageWriter(path);
+        if (!imageWriter.write(buffer->image())) {
+            QMessageBox msgBox;
+            msgBox.setText(imageWriter.errorString());
+            msgBox.exec();        }
     }
 }
 
