@@ -134,8 +134,19 @@ QImage Body::toImage(const BitmapHeader &bitmapHeader, const ColorMap &colorMap,
 {
     QImage image(bitmapHeader.width(), bitmapHeader.height(), QImage::Format_Indexed8);
 
-    // Store the aspect ratio of the image
-    float aspectRatio = bitmapHeader.xAspect() / static_cast<float>(bitmapHeader.yAspect());
+    // Calculate the aspect ratio of the image
+    unsigned char xAspect = bitmapHeader.xAspect();
+    unsigned char yAspect = bitmapHeader.yAspect();
+    if (xAspect == 1 && yAspect == 1) {
+        // Old DPaints claimed all images to be in 1:1 ratio - check if CAMG has more information
+        if (commodoreAmiga.modes() & CommodoreAmiga::Hires) {
+            yAspect = 2;
+        }
+        if (commodoreAmiga.modes() & CommodoreAmiga::Lace) {
+            xAspect = 2;
+        }
+    }
+    float aspectRatio = xAspect / static_cast<float>(yAspect);
     image.setDotsPerMeterY(static_cast<int>(image.dotsPerMeterY() * aspectRatio));
 
     QVector<QRgb> colorTable = colorMap.toVector();
