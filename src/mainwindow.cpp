@@ -120,7 +120,6 @@ void MainWindow::saveFile(const QString &savePath)
         saveAs();
     } else {
         QImageWriter imageWriter(path, "ilbm");
-        imageWriter.setCompression(1);
         imageWriter.write(buffer->image());
     }
 }

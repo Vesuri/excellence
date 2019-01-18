@@ -32,7 +32,7 @@ QImageIOHandler *ILBMPlugin::create(QIODevice */*device*/, const QByteArray &/*f
 }
 
 ILBMHandler::ILBMHandler() : QImageIOHandler(),
-    compressionRatio(0)
+    compressionRatio(-1)
 {
 }
 
@@ -102,7 +102,7 @@ bool ILBMHandler::write(const QImage &image)
         return false;
     }
 
-    BitmapHeader::Compression compression(static_cast<BitmapHeader::Compression>(compressionRatio.toInt()));
+    BitmapHeader::Compression compression(compressionRatio.toInt() >= 0 ? static_cast<BitmapHeader::Compression>(compressionRatio.toInt()) : BitmapHeader::CompressionByteRun1);
     BitmapHeader bitmapHeader(image, compression);
     ColorMap colorMap(image);
     Body body(image, compression);
