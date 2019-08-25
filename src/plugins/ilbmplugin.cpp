@@ -89,7 +89,7 @@ bool ILBMHandler::read(QImage *outputImage)
     }
 
     if (asIsChunks.size() > 0) {
-        image.setText(QString(), QString(asIsChunks.toBase64()));
+        image.setText("Unknown ILBM chunks", QString(asIsChunks.toBase64()));
     }
 
     *outputImage = image;
@@ -111,7 +111,7 @@ bool ILBMHandler::write(const QImage &image)
     ilbm.append(bitmapHeader.toByteArray());
     ilbm.append(colorMap.toByteArray());
 
-    QString imageText = image.text();
+    QString imageText = image.text("Unknown ILBM chunks");
     if (!imageText.isEmpty()) {
         QByteArray asIsChunks = QByteArray::fromBase64(imageText.toLocal8Bit());
 
