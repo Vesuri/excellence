@@ -37,7 +37,8 @@ public slots:
 signals:
     void pathChanged(QString path);
     void modified(QRect area);
-    void toolChanged(Tool *tool_);
+    void zoomed(QRect area);
+    void toolChanged(Tool *tool);
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 8);

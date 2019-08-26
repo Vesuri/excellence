@@ -67,7 +67,7 @@ QRect LineTool::changes(const QPoint &point)
 
 QRect LineTool::draw(const QPoint &point)
 {
-    if (mode_ == Paint) {
+    if (mouseButton_ == Qt::LeftButton) {
         return buffer_->pen()->paint(point, buffer_);
     } else {
         return buffer_->pen()->erase(point, buffer_);

@@ -14,17 +14,18 @@ class Tool : public QObject
     Q_OBJECT
 
 public:
-    enum Mode { Paint, Erase };
+    enum Type{ Modify, Zoom };
 
     explicit Tool(QObject *parent = nullptr);
 
-    void setMode(const Mode &mode);
+    void setMouseButton(const Qt::MouseButton &mouseButton);
     virtual void setBuffer(Buffer *buffer);
 
     virtual QRect press(const QPoint &point) = 0;
     virtual QRect move(const QPoint &point) = 0;
     virtual QRect release(const QPoint &point) = 0;
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
+    virtual Type type() const;
 
 protected slots:
     virtual void registerTool();
@@ -32,7 +33,7 @@ protected slots:
     virtual void setCheckedIfEqual(Tool *tool);
 
 protected:
-    Mode mode_;
+    Qt::MouseButton mouseButton_;
     Buffer *buffer_;
     QToolButton *button_;
 };

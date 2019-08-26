@@ -35,6 +35,7 @@ void BufferView::setBuffer(Buffer *buffer)
     if (this->buffer != nullptr) {
         disconnect(this->buffer, SIGNAL(pathChanged(QString)));
         disconnect(this->buffer, SIGNAL(modified(QRect)));
+        disconnect(this->buffer, SIGNAL(zoomed(QRect)));
     }
 
     this->buffer = buffer;
@@ -42,6 +43,7 @@ void BufferView::setBuffer(Buffer *buffer)
     if (buffer != nullptr) {
         connect(buffer, SIGNAL(pathChanged(QString)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
+        connect(buffer, SIGNAL(zoomed(QRect)), this, SLOT(setZoom(QRect)));
         updateWindowTitle();
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
         ui->graphicsView->resetTransform();
@@ -96,6 +98,13 @@ void BufferView::setPixmap(const QRect &area)
 {
     if (!area.isEmpty()) {
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
+    }
+}
+
+void BufferView::setZoom(const QRect &area)
+{
+    if (!area.isNull() && area.isEmpty()) {
+        ui->graphicsView->scale(2, 2);
     }
 }
 

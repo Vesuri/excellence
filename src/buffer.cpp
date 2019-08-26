@@ -69,36 +69,50 @@ void Buffer::clear()
 
 void Buffer::press(const QPoint &point, const Qt::MouseButton &button)
 {
-    tool_->setMode(button == Qt::LeftButton ? Tool::Paint : Tool::Erase);
+    tool_->setMouseButton(button);
 
-    preModificationImage = image_.copy();
+    if (tool_->type() == Tool::Modify) {
+        preModificationImage = image_.copy();
 
-    modifiedArea = tool_->press(point);
+        modifiedArea = tool_->press(point);
 
-    emit modified(modifiedArea);
+        emit modified(modifiedArea);
+    } else {
+        QRect zoomedArea = tool_->press(point);
+
+        emit zoomed(zoomedArea);
+    }
 }
 
 void Buffer::move(const QPoint &point)
 {
-    QRect modification = tool_->move(point);
+    QRect area = tool_->move(point);
 
-    modifiedArea = modifiedArea.united(modification);
+    if (tool_->type() == Tool::Modify) {
+        modifiedArea = modifiedArea.united(area);
 
-    emit modified(modification);
+        emit modified(area);
+    } else {
+        emit zoomed(area);
+    }
 }
 
 void Buffer::release(const QPoint &point)
 {
-    QRect modification = tool_->release(point);
+    QRect area = tool_->release(point);
 
-    modifiedArea = modifiedArea.united(modification);
+    if (tool_->type() == Tool::Modify) {
+        modifiedArea = modifiedArea.united(area);
 
-    emit modified(modification);
+        emit modified(area);
 
-    undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
+        undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
 
-    modifiedArea = QRect();
-    preModificationImage = QImage();
+        modifiedArea = QRect();
+        preModificationImage = QImage();
+    } else {
+        emit zoomed(area);
+    }
 }
 
 void Buffer::undo()

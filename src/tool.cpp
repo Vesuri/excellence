@@ -6,20 +6,25 @@
 QList<Tool *> tools;
 
 Tool::Tool(QObject *parent) : QObject(parent),
-    mode_(Paint),
+    mouseButton_(Qt::NoButton),
     buffer_(nullptr)
 {
     QTimer::singleShot(0, this, SLOT(registerTool()));
 }
 
-void Tool::setMode(const Mode &mode)
+void Tool::setMouseButton(const Qt::MouseButton &mouseButton)
 {
-    mode_ = mode;
+    mouseButton_ = mouseButton;
 }
 
 void Tool::setBuffer(Buffer *buffer)
 {
     buffer_ = buffer;
+}
+
+Tool::Type Tool::type() const
+{
+    return Modify;
 }
 
 void Tool::registerTool()

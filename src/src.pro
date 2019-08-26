@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     linetool.cpp \
     undobuffer.cpp \
     cleartool.cpp \
-    undotool.cpp
+    undotool.cpp \
+    zoomtool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -42,7 +43,8 @@ HEADERS  += mainwindow.h \
     linetool.h \
     undobuffer.h \
     cleartool.h \
-    undotool.h
+    undotool.h \
+    zoomtool.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui
