@@ -52,7 +52,8 @@ void MainWindow::setEraseColor(unsigned paletteIndex)
 
 void MainWindow::initialize()
 {
-    openFile("");
+    QStringList arguments = qApp->arguments();
+    openFile(arguments.length() > 1 ? arguments.last() : QString());
 
     penTip->setPaintColor(1);
     penTip->setEraseColor(0);
