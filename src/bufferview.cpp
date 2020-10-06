@@ -70,16 +70,18 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
         case QEvent::GraphicsSceneMouseRelease:
         {
             QGraphicsSceneMouseEvent *mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
+            QPointF scenePos = mouseEvent->scenePos();
+            QPoint point(qFloor(scenePos.x()), qFloor(scenePos.y()));
 
             if (event->type() == QEvent::GraphicsSceneMouseMove && mouseEvent->buttons() != Qt::NoButton) {
-                buffer->move(mouseEvent->scenePos().toPoint());
+                buffer->move(point);
             } else {
                 switch (event->type()) {
                 case QEvent::GraphicsSceneMousePress:
-                    buffer->press(mouseEvent->scenePos().toPoint(), mouseEvent->button());
+                    buffer->press(point, mouseEvent->button());
                     break;
                 case QEvent::GraphicsSceneMouseRelease:
-                    buffer->release(mouseEvent->scenePos().toPoint());
+                    buffer->release(point);
                     break;
                 default:
                     break;
