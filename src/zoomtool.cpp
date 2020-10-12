@@ -21,9 +21,10 @@ void ZoomTool::setBuffer(Buffer *buffer)
     }
 }
 
-QRect ZoomTool::press(const QPoint &point)
+QRect ZoomTool::press(const QPoint &point, const Qt::KeyboardModifiers &modifiers)
 {
-    return mouseButton_ == Qt::LeftButton ? QRect(point, QSize()) : QRect();
+    int factor = mouseButton_ == Qt::RightButton || (modifiers & Qt::ControlModifier) ? -2 : 2;
+    return QRect(point, QSize(factor, factor));
 }
 
 QRect ZoomTool::move(const QPoint &)

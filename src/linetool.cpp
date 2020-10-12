@@ -28,7 +28,7 @@ void LineTool::setBuffer(Buffer *buffer)
     }
 }
 
-QRect LineTool::press(const QPoint &point)
+QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
     startPoint = point;
 

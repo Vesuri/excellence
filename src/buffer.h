@@ -22,7 +22,7 @@ public:
     void setPath(const QString &path);
     QString path() const;
     QImage &image();
-    void press(const QPoint &point, const Qt::MouseButton &button);
+    void press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers);
     void move(const QPoint &point);
     void release(const QPoint &point);
     void setTool(Tool *tool_);

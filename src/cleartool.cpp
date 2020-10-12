@@ -21,7 +21,7 @@ void ClearTool::setBuffer(Buffer *buffer)
     }
 }
 
-QRect ClearTool::press(const QPoint &)
+QRect ClearTool::press(const QPoint &, const Qt::KeyboardModifiers &)
 {
     return QRect();
 }

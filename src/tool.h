@@ -21,7 +21,7 @@ public:
     void setMouseButton(const Qt::MouseButton &mouseButton);
     virtual void setBuffer(Buffer *buffer);
 
-    virtual QRect press(const QPoint &point) = 0;
+    virtual QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) = 0;
     virtual QRect move(const QPoint &point) = 0;
     virtual QRect release(const QPoint &point) = 0;
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;

@@ -21,7 +21,7 @@ void UndoTool::setBuffer(Buffer *buffer)
     }
 }
 
-QRect UndoTool::press(const QPoint &)
+QRect UndoTool::press(const QPoint &, const Qt::KeyboardModifiers &)
 {
     return QRect();
 }

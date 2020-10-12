@@ -78,7 +78,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             } else {
                 switch (event->type()) {
                 case QEvent::GraphicsSceneMousePress:
-                    buffer->press(point, mouseEvent->button());
+                    buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
                     break;
                 case QEvent::GraphicsSceneMouseRelease:
                     buffer->release(point);
@@ -105,8 +105,18 @@ void BufferView::setPixmap(const QRect &area)
 
 void BufferView::setZoom(const QRect &area)
 {
-    if (!area.isNull() && area.isEmpty()) {
-        ui->graphicsView->scale(2, 2);
+    if (!area.isNull()) {
+        qreal sx = area.width();
+        qreal sy = area.height();
+
+        if (sx < 0) {
+            sx = 1.0 / -sx;
+        }
+        if (sy < 0) {
+            sy = 1.0 / -sy;
+        }
+
+        ui->graphicsView->scale(sx, sy);
     }
 }
 

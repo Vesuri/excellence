@@ -67,18 +67,18 @@ void Buffer::clear()
     emit modified(image_.rect());
 }
 
-void Buffer::press(const QPoint &point, const Qt::MouseButton &button)
+void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers)
 {
     tool_->setMouseButton(button);
 
     if (tool_->type() == Tool::Modify) {
         preModificationImage = image_.copy();
 
-        modifiedArea = tool_->press(point);
+        modifiedArea = tool_->press(point, modifiers);
 
         emit modified(modifiedArea);
     } else {
-        QRect zoomedArea = tool_->press(point);
+        QRect zoomedArea = tool_->press(point, modifiers);
 
         emit zoomed(zoomedArea);
     }

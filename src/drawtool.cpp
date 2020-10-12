@@ -37,7 +37,7 @@ void DrawTool::setBuffer(Buffer *buffer)
     }
 }
 
-QRect DrawTool::press(const QPoint &point)
+QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
     startingPoint = point;
     previousPoint = point;
