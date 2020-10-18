@@ -17,6 +17,7 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     drawtool.cpp \
     algorithms.cpp \
+    propertiesdialog.cpp \
     tool.cpp \
     pen.cpp \
     pentip.cpp \
@@ -33,6 +34,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     drawtool.h \
     algorithms.h \
+    propertiesdialog.h \
     tool.h \
     pen.h \
     pentip.h \
@@ -47,7 +49,8 @@ HEADERS  += mainwindow.h \
     zoomtool.h
 
 FORMS    += mainwindow.ui \
-    bufferview.ui
+    bufferview.ui \
+    propertiesdialog.ui
 
 RESOURCES += \
     icons/icons.qrc

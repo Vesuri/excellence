@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QImageWriter>
 #include <QMessageBox>
+#include "propertiesdialog.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "drawtool.h"
@@ -16,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     openDialog(new QFileDialog(nullptr, tr("Open file"))),
+    propertiesDialog(new PropertiesDialog),
     buffer(nullptr),
     penTip(new PenTip(this))
 {
@@ -27,8 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    connect(ui->actionFileProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
+    connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
 
     QTimer::singleShot(1, this, SLOT(initialize()));
 }
@@ -70,8 +74,13 @@ void MainWindow::initialize()
 
 void MainWindow::openFile(const QString &path)
 {
+    setBuffer(new Buffer(path, this));
+}
+
+void MainWindow::setBuffer(Buffer *newBuffer)
+{
     Buffer *oldBuffer = buffer;
-    buffer = new Buffer(path, this);
+    buffer = newBuffer;
     for (int i = 0; i < tools.count(); i++) {
         tools.at(i)->setBuffer(buffer);
     }
@@ -125,7 +134,8 @@ void MainWindow::saveFile(const QString &savePath)
         if (!imageWriter.write(buffer->image())) {
             QMessageBox msgBox;
             msgBox.setText(imageWriter.errorString());
-            msgBox.exec();        }
+            msgBox.exec();
+        }
     }
 }
 
@@ -158,6 +168,12 @@ void MainWindow::closeWindow()
     } else {
         openFile();
     }
+}
+
+void MainWindow::showProperties()
+{
+    propertiesDialog->setBuffer(buffer);
+    propertiesDialog->show();
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)

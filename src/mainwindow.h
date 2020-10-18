@@ -8,6 +8,7 @@ class MainWindow;
 }
 
 class QFileDialog;
+class PropertiesDialog;
 class QGraphicsScene;
 class PaletteItem;
 class BufferView;
@@ -34,10 +35,13 @@ private slots:
     void saveAs();
     void newWindow();
     void closeWindow();
+    void showProperties();
+    void setBuffer(Buffer *buffer);
 
 private:
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
+    PropertiesDialog *propertiesDialog;
     QVector<BufferView *> bufferViews;
     BufferView *activeBufferView;
     Buffer *buffer;
