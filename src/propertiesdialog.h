@@ -21,6 +21,7 @@ public:
 
 private slots:
     void setProperties();
+    void setRetainImageState(int state);
 
 signals:
     void bufferChanged(Buffer *buffer);

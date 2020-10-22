@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>188</width>
-    <height>213</height>
+    <width>202</width>
+    <height>287</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -80,6 +80,9 @@
        <property name="text">
         <string>Retain image</string>
        </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
       </widget>
      </item>
      <item row="3" column="0">
@@ -91,9 +94,45 @@
      </item>
      <item row="3" column="1">
       <widget class="QComboBox" name="comboBoxOutOf">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="currentIndex">
+        <number>3</number>
+       </property>
+       <item>
+        <property name="text">
+         <string>8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>64</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>512</string>
+        </property>
+       </item>
        <item>
         <property name="text">
          <string>4096</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>32768</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>262144</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2097152</string>
         </property>
        </item>
        <item>
@@ -143,6 +182,48 @@
        <item>
         <property name="text">
          <string>256</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="labelScaling">
+       <property name="text">
+        <string>Scaling</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="labelPalette">
+       <property name="text">
+        <string>Palette</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QComboBox" name="comboBoxScaling">
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Scale to fit</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="6" column="1">
+      <widget class="QComboBox" name="comboBoxPalette">
+       <item>
+        <property name="text">
+         <string>Current</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Optimal</string>
         </property>
        </item>
       </widget>
