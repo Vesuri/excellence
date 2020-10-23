@@ -17,6 +17,7 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     drawtool.cpp \
     algorithms.cpp \
+    palettequantizer.cpp \
     propertiesdialog.cpp \
     tool.cpp \
     pen.cpp \
@@ -34,6 +35,7 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h \
     drawtool.h \
     algorithms.h \
+    palettequantizer.h \
     propertiesdialog.h \
     tool.h \
     pen.h \
