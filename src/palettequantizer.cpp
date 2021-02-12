@@ -1,11 +1,10 @@
-#include "buffer.h"
 #include "spatial_color_quant.h"
 #include "palettequantizer.h"
 
-Buffer *PaletteQuantizer::quantize(Buffer *buffer, int num_colors)
+QImage PaletteQuantizer::quantize(const QImage &source, int num_colors)
 {
-    int width = buffer->image().width();
-    int height = buffer->image().height();
+    int width = source.width();
+    int height = source.height();
     array2d< vector_fixed<double, 3> > image(width, height);
     array2d< vector_fixed<double, 3> > filter1_weights(1, 1);
     array2d< vector_fixed<double, 3> > filter3_weights(3, 3);
@@ -27,7 +26,7 @@ Buffer *PaletteQuantizer::quantize(Buffer *buffer, int num_colors)
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            QColor color = buffer->image().pixelColor(x, y);
+            QColor color = source.pixelColor(x, y);
             image(x, y)(0) = color.redF();
             image(x, y)(1) = color.greenF();
             image(x, y)(2) = color.blueF();
@@ -80,20 +79,22 @@ Buffer *PaletteQuantizer::quantize(Buffer *buffer, int num_colors)
     spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
     //spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
 
-    Buffer *newBuffer = new Buffer(width, height, num_colors, buffer->parent());
+    QImage out(width, height, QImage::Format_Indexed8);
+    out.setDotsPerMeterX(source.dotsPerMeterX());
+    out.setDotsPerMeterY(source.dotsPerMeterY());
     for (int i = 0; i < num_colors; i++) {
         QColor color;
         color.setRedF(palette[i](0));
         color.setGreenF(palette[i](1));
         color.setBlueF(palette[i](2));
         color.setAlphaF(1.0);
-        newBuffer->image().setColor(i, color.rgba());
+        out.setColor(i, color.rgba());
     }
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            newBuffer->image().setPixel(x, y, quantized_image(x,y));
+            out.setPixel(x, y, quantized_image(x,y));
         }
     }
 
-    return newBuffer;
+    return out;
 }

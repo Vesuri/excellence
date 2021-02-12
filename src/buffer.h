@@ -21,6 +21,7 @@ public:
 
     void setPath(const QString &path);
     QString path() const;
+    void setImage(const QImage &image);
     QImage &image();
     void press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers);
     void move(const QPoint &point);

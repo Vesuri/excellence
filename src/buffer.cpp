@@ -313,6 +313,13 @@ QString Buffer::path() const
     return path_;
 }
 
+void Buffer::setImage(const QImage &image)
+{
+    image_ = image;
+
+    emit modified(image_.rect());
+}
+
 QImage &Buffer::image()
 {
     return image_;

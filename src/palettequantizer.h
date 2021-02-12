@@ -1,12 +1,12 @@
 #ifndef PALETTEQUANTIZER_H
 #define PALETTEQUANTIZER_H
 
-class Buffer;
+#include <QImage>
 
 class PaletteQuantizer
 {
 public:
-    static Buffer *quantize(Buffer *buffer, int colorCount);
+    static QImage quantize(const QImage &source, int num_colors);
 };
 
 #endif // PALETTEQUANTIZER_H
