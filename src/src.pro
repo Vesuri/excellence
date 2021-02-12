@@ -48,7 +48,8 @@ HEADERS  += mainwindow.h \
     undobuffer.h \
     cleartool.h \
     undotool.h \
-    zoomtool.h
+    zoomtool.h \
+    spatial_color_quant.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui \
