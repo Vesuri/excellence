@@ -21,8 +21,10 @@ BufferView::BufferView(QWidget *parent) :
     scene->addItem(pixmapItem);
     ui->graphicsView->setStyleSheet( "QGraphicsView { border-style: none; }" );
     ui->graphicsView->setScene(scene);
+    setAttribute(Qt::WA_Hover);
 
     scene->installEventFilter(this);
+    installEventFilter(this);
 }
 
 BufferView::~BufferView()
@@ -87,12 +89,23 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                     break;
                 }
             }
+
+            updateWindowTitle(point);
             break;
         }
         default:
             break;
         }
+    } else if (watched == this) {
+        switch (event->type()) {
+        case QEvent::HoverLeave:
+            updateWindowTitle();
+            break;
+        default:
+            break;
+        }
     }
+
     return false;
 }
 
@@ -117,11 +130,34 @@ void BufferView::setZoom(const QRect &area)
         }
 
         ui->graphicsView->scale(sx, sy);
+        updateWindowTitle();
     }
 }
 
-void BufferView::updateWindowTitle()
+void BufferView::updateWindowTitle(const QPoint &point)
 {
     QString path = buffer->path();
-    setWindowTitle(QString("[%1]").arg(path.isEmpty() ? "Untitled" : path));
+    int depth = 1;
+    for (int i = buffer->image().colorCount(); i > 2; i >>= 1) {
+        depth++;
+    }
+    int zoom = qRound(ui->graphicsView->transform().m11() * 100.0);
+
+    if (point.x() >= 0 && point.y() >= 0 && point.x() < buffer->image().width() && point.y() < buffer->image().height()) {
+        setWindowTitle(QString("%1 (%2x%3x%4) %5% %6,%7")
+                       .arg(path.isEmpty() ? "Untitled" : path)
+                       .arg(buffer->image().width())
+                       .arg(buffer->image().height())
+                       .arg(depth)
+                       .arg(zoom)
+                       .arg(point.x())
+                       .arg(point.y()));
+    } else {
+        setWindowTitle(QString("%1 (%2x%3x%4) %5%")
+                       .arg(path.isEmpty() ? "Untitled" : path)
+                       .arg(buffer->image().width())
+                       .arg(buffer->image().height())
+                       .arg(depth)
+                       .arg(zoom));
+    }
 }

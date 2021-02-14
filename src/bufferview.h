@@ -26,7 +26,7 @@ public:
 private slots:
     void setPixmap(const QRect &area);
     void setZoom(const QRect &area);
-    void updateWindowTitle();
+    void updateWindowTitle(const QPoint &point = QPoint(-1, -1));
 
 private:
     Ui::BufferView *ui;
