@@ -57,4 +57,6 @@ void PaletteButton::setPaletteIndex(unsigned paletteIndex)
 void PaletteButton::setColor(const QColor &color)
 {
     this->color = color;
+
+    update();
 }

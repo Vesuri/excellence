@@ -415,3 +415,43 @@ Tool *Buffer::tool() const
 {
     return tool_;
 }
+
+void Buffer::copyColor(unsigned fromIndex, unsigned toIndex, bool remap)
+{
+    if (remap) {
+        for (int y = 0; y < image_.height(); y++) {
+            for (int x = 0; x < image_.width(); x++) {
+                if (image_.pixelIndex(x, y) == static_cast<int>(toIndex)) {
+                    image_.setPixel(x, y, fromIndex);
+                }
+            }
+        }
+    } else {
+        QRgb color = image_.color(fromIndex);
+        image_.setColor(toIndex, color);
+        emit paletteModified();
+    }
+    emit modified(image_.rect());
+}
+
+void Buffer::swapColors(unsigned index1, unsigned index2, bool remap)
+{
+    if (remap) {
+        for (int y = 0; y < image_.height(); y++) {
+            for (int x = 0; x < image_.width(); x++) {
+                if (image_.pixelIndex(x, y) == static_cast<int>(index1)) {
+                    image_.setPixel(x, y, index2);
+                } else if (image_.pixelIndex(x, y) == static_cast<int>(index2)) {
+                    image_.setPixel(x, y, index1);
+                }
+            }
+        }
+    } else {
+        QRgb color1 = image_.color(index1);
+        QRgb color2 = image_.color(index2);
+        image_.setColor(index1, color2);
+        image_.setColor(index2, color1);
+        emit paletteModified();
+    }
+    emit modified(image_.rect());
+}

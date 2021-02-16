@@ -95,7 +95,17 @@
     <addaction name="actionWindowNewWindow"/>
     <addaction name="actionWindowCloseWindow"/>
    </widget>
+   <widget class="QMenu" name="menuPalette">
+    <property name="title">
+     <string>Palette</string>
+    </property>
+    <addaction name="actionPaletteCopyColor"/>
+    <addaction name="actionPaletteSwapColors"/>
+    <addaction name="separator"/>
+    <addaction name="actionPaletteRemap"/>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menuPalette"/>
    <addaction name="menuWindow"/>
   </widget>
   <action name="actionFileOpen">
@@ -157,6 +167,24 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionPaletteCopyColor">
+   <property name="text">
+    <string>Copy color</string>
+   </property>
+  </action>
+  <action name="actionPaletteSwapColors">
+   <property name="text">
+    <string>Swap colors</string>
+   </property>
+  </action>
+  <action name="actionPaletteRemap">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Remap</string>
    </property>
   </action>
  </widget>

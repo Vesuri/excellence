@@ -28,8 +28,9 @@ protected:
 
 private slots:
     void initialize();
-    void setPaintColor(unsigned paletteIndex);
-    void setEraseColor(unsigned paletteIndex);
+    void updatePalette();
+    void runPaletteActionForPaintColor(unsigned paletteIndex);
+    void runPaletteActionForEraseColor(unsigned paletteIndex);
     void openFile(const QString &path = QString());
     void saveFile(const QString &path = QString());
     void saveAs();
@@ -37,8 +38,18 @@ private slots:
     void closeWindow();
     void showProperties();
     void setBuffer(Buffer *buffer);
+    void startCopyColor();
+    void startSwapColors();
 
 private:
+    enum PaletteMode { Pick, Copy, Swap };
+
+    void copyColor(unsigned paletteIndex);
+    void swapColors(unsigned paletteIndex);
+    void setPaintColor(unsigned paletteIndex);
+    void setEraseColor(unsigned paletteIndex);
+    void updateWindowTitle();
+
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
     PropertiesDialog *propertiesDialog;
@@ -46,6 +57,9 @@ private:
     BufferView *activeBufferView;
     Buffer *buffer;
     PenTip *penTip;
+    PaletteMode paletteMode;
+    unsigned paintColor;
+    unsigned eraseColor;
 };
 
 #endif // MAINWINDOW_H

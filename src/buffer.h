@@ -30,6 +30,8 @@ public:
     Tool *tool() const;
     void setPen(Pen *pen);
     Pen *pen() const;
+    void copyColor(unsigned fromIndex, unsigned toIndex, bool remap = false);
+    void swapColors(unsigned index1, unsigned index2, bool remap = false);
 
 public slots:
     void clear();
@@ -40,6 +42,7 @@ signals:
     void modified(QRect area);
     void zoomed(QRect area);
     void toolChanged(Tool *tool);
+    void paletteModified();
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 8);
