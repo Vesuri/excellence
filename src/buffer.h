@@ -30,8 +30,10 @@ public:
     Tool *tool() const;
     void setPen(Pen *pen);
     Pen *pen() const;
-    void copyColor(unsigned fromIndex, unsigned toIndex, bool remap = false);
-    void swapColors(unsigned index1, unsigned index2, bool remap = false);
+    void copyImageColor(unsigned fromIndex, unsigned toIndex);
+    void swapImageColors(unsigned index1, unsigned index2);
+    void copyPaletteColor(unsigned fromIndex, unsigned toIndex);
+    void swapPaletteColors(unsigned index1, unsigned index2);
 
 public slots:
     void clear();

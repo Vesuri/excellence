@@ -33,8 +33,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
     connect(ui->actionFileProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
-    connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(startCopyColor()));
-    connect(ui->actionPaletteSwapColors, SIGNAL(triggered()), this, SLOT(startSwapColors()));
+    connect(ui->actionImageCopyColor, SIGNAL(triggered()), this, SLOT(imageCopyColor()));
+    connect(ui->actionImageSwapColors, SIGNAL(triggered()), this, SLOT(imageSwapColors()));
+    connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(paletteCopyColor()));
+    connect(ui->actionPaletteSwapColors, SIGNAL(triggered()), this, SLOT(paletteSwapColors()));
+    connect(ui->actionPaletteSwapAndRemapColors, SIGNAL(triggered()), this, SLOT(paletteSwapAndRemapColors()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
@@ -49,18 +52,34 @@ MainWindow::~MainWindow()
 
 void MainWindow::runPaletteActionForPaintColor(unsigned paletteIndex)
 {
+    bool resetPaletteMode = true;
+
     switch (paletteMode) {
-    case Pick:
-        setPaintColor(paletteIndex);
+    case ImageCopy:
+        buffer->copyImageColor(paintColor, paletteIndex);
         break;
-    case Copy:
-        copyColor(paletteIndex);
+    case ImageSwap:
+        buffer->swapImageColors(paintColor, paletteIndex);
         break;
-    case Swap:
-        swapColors(paletteIndex);
+    case PaletteCopy:
+        buffer->copyPaletteColor(paintColor, paletteIndex);
+        break;
+    case PaletteSwap:
+        buffer->swapPaletteColors(paintColor, paletteIndex);
+        break;
+    case PaletteSwapAndRemap:
+        buffer->swapImageColors(paintColor, paletteIndex);
+        buffer->swapPaletteColors(paintColor, paletteIndex);
         break;
     default:
+        setPaintColor(paletteIndex);
+        resetPaletteMode = false;
         break;
+    }
+
+    if (resetPaletteMode) {
+        paletteMode = Pick;
+        updateWindowTitle();
     }
 }
 
@@ -70,13 +89,9 @@ void MainWindow::runPaletteActionForEraseColor(unsigned paletteIndex)
     case Pick:
         setEraseColor(paletteIndex);
         break;
-    case Copy:
-        copyColor(paletteIndex);
-        break;
-    case Swap:
-        swapColors(paletteIndex);
-        break;
     default:
+        paletteMode = Pick;
+        updateWindowTitle();
         break;
     }
 }
@@ -212,15 +227,33 @@ void MainWindow::showProperties()
     propertiesDialog->show();
 }
 
-void MainWindow::startCopyColor()
+void MainWindow::imageCopyColor()
 {
-    paletteMode = Copy;
+    paletteMode = ImageCopy;
     updateWindowTitle();
 }
 
-void MainWindow::startSwapColors()
+void MainWindow::imageSwapColors()
 {
-    paletteMode = Swap;
+    paletteMode = ImageSwap;
+    updateWindowTitle();
+}
+
+void MainWindow::paletteCopyColor()
+{
+    paletteMode = PaletteCopy;
+    updateWindowTitle();
+}
+
+void MainWindow::paletteSwapColors()
+{
+    paletteMode = PaletteSwap;
+    updateWindowTitle();
+}
+
+void MainWindow::paletteSwapAndRemapColors()
+{
+    paletteMode = PaletteSwapAndRemap;
     updateWindowTitle();
 }
 
@@ -240,22 +273,6 @@ void MainWindow::setEraseColor(unsigned paletteIndex)
     ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(static_cast<int>(eraseColor))));
 }
 
-void MainWindow::copyColor(unsigned paletteIndex)
-{
-    buffer->copyColor(paintColor, paletteIndex, ui->actionPaletteRemap->isChecked());
-
-    paletteMode = Pick;
-    updateWindowTitle();
-}
-
-void MainWindow::swapColors(unsigned paletteIndex)
-{
-    buffer->swapColors(paintColor, paletteIndex, ui->actionPaletteRemap->isChecked());
-
-    paletteMode = Pick;
-    updateWindowTitle();
-}
-
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     if (event->type() == QEvent::WindowActivate) {
@@ -273,11 +290,20 @@ void MainWindow::updateWindowTitle()
     QString windowTitle;
 
     switch (paletteMode) {
-    case Copy:
-        windowTitle = "Excellence - Copy color";
+    case ImageCopy:
+        windowTitle = "Excellence - Copy image color";
         break;
-    case Swap:
-        windowTitle = "Excellence - Swap colors";
+    case ImageSwap:
+        windowTitle = "Excellence - Swap image colors";
+        break;
+    case PaletteCopy:
+        windowTitle = "Excellence - Copy palette color";
+        break;
+    case PaletteSwap:
+        windowTitle = "Excellence - Swap palette colors";
+        break;
+    case PaletteSwapAndRemap:
+        windowTitle = "Excellence - Swap palette colors and remap";
         break;
     default:
         windowTitle = "Excellence";

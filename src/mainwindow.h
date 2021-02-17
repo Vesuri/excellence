@@ -38,14 +38,15 @@ private slots:
     void closeWindow();
     void showProperties();
     void setBuffer(Buffer *buffer);
-    void startCopyColor();
-    void startSwapColors();
+    void imageCopyColor();
+    void imageSwapColors();
+    void paletteCopyColor();
+    void paletteSwapColors();
+    void paletteSwapAndRemapColors();
 
 private:
-    enum PaletteMode { Pick, Copy, Swap };
+    enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap };
 
-    void copyColor(unsigned paletteIndex);
-    void swapColors(unsigned paletteIndex);
     void setPaintColor(unsigned paletteIndex);
     void setEraseColor(unsigned paletteIndex);
     void updateWindowTitle();
