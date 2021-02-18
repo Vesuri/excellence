@@ -134,7 +134,7 @@ void BufferView::setZoom(const QRect &area)
     }
 }
 
-void BufferView::updateWindowTitle(const QPoint &point)
+void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
 {
     QString path = buffer->path();
     int depth = 1;
@@ -143,15 +143,15 @@ void BufferView::updateWindowTitle(const QPoint &point)
     }
     int zoom = qRound(ui->graphicsView->transform().m11() * 100.0);
 
-    if (point.x() >= 0 && point.y() >= 0 && point.x() < buffer->image().width() && point.y() < buffer->image().height()) {
+    if (mouseCoordinates.x() >= 0 && mouseCoordinates.y() >= 0 && mouseCoordinates.x() < buffer->image().width() && mouseCoordinates.y() < buffer->image().height()) {
         setWindowTitle(QString("%1 (%2x%3x%4) %5% %6,%7")
                        .arg(path.isEmpty() ? "Untitled" : path)
                        .arg(buffer->image().width())
                        .arg(buffer->image().height())
                        .arg(depth)
                        .arg(zoom)
-                       .arg(point.x())
-                       .arg(point.y()));
+                       .arg(mouseCoordinates.x())
+                       .arg(mouseCoordinates.y()));
     } else {
         setWindowTitle(QString("%1 (%2x%3x%4) %5%")
                        .arg(path.isEmpty() ? "Untitled" : path)
