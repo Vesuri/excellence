@@ -109,6 +109,8 @@
     </property>
     <addaction name="actionImageCopyColor"/>
     <addaction name="actionImageSwapColors"/>
+    <addaction name="separator"/>
+    <addaction name="actionImageHistogram"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuImage"/>
@@ -199,6 +201,11 @@
   <action name="actionPaletteSwapAndRemapColors">
    <property name="text">
     <string>Swap and remap colors</string>
+   </property>
+  </action>
+  <action name="actionImageHistogram">
+   <property name="text">
+    <string>Histogram</string>
    </property>
   </action>
  </widget>

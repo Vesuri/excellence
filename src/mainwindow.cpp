@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
     connect(ui->actionFileProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
+    connect(ui->actionImageHistogram, SIGNAL(triggered()), this, SLOT(imageHistogram()));
     connect(ui->actionImageCopyColor, SIGNAL(triggered()), this, SLOT(imageCopyColor()));
     connect(ui->actionImageSwapColors, SIGNAL(triggered()), this, SLOT(imageSwapColors()));
     connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(paletteCopyColor()));
@@ -225,6 +226,21 @@ void MainWindow::showProperties()
 {
     propertiesDialog->setBuffer(buffer);
     propertiesDialog->show();
+}
+
+void MainWindow::imageHistogram()
+{
+    QVector<unsigned> histogram(buffer->image().colorCount());
+
+    for (int y = 0; y < buffer->image().height(); y++) {
+        for (int x = 0; x < buffer->image().width(); x++) {
+            histogram[buffer->image().pixelIndex(x, y)]++;
+        }
+    }
+
+    for (int i = 0; i < histogram.count(); i++) {
+        qWarning("%d #%06x %d", i, buffer->image().color(i) & 0xffffff, histogram[i]);
+    }
 }
 
 void MainWindow::imageCopyColor()

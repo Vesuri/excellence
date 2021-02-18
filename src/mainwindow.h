@@ -38,6 +38,7 @@ private slots:
     void closeWindow();
     void showProperties();
     void setBuffer(Buffer *buffer);
+    void imageHistogram();
     void imageCopyColor();
     void imageSwapColors();
     void paletteCopyColor();
