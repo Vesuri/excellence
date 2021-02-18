@@ -43,6 +43,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
 
+    setAttribute(Qt::WA_Hover);
+    installEventFilter(this);
+
     QTimer::singleShot(1, this, SLOT(initialize()));
 }
 
@@ -143,6 +146,8 @@ void MainWindow::setBuffer(Buffer *newBuffer)
         connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(runPaletteActionForEraseColor(unsigned)));
         button->setPaletteIndex(static_cast<unsigned>(i));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+        button->setAttribute(Qt::WA_Hover);
+        button->installEventFilter(this);
         ui->paletteLayout->addWidget(button, row, column);
         column++;
         if (column >= paletteButtonPerRow) {
@@ -291,17 +296,31 @@ void MainWindow::setEraseColor(unsigned paletteIndex)
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
-    if (event->type() == QEvent::WindowActivate) {
+    switch (event->type()) {
+    case QEvent::WindowActivate:
         foreach (BufferView *bufferView, bufferViews) {
             if (watched == bufferView) {
                 activeBufferView = bufferView;
             }
         }
+        break;
+    case QEvent::HoverEnter: {
+        PaletteButton *paletteButton = qobject_cast<PaletteButton *>(watched);
+        if (paletteButton) {
+            updateWindowTitle(paletteButton->paletteIndex());
+        }
+        break;
+    }
+    case QEvent::HoverLeave:
+        updateWindowTitle();
+        break;
+    default:
+        break;
     }
     return QObject::eventFilter(watched, event);
 }
 
-void MainWindow::updateWindowTitle()
+void MainWindow::updateWindowTitle(int paletteIndex)
 {
     QString windowTitle;
 
@@ -324,6 +343,10 @@ void MainWindow::updateWindowTitle()
     default:
         windowTitle = "Excellence";
         break;
+    }
+
+    if (paletteIndex >= 0) {
+        windowTitle.append(paletteMode == Pick ? QString(" %1").arg(paletteIndex) : QString(" %1->%2").arg(paintColor).arg(paletteIndex));
     }
 
     setWindowTitle(windowTitle);

@@ -50,7 +50,7 @@ private:
 
     void setPaintColor(unsigned paletteIndex);
     void setEraseColor(unsigned paletteIndex);
-    void updateWindowTitle();
+    void updateWindowTitle(int paletteIndex = -1);
 
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
