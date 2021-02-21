@@ -11,12 +11,13 @@ class PenTip : public Pen
 public:
     explicit PenTip(QObject *parent = nullptr);
 
-    void setPaintColor(unsigned paintColor);
-    void setEraseColor(unsigned eraseColor);
-
     QRect paint(const QPoint &point, Buffer *buffer) const override;
     QRect erase(const QPoint &point, Buffer *buffer) const override;
     QRect rect(const QPoint &point) const override;
+
+public slots:
+    void setPaintColor(unsigned paintColor);
+    void setEraseColor(unsigned eraseColor);
 
 private:
     unsigned paintColor_;

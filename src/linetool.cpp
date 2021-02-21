@@ -86,5 +86,5 @@ void LineTool::registerTool()
 
 void LineTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 2);
+    layout->addWidget(button_, 0, 3);
 }

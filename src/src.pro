@@ -30,7 +30,8 @@ SOURCES += main.cpp\
     undobuffer.cpp \
     cleartool.cpp \
     undotool.cpp \
-    zoomtool.cpp
+    zoomtool.cpp \
+    palettetool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -49,6 +50,7 @@ HEADERS  += mainwindow.h \
     cleartool.h \
     undotool.h \
     zoomtool.h \
+    palettetool.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \

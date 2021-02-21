@@ -275,7 +275,9 @@ static QRgb defaultPalette[] = {
 */
 
 Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
-    pen_(nullptr)
+    pen_(nullptr),
+    paintColor_(1),
+    eraseColor_(0)
 {
     initialize(width, height, colors);
 }
@@ -283,7 +285,9 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     path_(path),
     image_(path),
-    pen_(nullptr)
+    pen_(nullptr),
+    paintColor_(1),
+    eraseColor_(0)
 {
     if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
         initialize();
@@ -416,6 +420,30 @@ Tool *Buffer::tool() const
     return tool_;
 }
 
+void Buffer::setPaintColor(unsigned colorIndex)
+{
+    paintColor_ = colorIndex;
+
+    emit paintColorChanged(paintColor_, image().color(static_cast<int>(paintColor_)));
+}
+
+unsigned Buffer::paintColor() const
+{
+    return paintColor_;
+}
+
+void Buffer::setEraseColor(unsigned colorIndex)
+{
+    eraseColor_ = colorIndex;
+
+    emit eraseColorChanged(eraseColor_, image().color(static_cast<int>(eraseColor_)));
+}
+
+unsigned Buffer::eraseColor() const
+{
+    return eraseColor_;
+}
+
 void Buffer::copyImageColor(unsigned fromIndex, unsigned toIndex)
 {
     for (int y = 0; y < image_.height(); y++) {
@@ -456,6 +484,13 @@ void Buffer::swapPaletteColors(unsigned index1, unsigned index2)
     QRgb color2 = image_.color(index2);
     image_.setColor(index1, color2);
     image_.setColor(index2, color1);
+    emit paletteModified();
+    emit modified(image_.rect());
+}
+
+void Buffer::setColor(unsigned colorIndex, const QColor &color)
+{
+    image_.setColor(colorIndex, color.rgb());
     emit paletteModified();
     emit modified(image_.rect());
 }

@@ -32,14 +32,14 @@ void CurrentColorsButton::paintEvent(QPaintEvent *event)
     painter.end();
 }
 
-void CurrentColorsButton::setPaintColor(const QColor &color)
+void CurrentColorsButton::setPaintColor(unsigned, const QColor &color)
 {
     this->paintColor = color;
 
     update();
 }
 
-void CurrentColorsButton::setEraseColor(const QColor &color)
+void CurrentColorsButton::setEraseColor(unsigned, const QColor &color)
 {
     this->eraseColor = color;
 

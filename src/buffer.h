@@ -30,10 +30,15 @@ public:
     Tool *tool() const;
     void setPen(Pen *pen);
     Pen *pen() const;
+    void setPaintColor(unsigned colorIndex);
+    unsigned paintColor() const;
+    void setEraseColor(unsigned colorIndex);
+    unsigned eraseColor() const;
     void copyImageColor(unsigned fromIndex, unsigned toIndex);
     void swapImageColors(unsigned index1, unsigned index2);
     void copyPaletteColor(unsigned fromIndex, unsigned toIndex);
     void swapPaletteColors(unsigned index1, unsigned index2);
+    void setColor(unsigned colorIndex, const QColor &color);
 
 public slots:
     void clear();
@@ -45,6 +50,8 @@ signals:
     void zoomed(QRect area);
     void toolChanged(Tool *tool);
     void paletteModified();
+    void paintColorChanged(unsigned colorIndex, QColor color);
+    void eraseColorChanged(unsigned colorIndex, QColor color);
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 8);
@@ -56,6 +63,8 @@ private:
     QList<UndoBuffer *> undoBuffers;
     Tool *tool_;
     Pen *pen_;
+    unsigned paintColor_;
+    unsigned eraseColor_;
 };
 
 #endif // BUFFER_H

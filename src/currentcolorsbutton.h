@@ -9,10 +9,11 @@ class CurrentColorsButton : public QAbstractButton
 public:
     explicit CurrentColorsButton(QWidget *parent = nullptr);
 
-    void setPaintColor(const QColor &color);
-    void setEraseColor(const QColor &color);
-
     void paintEvent(QPaintEvent *e) override;
+
+public slots:
+    void setPaintColor(unsigned colorIndex, const QColor &color);
+    void setEraseColor(unsigned colorIndex, const QColor &color);
 
 private:
     QColor paintColor;

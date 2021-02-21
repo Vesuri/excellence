@@ -48,8 +48,6 @@ private slots:
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap };
 
-    void setPaintColor(unsigned paletteIndex);
-    void setEraseColor(unsigned paletteIndex);
     void updateWindowTitle(int paletteIndex = -1);
 
     Ui::MainWindow *ui;
@@ -60,8 +58,6 @@ private:
     Buffer *buffer;
     PenTip *penTip;
     PaletteMode paletteMode;
-    unsigned paintColor;
-    unsigned eraseColor;
 };
 
 #endif // MAINWINDOW_H

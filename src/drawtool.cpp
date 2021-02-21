@@ -103,5 +103,5 @@ void DrawTool::activate()
 
 void DrawTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 1);
+    layout->addWidget(button_, 0, 2);
 }

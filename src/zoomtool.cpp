@@ -59,7 +59,7 @@ void ZoomTool::activate()
 
 void ZoomTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 3);
+    layout->addWidget(button_, 1, 4);
 }
 
 Tool::Type ZoomTool::type() const

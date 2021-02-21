@@ -20,9 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     propertiesDialog(new PropertiesDialog),
     buffer(nullptr),
     penTip(new PenTip(this)),
-    paletteMode(Pick),
-    paintColor(1),
-    eraseColor(0)
+    paletteMode(Pick)
 {
     ui->setupUi(this);
 
@@ -60,23 +58,23 @@ void MainWindow::runPaletteActionForPaintColor(unsigned paletteIndex)
 
     switch (paletteMode) {
     case ImageCopy:
-        buffer->copyImageColor(paintColor, paletteIndex);
+        buffer->copyImageColor(buffer->paintColor(), paletteIndex);
         break;
     case ImageSwap:
-        buffer->swapImageColors(paintColor, paletteIndex);
+        buffer->swapImageColors(buffer->paintColor(), paletteIndex);
         break;
     case PaletteCopy:
-        buffer->copyPaletteColor(paintColor, paletteIndex);
+        buffer->copyPaletteColor(buffer->paintColor(), paletteIndex);
         break;
     case PaletteSwap:
-        buffer->swapPaletteColors(paintColor, paletteIndex);
+        buffer->swapPaletteColors(buffer->paintColor(), paletteIndex);
         break;
     case PaletteSwapAndRemap:
-        buffer->swapImageColors(paintColor, paletteIndex);
-        buffer->swapPaletteColors(paintColor, paletteIndex);
+        buffer->swapImageColors(buffer->paintColor(), paletteIndex);
+        buffer->swapPaletteColors(buffer->paintColor(), paletteIndex);
         break;
     default:
-        setPaintColor(paletteIndex);
+        buffer->setPaintColor(paletteIndex);
         resetPaletteMode = false;
         break;
     }
@@ -91,7 +89,7 @@ void MainWindow::runPaletteActionForEraseColor(unsigned paletteIndex)
 {
     switch (paletteMode) {
     case Pick:
-        setEraseColor(paletteIndex);
+        buffer->setEraseColor(paletteIndex);
         break;
     default:
         paletteMode = Pick;
@@ -105,8 +103,8 @@ void MainWindow::initialize()
     QStringList arguments = qApp->arguments();
     openFile(arguments.length() > 1 ? arguments.last() : QString());
 
-    penTip->setPaintColor(paintColor);
-    penTip->setEraseColor(eraseColor);
+    penTip->setPaintColor(buffer->paintColor());
+    penTip->setEraseColor(buffer->eraseColor());
 
     newWindow();
 
@@ -158,6 +156,10 @@ void MainWindow::setBuffer(Buffer *newBuffer)
 
     updatePalette();
     connect(buffer, SIGNAL(paletteModified()), this, SLOT(updatePalette()));
+    connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), penTip, SLOT(setPaintColor(unsigned)));
+    connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), penTip, SLOT(setEraseColor(unsigned)));
+    connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setPaintColor(unsigned, QColor)));
+    connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setEraseColor(unsigned, QColor)));
 
     delete oldBuffer;
 }
@@ -168,8 +170,8 @@ void MainWindow::updatePalette()
         PaletteButton *button = static_cast<PaletteButton *>(ui->paletteLayout->itemAt(i)->widget());
         button->setColor(QColor(buffer->image().color(i)));
     }
-    ui->currentColorsButton->setPaintColor(QColor(buffer->image().color(static_cast<int>(paintColor))));
-    ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(static_cast<int>(eraseColor))));
+    ui->currentColorsButton->setPaintColor(buffer->paintColor(), QColor(buffer->image().color(static_cast<int>(buffer->paintColor()))));
+    ui->currentColorsButton->setEraseColor(buffer->eraseColor(), QColor(buffer->image().color(static_cast<int>(buffer->eraseColor()))));
 }
 
 void MainWindow::openFile(const QString &path)
@@ -278,22 +280,6 @@ void MainWindow::paletteSwapAndRemapColors()
     updateWindowTitle();
 }
 
-void MainWindow::setPaintColor(unsigned paletteIndex)
-{
-    paintColor = paletteIndex;
-
-    penTip->setPaintColor(paintColor);
-    ui->currentColorsButton->setPaintColor(QColor(buffer->image().color(static_cast<int>(paintColor))));
-}
-
-void MainWindow::setEraseColor(unsigned paletteIndex)
-{
-    eraseColor = paletteIndex;
-
-    penTip->setEraseColor(eraseColor);
-    ui->currentColorsButton->setEraseColor(QColor(buffer->image().color(static_cast<int>(eraseColor))));
-}
-
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
     switch (event->type()) {
@@ -346,7 +332,7 @@ void MainWindow::updateWindowTitle(int paletteIndex)
     }
 
     if (paletteIndex >= 0) {
-        windowTitle.append(paletteMode == Pick ? QString(" %1").arg(paletteIndex) : QString(" %1->%2").arg(paintColor).arg(paletteIndex));
+        windowTitle.append(paletteMode == Pick ? QString(" %1").arg(paletteIndex) : QString(" %1->%2").arg(buffer->paintColor()).arg(paletteIndex));
     }
 
     setWindowTitle(windowTitle);
