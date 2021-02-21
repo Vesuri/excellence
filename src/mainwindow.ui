@@ -84,8 +84,6 @@
     <addaction name="actionFileSave"/>
     <addaction name="actionFileSaveAs"/>
     <addaction name="separator"/>
-    <addaction name="actionFileProperties"/>
-    <addaction name="separator"/>
     <addaction name="actionFileQuit"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -111,6 +109,8 @@
     <addaction name="actionImageSwapColors"/>
     <addaction name="separator"/>
     <addaction name="actionImageHistogram"/>
+    <addaction name="separator"/>
+    <addaction name="actionImageProperties"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuImage"/>
@@ -170,7 +170,7 @@
     <string>Ctrl+N</string>
    </property>
   </action>
-  <action name="actionFileProperties">
+  <action name="actionImageProperties">
    <property name="text">
     <string>Properties</string>
    </property>

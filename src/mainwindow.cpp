@@ -32,10 +32,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
-    connect(ui->actionFileProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
-    connect(ui->actionImageHistogram, SIGNAL(triggered()), this, SLOT(imageHistogram()));
     connect(ui->actionImageCopyColor, SIGNAL(triggered()), this, SLOT(imageCopyColor()));
     connect(ui->actionImageSwapColors, SIGNAL(triggered()), this, SLOT(imageSwapColors()));
+    connect(ui->actionImageHistogram, SIGNAL(triggered()), this, SLOT(imageHistogram()));
+    connect(ui->actionImageProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
     connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(paletteCopyColor()));
     connect(ui->actionPaletteSwapColors, SIGNAL(triggered()), this, SLOT(paletteSwapColors()));
     connect(ui->actionPaletteSwapAndRemapColors, SIGNAL(triggered()), this, SLOT(paletteSwapAndRemapColors()));
