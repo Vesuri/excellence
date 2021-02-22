@@ -3,6 +3,7 @@
 #include <QtPlugin>
 
 Q_IMPORT_PLUGIN(ILBMPlugin)
+Q_IMPORT_PLUGIN(RawPlugin)
 
 int main(int argc, char *argv[])
 {

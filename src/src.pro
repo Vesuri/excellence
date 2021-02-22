@@ -60,6 +60,6 @@ FORMS    += mainwindow.ui \
 RESOURCES += \
     icons/icons.qrc
 
-LIBS += -Lplugins/ilbm
-CONFIG(release, debug|release): LIBS += -lilbm
-else:CONFIG(debug, debug|release): LIBS += -lilbm_debug
+LIBS += -Lplugins/ilbm -Lplugins/raw
+CONFIG(release, debug|release): LIBS += -lilbm -lraw
+else:CONFIG(debug, debug|release): LIBS += -lilbm_debug -lraw_debug
