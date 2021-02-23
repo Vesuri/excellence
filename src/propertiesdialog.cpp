@@ -42,6 +42,7 @@ void PropertiesDialog::setProperties()
     bool remapPalette = ui->comboBoxPalette->currentIndex() == 1;
 
     Buffer *newBuffer = new Buffer(width, height, colors, buffer->parent());
+    newBuffer->setPath(buffer->path());
     newBuffer->image().setDotsPerMeterX(buffer->image().dotsPerMeterX());
     newBuffer->image().setDotsPerMeterY(buffer->image().dotsPerMeterY());
     for (int i = 0; i < qMin(colors, buffer->image().colorCount()); i++) {
