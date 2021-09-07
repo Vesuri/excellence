@@ -342,16 +342,20 @@ void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt:
 {
     tool_->setMouseButton(button);
 
-    if (tool_->type() == Tool::Modify) {
+    switch (tool_->type()) {
+    case Tool::Zoom: {
+        QRect zoomedArea = tool_->press(point, modifiers);
+
+        emit zoomed(zoomedArea);
+        break;
+    }
+    default:
         preModificationImage = image_.copy();
 
         modifiedArea = tool_->press(point, modifiers);
 
         emit modified(modifiedArea);
-    } else {
-        QRect zoomedArea = tool_->press(point, modifiers);
-
-        emit zoomed(zoomedArea);
+        break;
     }
 }
 
@@ -359,12 +363,15 @@ void Buffer::move(const QPoint &point)
 {
     QRect area = tool_->move(point);
 
-    if (tool_->type() == Tool::Modify) {
+    switch (tool_->type()) {
+    case Tool::Zoom:
+        emit zoomed(area);
+        break;
+    default:
         modifiedArea = modifiedArea.united(area);
 
         emit modified(area);
-    } else {
-        emit zoomed(area);
+        break;
     }
 }
 
@@ -372,7 +379,11 @@ void Buffer::release(const QPoint &point)
 {
     QRect area = tool_->release(point);
 
-    if (tool_->type() == Tool::Modify) {
+    switch (tool_->type()) {
+    case Tool::Zoom:
+        emit zoomed(area);
+        break;
+    default:
         modifiedArea = modifiedArea.united(area);
 
         emit modified(area);
@@ -381,8 +392,7 @@ void Buffer::release(const QPoint &point)
 
         modifiedArea = QRect();
         preModificationImage = QImage();
-    } else {
-        emit zoomed(area);
+        break;
     }
 }
 
