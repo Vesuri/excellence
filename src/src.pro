@@ -31,7 +31,9 @@ SOURCES += main.cpp\
     cleartool.cpp \
     undotool.cpp \
     zoomtool.cpp \
-    palettetool.cpp
+    palettetool.cpp \
+    brushtool.cpp \
+    brush.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -51,6 +53,8 @@ HEADERS  += mainwindow.h \
     undotool.h \
     zoomtool.h \
     palettetool.h \
+    brushtool.h \
+    brush.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \
