@@ -10,6 +10,7 @@ class Algorithms
 {
 public:
     static void line(const QPoint &from, const QPoint &to, std::function<void(const QPoint &)> point);
+    static void rectangle(const QPoint &topLeft, const QPoint &bottomRight, std::function<void(const QPoint &)> point);
 };
 
 #endif // ALGORITHMS_H

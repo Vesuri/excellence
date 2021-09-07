@@ -42,3 +42,13 @@ void Algorithms::line(const QPoint &from, const QPoint &to, std::function<void(c
         }
     }
 }
+
+void Algorithms::rectangle(const QPoint &topLeft, const QPoint &bottomRight, std::function<void(const QPoint &)> point)
+{
+    QPoint topRight(bottomRight.x(), topLeft.y());
+    QPoint bottomLeft(topLeft.x(), bottomRight.y());
+    line(topLeft, topRight, point);
+    line(topRight, bottomRight, point);
+    line(bottomRight, bottomLeft, point);
+    line(bottomLeft, topLeft, point);
+}
