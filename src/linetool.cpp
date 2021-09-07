@@ -1,6 +1,5 @@
 #include <QImage>
 #include <QRect>
-#include <QPainter>
 #include <QGridLayout>
 #include "pen.h"
 #include "buffer.h"

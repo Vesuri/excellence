@@ -5,7 +5,6 @@
 #include <QPoint>
 #include <QImage>
 
-class QImage;
 class Buffer;
 
 class UndoBuffer : public QObject
