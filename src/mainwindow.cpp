@@ -203,7 +203,7 @@ void MainWindow::saveFile(const QString &savePath)
 
 void MainWindow::saveAs()
 {
-    QString path = QFileDialog::getSaveFileName(nullptr, tr("Open file"));
+    QString path = QFileDialog::getSaveFileName(nullptr, tr("Open file"), buffer->path());
 
     if (!path.isEmpty()) {
         saveFile(path);
