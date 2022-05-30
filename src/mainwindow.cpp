@@ -180,6 +180,7 @@ void MainWindow::updatePalette()
 void MainWindow::openFile(const QString &path)
 {
     setBuffer(new Buffer(path, this));
+    openDialog->setDirectory(path);
 }
 
 void MainWindow::saveFile(const QString &savePath)
