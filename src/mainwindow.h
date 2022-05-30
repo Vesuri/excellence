@@ -36,6 +36,7 @@ private slots:
     void saveAs();
     void newWindow();
     void closeWindow();
+    void loadPalette(const QString &path = QString());
     void showProperties();
     void setBuffer(Buffer *buffer);
     void imageHistogram();
@@ -52,6 +53,7 @@ private:
 
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
+    QFileDialog *loadPaletteDialog;
     PropertiesDialog *propertiesDialog;
     QVector<BufferView *> bufferViews;
     BufferView *activeBufferView;

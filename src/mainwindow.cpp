@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     openDialog(new QFileDialog(nullptr, tr("Open file"))),
+    loadPaletteDialog(new QFileDialog(nullptr, tr("Load palette"))),
     propertiesDialog(new PropertiesDialog),
     buffer(nullptr),
     penTip(new PenTip(this)),
@@ -25,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
+    connect(loadPaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(loadPalette(QString)));
     connect(ui->actionFileQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(ui->actionFileNew, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
@@ -34,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionImageSwapColors, SIGNAL(triggered()), this, SLOT(imageSwapColors()));
     connect(ui->actionImageHistogram, SIGNAL(triggered()), this, SLOT(imageHistogram()));
     connect(ui->actionImageProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
+    connect(ui->actionPaletteLoad, SIGNAL(triggered()), loadPaletteDialog, SLOT(show()));
     connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(paletteCopyColor()));
     connect(ui->actionPaletteSwapColors, SIGNAL(triggered()), this, SLOT(paletteSwapColors()));
     connect(ui->actionPaletteSwapAndRemapColors, SIGNAL(triggered()), this, SLOT(paletteSwapAndRemapColors()));
@@ -227,6 +230,16 @@ void MainWindow::closeWindow()
     } else {
         openFile();
     }
+}
+
+void MainWindow::loadPalette(const QString &path)
+{
+    QImage image(path);
+    for (int i = 0; i < qMin(image.colorCount(), buffer->image().colorCount()); i++) {
+        buffer->image().setColor(i, image.color(i));
+    }
+    updatePalette();
+    emit buffer->modified(buffer->image().rect());
 }
 
 void MainWindow::showProperties()
