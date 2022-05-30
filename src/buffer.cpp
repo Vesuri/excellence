@@ -1,4 +1,5 @@
 #include <QImage>
+#include <QMessageBox>
 #include "undobuffer.h"
 #include "tool.h"
 #include "buffer.h"
@@ -284,12 +285,20 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
 
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     path_(path),
-    image_(path),
+    image_(),
     pen_(nullptr),
     paintColor_(1),
     eraseColor_(0)
 {
+    if (!path.isEmpty()) {
+        image_.load(path);
+    }
     if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
+        if (image_.format() != QImage::Format_Indexed8) {
+            QMessageBox msgBox;
+            msgBox.setText("Not an indexed palette image.");
+            msgBox.exec();
+        }
         initialize();
     }
 }
