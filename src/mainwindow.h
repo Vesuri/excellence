@@ -59,6 +59,7 @@ private:
     BufferView *activeBufferView;
     Buffer *buffer;
     PenTip *penTip;
+    PenTip *toolPenTip;
     PaletteMode paletteMode;
 };
 

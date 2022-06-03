@@ -30,6 +30,8 @@ public:
     Tool *tool() const;
     void setPen(Pen *pen);
     Pen *pen() const;
+    void setToolPen(Pen *pen);
+    Pen *toolPen() const;
     void setPaintColor(unsigned colorIndex);
     unsigned paintColor() const;
     void setEraseColor(unsigned colorIndex);
@@ -63,6 +65,7 @@ private:
     QList<UndoBuffer *> undoBuffers;
     Tool *tool_;
     Pen *pen_;
+    Pen *toolPen_;
     unsigned paintColor_;
     unsigned eraseColor_;
 };

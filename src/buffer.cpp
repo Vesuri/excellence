@@ -277,6 +277,7 @@ static QRgb defaultPalette[] = {
 
 Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
     pen_(nullptr),
+    toolPen_(nullptr),
     paintColor_(1),
     eraseColor_(0)
 {
@@ -287,6 +288,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     path_(path),
     image_(),
     pen_(nullptr),
+    toolPen_(nullptr),
     paintColor_(1),
     eraseColor_(0)
 {
@@ -423,6 +425,16 @@ void Buffer::setPen(Pen *pen)
 Pen *Buffer::pen() const
 {
     return pen_;
+}
+
+void Buffer::setToolPen(Pen *pen)
+{
+    toolPen_ = pen;
+}
+
+Pen *Buffer::toolPen() const
+{
+    return toolPen_;
 }
 
 void Buffer::setTool(Tool *tool)

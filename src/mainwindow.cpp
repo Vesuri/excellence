@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     propertiesDialog(new PropertiesDialog),
     buffer(nullptr),
     penTip(new PenTip(this)),
+    toolPenTip(new PenTip(this)),
     paletteMode(Pick)
 {
     ui->setupUi(this);
@@ -108,6 +109,7 @@ void MainWindow::initialize()
 
     penTip->setPaintColor(buffer->paintColor());
     penTip->setEraseColor(buffer->eraseColor());
+    toolPenTip->setPaintColor(1);
 
     newWindow();
 
@@ -128,6 +130,7 @@ void MainWindow::setBuffer(Buffer *newBuffer)
     }
 
     buffer->setPen(penTip);
+    buffer->setToolPen(toolPenTip);
     buffer->setTool(tools.at(0));
 
     foreach (BufferView *bufferView, bufferViews) {

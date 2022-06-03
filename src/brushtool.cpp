@@ -62,15 +62,15 @@ QRect BrushTool::release(const QPoint &point)
 
 QRect BrushTool::changes(const QPoint &point)
 {
-    return buffer_->pen()->rect(point);
+    return buffer_->toolPen()->rect(point);
 }
 
 QRect BrushTool::draw(const QPoint &point)
 {
     if (mouseButton_ == Qt::LeftButton) {
-        return buffer_->pen()->paint(point, buffer_);
+        return buffer_->toolPen()->paint(point, buffer_);
     } else {
-        return buffer_->pen()->erase(point, buffer_);
+        return buffer_->toolPen()->erase(point, buffer_);
     }
 }
 
