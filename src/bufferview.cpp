@@ -2,6 +2,7 @@
 #include <QGraphicsScene>
 #include <QPixmap>
 #include <QGraphicsSceneMouseEvent>
+#include <QKeyEvent>
 #include <QtCore/qmath.h>
 #include "tool.h"
 #include "buffer.h"
@@ -13,7 +14,8 @@ BufferView::BufferView(QWidget *parent) :
     ui(new Ui::BufferView),
     scene(new QGraphicsScene(this)),
     pixmapItem(new QGraphicsPixmapItem),
-    buffer(nullptr)
+    buffer(nullptr),
+    lastMousePoint()
 {
     ui->setupUi(this);
 
@@ -91,6 +93,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             }
 
             updateWindowTitle(point);
+            lastMousePoint = point;
             break;
         }
         default:
@@ -107,6 +110,20 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
     }
 
     return false;
+}
+
+void BufferView::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key()) {
+    case '+':
+        setZoom(QRect(lastMousePoint, QSize(2, 2)));
+        break;
+    case '-':
+        setZoom(QRect(lastMousePoint, QSize(-2, -2)));
+        break;
+    default:
+        break;
+    }
 }
 
 void BufferView::setPixmap(const QRect &area)

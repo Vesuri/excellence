@@ -23,6 +23,9 @@ public:
     void setBuffer(Buffer *buffer);
     bool eventFilter(QObject *watched, QEvent *event) override;
 
+protected:
+    virtual void keyPressEvent(QKeyEvent *event) override;
+
 private slots:
     void setPixmap(const QRect &area);
     void setZoom(const QRect &area);
@@ -33,6 +36,7 @@ private:
     QGraphicsScene *scene;
     QGraphicsPixmapItem *pixmapItem;
     Buffer *buffer;
+    QPoint lastMousePoint;
 };
 
 #endif // BUFFERVIEW_H
