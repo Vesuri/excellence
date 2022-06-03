@@ -294,7 +294,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
         image_.load(path);
     }
     if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
-        if (image_.format() != QImage::Format_Indexed8) {
+        if (!path.isEmpty() && image_.format() != QImage::Format_Indexed8) {
             QMessageBox msgBox;
             msgBox.setText("Not an indexed palette image.");
             msgBox.exec();
