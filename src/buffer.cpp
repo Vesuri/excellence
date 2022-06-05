@@ -458,6 +458,7 @@ void Buffer::setTool(Tool *tool)
 {
     if (tool_ != tool) {
         tool_ = tool;
+        tool_->setMouseButton(Qt::NoButton);
 
         emit toolChanged(tool);
     }
