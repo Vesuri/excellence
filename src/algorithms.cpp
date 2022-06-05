@@ -52,3 +52,12 @@ void Algorithms::rectangle(const QPoint &topLeft, const QPoint &bottomRight, std
     line(bottomRight, bottomLeft, point);
     line(bottomLeft, topLeft, point);
 }
+
+void Algorithms::fillRectangle(const QPoint &topLeft, const QPoint &bottomRight, std::function<void(const QPoint &)> point)
+{
+    for (int y = topLeft.y(); y <= bottomRight.y(); y++) {
+        QPoint left(topLeft.x(), y);
+        QPoint right(bottomRight.x(), y);
+        line(left, right, point);
+    }
+}

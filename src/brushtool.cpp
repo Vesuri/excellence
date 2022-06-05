@@ -57,6 +57,11 @@ QRect BrushTool::release(const QPoint &point)
 
     QImage image = buffer_->image().copy(QRect(startPoint, point));
     buffer_->setPen(new Brush(image));
+
+    if (mouseButton_ == Qt::RightButton) {
+        Algorithms::fillRectangle(startPoint, point, [this](const QPoint &point) { this->draw(point); });
+    }
+
     return changedRect;
 }
 
