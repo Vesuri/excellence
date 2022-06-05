@@ -77,19 +77,18 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             QPointF scenePos = mouseEvent->scenePos();
             QPoint point(qFloor(scenePos.x()), qFloor(scenePos.y()));
 
-            if (event->type() == QEvent::GraphicsSceneMouseMove && mouseEvent->buttons() != Qt::NoButton) {
+            switch (event->type()) {
+            case QEvent::GraphicsSceneMousePress:
+                buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
+                break;
+            case QEvent::GraphicsSceneMouseMove:
                 buffer->move(point);
-            } else {
-                switch (event->type()) {
-                case QEvent::GraphicsSceneMousePress:
-                    buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
-                    break;
-                case QEvent::GraphicsSceneMouseRelease:
-                    buffer->release(point);
-                    break;
-                default:
-                    break;
-                }
+                break;
+            case QEvent::GraphicsSceneMouseRelease:
+                buffer->release(point);
+                break;
+            default:
+                break;
             }
 
             updateWindowTitle(point);

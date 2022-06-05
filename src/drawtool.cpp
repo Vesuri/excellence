@@ -46,7 +46,7 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 
 QRect DrawTool::move(const QPoint &point)
 {
-    if (drawMode == Draw) {
+    if (drawMode == Draw || mouseButton_ == Qt::NoButton) {
         return draw(point);
     } else {
         QRect changedRect;
@@ -54,6 +54,11 @@ QRect DrawTool::move(const QPoint &point)
         previousPoint = point;
         return changedRect;
     }
+}
+
+QRect DrawTool::hover(const QPoint &point)
+{
+    return buffer_->pen()->rect(point);
 }
 
 QRect DrawTool::release(const QPoint &point)
@@ -74,10 +79,10 @@ QRect DrawTool::release(const QPoint &point)
 
 QRect DrawTool::draw(const QPoint &point)
 {
-    if (mouseButton_ == Qt::LeftButton) {
-        return buffer_->pen()->paint(point, buffer_);
-    } else {
+    if (mouseButton_ == Qt::RightButton) {
         return buffer_->pen()->erase(point, buffer_);
+    } else {
+        return buffer_->pen()->paint(point, buffer_);
     }
 }
 

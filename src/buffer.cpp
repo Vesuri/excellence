@@ -276,6 +276,7 @@ static QRgb defaultPalette[] = {
 */
 
 Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
+    moveUndoBuffer(nullptr),
     pen_(nullptr),
     toolPen_(nullptr),
     paintColor_(1),
@@ -287,6 +288,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     path_(path),
     image_(),
+    moveUndoBuffer(nullptr),
     pen_(nullptr),
     toolPen_(nullptr),
     paintColor_(1),
@@ -372,6 +374,19 @@ void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt:
 
 void Buffer::move(const QPoint &point)
 {
+    if (moveUndoBuffer) {
+        moveUndoBuffer->apply(this);
+        delete moveUndoBuffer;
+        moveUndoBuffer = nullptr;
+    }
+
+    if (tool_->mouseButton() == Qt::NoButton) {
+        QRect rect = tool_->hover(point);
+        if (!rect.isNull()) {
+            moveUndoBuffer = new UndoBuffer(rect.topLeft(), image().copy(rect));
+        }
+    }
+
     QRect area = tool_->move(point);
 
     switch (tool_->type()) {
@@ -405,6 +420,8 @@ void Buffer::release(const QPoint &point)
         preModificationImage = QImage();
         break;
     }
+
+    tool_->setMouseButton(Qt::NoButton);
 }
 
 void Buffer::undo()

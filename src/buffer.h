@@ -63,6 +63,7 @@ private:
     QRect modifiedArea;
     QImage preModificationImage;
     QList<UndoBuffer *> undoBuffers;
+    UndoBuffer *moveUndoBuffer;
     Tool *tool_;
     Pen *pen_;
     Pen *toolPen_;

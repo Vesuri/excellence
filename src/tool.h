@@ -19,11 +19,13 @@ public:
     explicit Tool(QObject *parent = nullptr);
 
     void setMouseButton(const Qt::MouseButton &mouseButton);
+    Qt::MouseButton mouseButton() const;
     virtual void setBuffer(Buffer *buffer);
 
     virtual QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) = 0;
     virtual QRect move(const QPoint &point) = 0;
     virtual QRect release(const QPoint &point) = 0;
+    virtual QRect hover(const QPoint &point);
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
     virtual Type type() const;
 

@@ -38,6 +38,10 @@ QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 
 QRect LineTool::move(const QPoint &point)
 {
+    if (mouseButton_ == Qt::NoButton) {
+        return QRect();
+    }
+
     undoBuffer->apply(buffer_);
     delete undoBuffer;
 
