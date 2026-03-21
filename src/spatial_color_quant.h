@@ -25,6 +25,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <vector>
 #include <deque>
+#include <random>
 #include <algorithm>
 #include <cassert>
 #include <iostream>
@@ -402,7 +403,9 @@ void random_permutation(int count, vector<int>& result) {
     for(int i=0; i<count; i++) {
         result.push_back(i);
     }
-    random_shuffle(result.begin(), result.end());
+    random_device randomDevice;
+    mt19937 generator(randomDevice());
+    shuffle(result.begin(), result.end(), generator);
 }
 
 void random_permutation_2d(int width, int height, deque< pair<int, int> >& result) {
