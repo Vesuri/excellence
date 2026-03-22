@@ -8,6 +8,8 @@ class PenTip : public Pen
 {
     Q_OBJECT
 public:
+    enum Shape { Circle, Square };
+
     explicit PenTip(QObject *parent = nullptr);
 
     QRect paint(const QPoint &point, Buffer *buffer) const override;
@@ -15,13 +17,16 @@ public:
     QRect rect(const QPoint &point) const override;
 
     int size() const;
+    Shape shape() const;
 
 public slots:
     void setPaintColor(unsigned paintColor);
     void setEraseColor(unsigned eraseColor);
     void setSize(int size);
+    void setShape(Shape shape);
 
 private:
+    bool inTip(int dx, int dy, int r) const;
     void applyColor(const QPoint &point, Buffer *buffer, unsigned color) const;
     void applySmear(const QPoint &point, Buffer *buffer, unsigned fallbackColor) const;
     void applySmooth(const QPoint &point, Buffer *buffer) const;
@@ -35,6 +40,7 @@ private:
     unsigned paintColor_;
     unsigned eraseColor_;
     int size_;
+    Shape shape_;
 };
 
 #endif // PENTIP_H

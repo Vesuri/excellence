@@ -10,7 +10,6 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include "pen.h"
-#include "pentip.h"
 #include "buffer.h"
 #include "algorithms.h"
 #include "drawtool.h"
@@ -157,20 +156,6 @@ QWidget *DrawTool::createOptionsWidget()
     QVBoxLayout *vbox = new QVBoxLayout(w);
     vbox->setSpacing(4);
     vbox->setContentsMargins(4, 4, 4, 4);
-
-    vbox->addWidget(new QLabel("Pen Tip Size:", w));
-
-    QHBoxLayout *row = new QHBoxLayout;
-    for (int size : {1, 3, 5, 7}) {
-        QPushButton *btn = new QPushButton(QString("%1px").arg(size), w);
-        btn->setFixedSize(40, 24);
-        connect(btn, &QPushButton::clicked, [this, size]() {
-            PenTip *tip = qobject_cast<PenTip *>(buffer_->pen());
-            if (tip) tip->setSize(size);
-        });
-        row->addWidget(btn);
-    }
-    vbox->addLayout(row);
 
     vbox->addWidget(new QLabel("Draw Mode:", w));
 

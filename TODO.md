@@ -56,36 +56,18 @@ Features remaining to implement, compared against Features.md. Items already ful
 - [ ] **Brush Shear X / Y** — Slant the brush horizontally or vertically with interactive drag. [#18](https://github.com/Vesuri/excellence/issues/18)
 - [ ] **Brush Outline** — Add a 1-pixel border in the foreground color at background-to-color boundaries. Keyboard: `o`. [#18](https://github.com/Vesuri/excellence/issues/18)
 - [ ] **Brush Trim** — Remove a 1-pixel boundary where background meets another color. Keyboard: `O`. [#18](https://github.com/Vesuri/excellence/issues/18)
-- [ ] **Pen Tip Tool** — Selectable pen tip sizes and shapes (multi-pixel circle, square, etc.); currently only 1×1 pixel is used. Keyboard: `.` for single pixel. [#20](https://github.com/Vesuri/excellence/issues/20)
 - [ ] **Anti-Aliasing for brush transforms** — Low / Medium / High quality levels for resize, rotation, and distortion. [#18](https://github.com/Vesuri/excellence/issues/18)
 
 ---
 
 ## 3. Draw Modes
 
-Currently only default Color mode (single foreground color) and Brush mode (stamp brush's own colors) are effectively supported. All the following are missing:
+Normal, Replace, Smear, Smooth, Range, Average Smear, Cycle, Random, Tint, Colorize, Brighten, Darken, Mix, Negative, Dither1, Dither2, Transparent, and the Amount slider are implemented. Missing:
 
-- [ ] **Replace mode** — All brush colors treated as foreground; no transparency. [#21](https://github.com/Vesuri/excellence/issues/21)
-- [ ] **Smear mode** — Drags and mixes pixels in the direction of travel. [#21](https://github.com/Vesuri/excellence/issues/21)
-- [ ] **Smooth mode** — Softens color transitions between adjacent pixels. [#21](https://github.com/Vesuri/excellence/issues/21)
-- [ ] **Range mode** — Increments/decrements each pixel one step along the active gradient range. [#22](https://github.com/Vesuri/excellence/issues/22)
-- [ ] **Average Smear mode** — Smear restricted to gradient range colors; averages with underlying colors. [#22](https://github.com/Vesuri/excellence/issues/22)
-- [ ] **Cycle mode** — Paints cycling through gradient colors sequentially; direction depends on mouse button. [#22](https://github.com/Vesuri/excellence/issues/22)
-- [ ] **Random mode** — Like Cycle but color order is randomized. [#22](https://github.com/Vesuri/excellence/issues/22)
-- [ ] **Tint mode** — Alters chroma of painted areas toward the current color. [#23](https://github.com/Vesuri/excellence/issues/23)
-- [ ] **Colorize mode** — Changes hue of areas containing chroma; no effect on neutrals. [#23](https://github.com/Vesuri/excellence/issues/23)
-- [ ] **Brighten mode** — Advances each pixel to the next brighter shade in its hue range. [#23](https://github.com/Vesuri/excellence/issues/23)
-- [ ] **Darken mode** — Advances each pixel to the next darker shade in its hue range. [#23](https://github.com/Vesuri/excellence/issues/23)
-- [ ] **Mix mode** — Mixes on-screen pixel colors with the current foreground color. [#23](https://github.com/Vesuri/excellence/issues/23)
-- [ ] **Negative mode** — Inverts colors being painted over. [#23](https://github.com/Vesuri/excellence/issues/23)
-- [ ] **Dither1 mode** — Dithered pattern of foreground color and transparency; Amount slider controls ratio. [#24](https://github.com/Vesuri/excellence/issues/24)
-- [ ] **Dither2 mode** — Dithered pattern of foreground and background color; Amount slider controls ratio. [#24](https://github.com/Vesuri/excellence/issues/24)
 - [ ] **Brush fill modes — Stretch / Pattern / Shape / Perspective** — Tile or warp the brush to fill areas. [#21](https://github.com/Vesuri/excellence/issues/21)
 - [ ] **Stencil draw mode** — Paint the stencil mask directly with any drawing tool. [#32](https://github.com/Vesuri/excellence/issues/32)
 - [ ] **Fill controls — Conform / Center** — Conform scales fills to the cross-section of the area; Center forces radial fills to originate from its center. [#28](https://github.com/Vesuri/excellence/issues/28)
-- [ ] **Draw Mode Amount slider** — Controls dither percentage for Dither1, Dither2, Brighten, and Darken. [#24](https://github.com/Vesuri/excellence/issues/24)
 - [ ] **Real-time Preview Mode (RPM)** — Live preview before committing for Tint, Colorize, Brighten, Darken, Dither1, Dither2, and Negative. [#23](https://github.com/Vesuri/excellence/issues/23)
-- [ ] **Transparent painting mode** — Adjustable opacity (0–100%); no accumulation within a single mouse-down; RGB and HSV mixing options. [#24](https://github.com/Vesuri/excellence/issues/24)
 
 ---
 
