@@ -295,6 +295,13 @@ void Brush::trim()
     image_ = result;
 }
 
+void Brush::tileCut()
+{
+    int w = image_.width(), h = image_.height();
+    if (w > 1 && h > 1)
+        image_ = image_.copy(0, 0, w - 1, h - 1);
+}
+
 void Brush::storeOriginal()   { originalImage_ = image_; }
 void Brush::restoreOriginal() { if (!originalImage_.isNull()) { image_ = originalImage_; handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2); } }
 bool Brush::hasOriginal() const { return !originalImage_.isNull(); }

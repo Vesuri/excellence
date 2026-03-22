@@ -35,6 +35,7 @@ public:
     void bendY(double amount);
     void outline(int colorIndex);
     void trim();
+    void tileCut();
     void storeOriginal();
     void restoreOriginal();
     bool hasOriginal() const;

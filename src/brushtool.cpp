@@ -3,6 +3,7 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QImage>
+#include <QLabel>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPushButton>
@@ -137,7 +138,8 @@ BrushTool BrushTool::instance;
 
 BrushTool::BrushTool(QObject *parent) : Tool(parent),
     undoBuffer(nullptr),
-    handleWidget_(nullptr)
+    handleWidget_(nullptr),
+    dimensionsLabel_(nullptr)
 {
     for (int i = 0; i < WellCount; i++)
         wellButtons_[i] = nullptr;
@@ -273,6 +275,22 @@ QWidget *BrushTool::createOptionsWidget()
     vbox->setSpacing(4);
     vbox->setContentsMargins(4, 4, 4, 4);
 
+    // ── Dimensions + Tile Cut ──────────────────────────────────────────────
+    {
+        QHBoxLayout *dimRow = new QHBoxLayout;
+        Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
+        QString dimText = brush
+            ? QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height())
+            : QString("– × –");
+        dimensionsLabel_ = new QLabel(dimText, w);
+        dimRow->addWidget(dimensionsLabel_);
+        dimRow->addStretch();
+        QPushButton *tileCutBtn = new QPushButton("Tile Cut", w);
+        connect(tileCutBtn, SIGNAL(clicked()), this, SLOT(brushTileCut()));
+        dimRow->addWidget(tileCutBtn);
+        vbox->addLayout(dimRow);
+    }
+
     // ── Wells row ──────────────────────────────────────────────────────────
     QHBoxLayout *wellsRow = new QHBoxLayout;
     wellsRow->setSpacing(2);
@@ -373,7 +391,8 @@ static Brush *currentBrush(Buffer *buf)
     if (!brush) return; \
     if (!brush->hasOriginal()) brush->storeOriginal(); \
     brush->method; \
-    if (handleWidget_) handleWidget_->update();
+    if (handleWidget_) handleWidget_->update(); \
+    if (dimensionsLabel_) dimensionsLabel_->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 
 void BrushTool::brushFlipH()       { BRUSH_TRANSFORM(flipHorizontal()) }
 void BrushTool::brushFlipV()       { BRUSH_TRANSFORM(flipVertical()) }
@@ -396,6 +415,7 @@ void BrushTool::brushOutline()
     if (!brush->hasOriginal()) brush->storeOriginal();
     brush->outline(static_cast<int>(buffer_->paintColor()));
     if (handleWidget_) handleWidget_->update();
+    if (dimensionsLabel_) dimensionsLabel_->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 }
 void BrushTool::brushTrim() { BRUSH_TRANSFORM(trim()) }
 void BrushTool::brushRestore()
@@ -404,7 +424,10 @@ void BrushTool::brushRestore()
     if (!brush) return;
     brush->restoreOriginal();
     if (handleWidget_) handleWidget_->update();
+    if (dimensionsLabel_) dimensionsLabel_->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 }
+
+void BrushTool::brushTileCut() { BRUSH_TRANSFORM(tileCut()) }
 
 #undef BRUSH_TRANSFORM
 

@@ -3,6 +3,7 @@
 
 #include <QAbstractButton>
 #include <QImage>
+#include <QLabel>
 #include <QPixmap>
 #include <QPoint>
 #include "tool.h"
@@ -92,6 +93,7 @@ private slots:
     void brushOutline();
     void brushTrim();
     void brushRestore();
+    void brushTileCut();
 
 private:
     QRect changes(const QPoint &point);
@@ -105,6 +107,7 @@ private:
     QImage wells_[WellCount];
     BrushWellButton *wellButtons_[WellCount];
     BrushHandleWidget *handleWidget_;
+    QLabel *dimensionsLabel_;
 
     static BrushTool instance;
 };
