@@ -227,8 +227,8 @@ void AirTool::setSprayMode(SprayMode mode)
 void AirTool::registerTool()
 {
     Tool::registerTool();
-    button_->setIcon(QIcon(":/finesprayairbrush.png"));
     button_->setCheckable(true);
+    setMode(sprayMode_);
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }
 

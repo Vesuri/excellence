@@ -255,8 +255,8 @@ void EllipseTool::setRotateMode(bool rotate)
 void EllipseTool::registerTool()
 {
     Tool::registerTool();
-    button_->setIcon(QIcon(":/ellipse.png"));
     button_->setCheckable(true);
+    setDrawMode(drawMode_);
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }
 

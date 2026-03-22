@@ -163,8 +163,8 @@ void RectangleTool::registerTool()
 {
     Tool::registerTool();
 
-    button_->setIcon(QIcon(":/rectangle.png"));
     button_->setCheckable(true);
+    setDrawMode(drawMode);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }

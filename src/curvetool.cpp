@@ -414,8 +414,8 @@ void CurveTool::registerTool()
 {
     Tool::registerTool();
 
-    button_->setIcon(QIcon(":/curve.png"));
     button_->setCheckable(true);
+    setCurveMode(curveMode_);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }
