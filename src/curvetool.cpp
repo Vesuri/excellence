@@ -157,7 +157,9 @@ QRect CurveTool::drawCurve(const QPoint &p0, const QPoint &p2, const QPoint &con
         qreal y = u * u * p0.y() + 2.0 * u * t * p1y + t * t * p2.y();
         QPoint cur(qFloor(x), qFloor(y));
         Algorithms::line(prev, cur, [this, &changedRect](const QPoint &p) {
-            changedRect = changedRect.united(draw(p));
+            if (buffer_->image().rect().contains(p)) {
+                changedRect = changedRect.united(draw(p));
+            }
         });
         prev = cur;
     }
