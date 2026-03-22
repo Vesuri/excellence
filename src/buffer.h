@@ -64,6 +64,7 @@ public slots:
     void redoAll();
     void clearUndoBuffer();
     void notifyModified(const QRect &rect);
+    void clearHoverPreview();
 
 signals:
     void pathChanged(QString path);

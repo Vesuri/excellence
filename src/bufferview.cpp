@@ -114,6 +114,8 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
     } else if (watched == this) {
         switch (event->type()) {
         case QEvent::HoverLeave:
+            if (buffer)
+                buffer->clearHoverPreview();
             updateWindowTitle();
             break;
         default:

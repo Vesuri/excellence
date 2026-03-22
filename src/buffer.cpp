@@ -518,10 +518,21 @@ Pen *Buffer::toolPen() const
 void Buffer::setTool(Tool *tool)
 {
     if (tool_ != tool) {
+        clearHoverPreview();
         tool_ = tool;
         tool_->setMouseButton(Qt::NoButton);
 
         emit toolChanged(tool);
+    }
+}
+
+void Buffer::clearHoverPreview()
+{
+    if (moveUndoBuffer) {
+        moveUndoBuffer->apply(this);
+        delete moveUndoBuffer;
+        moveUndoBuffer = nullptr;
+        emit modified(image_.rect());
     }
 }
 
