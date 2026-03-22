@@ -33,6 +33,7 @@ BufferView::BufferView(QWidget *parent) :
     scene->addItem(pixmapItem);
     ui->graphicsView->setStyleSheet( "QGraphicsView { border-style: none; }" );
     ui->graphicsView->setScene(scene);
+    ui->graphicsView->viewport()->setCursor(Qt::CrossCursor);
     setAttribute(Qt::WA_Hover);
 
     scene->installEventFilter(this);

@@ -63,7 +63,9 @@ The toolbar is a two-row `QGridLayout` (`ui->toolsLayout`). Each tool declares i
 
 Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on repeated activation — ConnectedLinesTool no longer exists as a separate tool. Brush(10) cycles between Rectangle and Freehand (carve) modes on repeated activation — CarveBrushTool no longer exists as a separate tool.
 
-**Row 1:** PickColorTool(8), PenTipTool(9), DrawModeTool(10), Zoom(11) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
+**Row 1:** PenTipTool(9), DrawModeTool(10), Zoom(11) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
+
+**PickColorTool** has no toolbar button. It is activated by clicking the foreground (top half) or background (bottom half) color rectangles in the palette area (`CurrentColorsButton`). Clicking foreground forces the next pick to set the foreground color; clicking background forces it to set the background color. After picking, the previous tool is automatically restored (one-shot mode). The `,` keyboard shortcut and Alt temporary-activation still work as persistent activation.
 
 ### Brush Handle
 

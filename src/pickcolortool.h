@@ -16,11 +16,19 @@ public:
     QRect release(const QPoint &point) override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
+    void activateOneShotForeground(Tool *previousTool);
+    void activateOneShotBackground(Tool *previousTool);
+
 protected:
     void registerTool() override;
     void activate() override;
 
 private:
+    enum OneShotTarget { None, Foreground, Background };
+
+    OneShotTarget oneShotTarget_;
+    Tool *previousTool_;
+
     static PickColorTool instance;
 };
 

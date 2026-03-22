@@ -15,6 +15,8 @@
 #include "drawtool.h"
 #include "linetool.h"
 #include "pentip.h"
+#include "tool.h"
+#include "pickcolortool.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -147,6 +149,9 @@ void MainWindow::initialize()
         tools.at(i)->addButtonToGridLayout(ui->toolsLayout);
         tools.at(i)->setBuffer(buffer);
     }
+
+    connect(ui->currentColorsButton, SIGNAL(foregroundClicked()), this, SLOT(pickForegroundColor()));
+    connect(ui->currentColorsButton, SIGNAL(backgroundClicked()), this, SLOT(pickBackgroundColor()));
 
     buffer->setTool(tools.at(0));
 }
@@ -555,6 +560,26 @@ void MainWindow::brushRestore()
 {
     Brush *brush = qobject_cast<Brush *>(buffer->pen());
     if (brush) brush->restoreOriginal();
+}
+
+void MainWindow::pickForegroundColor()
+{
+    for (Tool *tool : tools) {
+        if (PickColorTool *picker = qobject_cast<PickColorTool *>(tool)) {
+            picker->activateOneShotForeground(buffer->tool());
+            break;
+        }
+    }
+}
+
+void MainWindow::pickBackgroundColor()
+{
+    for (Tool *tool : tools) {
+        if (PickColorTool *picker = qobject_cast<PickColorTool *>(tool)) {
+            picker->activateOneShotBackground(buffer->tool());
+            break;
+        }
+    }
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)

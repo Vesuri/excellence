@@ -1,9 +1,10 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPaintEvent>
+#include <QMouseEvent>
 #include "currentcolorsbutton.h"
 
-CurrentColorsButton::CurrentColorsButton(QWidget *parent) : QAbstractButton(parent)
+CurrentColorsButton::CurrentColorsButton(QWidget *parent) : QWidget(parent)
 {
 
 }
@@ -30,6 +31,14 @@ void CurrentColorsButton::paintEvent(QPaintEvent *event)
     painter.fillPath(path, eraseColor);
 
     painter.end();
+}
+
+void CurrentColorsButton::mousePressEvent(QMouseEvent *e)
+{
+    if (e->position().y() < height() / 2)
+        emit foregroundClicked();
+    else
+        emit backgroundClicked();
 }
 
 void CurrentColorsButton::setPaintColor(unsigned, const QColor &color)

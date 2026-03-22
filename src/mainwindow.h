@@ -70,6 +70,8 @@ private slots:
     void brushTrim();
     void brushTileCut();
     void brushRestore();
+    void pickForegroundColor();
+    void pickBackgroundColor();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap };

@@ -4,7 +4,9 @@
 
 PickColorTool PickColorTool::instance;
 
-PickColorTool::PickColorTool(QObject *parent) : Tool(parent)
+PickColorTool::PickColorTool(QObject *parent) : Tool(parent),
+    oneShotTarget_(None),
+    previousTool_(nullptr)
 {
 }
 
@@ -24,10 +26,18 @@ QRect PickColorTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         return QRect();
 
     unsigned index = static_cast<unsigned>(image.pixelIndex(point));
-    if (mouseButton_ == Qt::RightButton)
-        buffer_->setEraseColor(index);
-    else
+    if (oneShotTarget_ == Foreground || (oneShotTarget_ == None && mouseButton_ != Qt::RightButton))
         buffer_->setPaintColor(index);
+    else
+        buffer_->setEraseColor(index);
+
+    if (oneShotTarget_ != None) {
+        Tool *prev = previousTool_;
+        oneShotTarget_ = None;
+        previousTool_ = nullptr;
+        if (prev)
+            buffer_->setTool(prev);
+    }
 
     return QRect();
 }
@@ -45,7 +55,6 @@ QRect PickColorTool::release(const QPoint &)
 void PickColorTool::registerTool()
 {
     Tool::registerTool();
-    button_->setIcon(QIcon(":/eyedropper.png"));
     button_->setToolTip("Pick Color [,]");
     button_->setCheckable(true);
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
@@ -53,10 +62,26 @@ void PickColorTool::registerTool()
 
 void PickColorTool::activate()
 {
+    oneShotTarget_ = None;
+    previousTool_ = nullptr;
     Tool::activate();
 }
 
-void PickColorTool::addButtonToGridLayout(QGridLayout *layout)
+void PickColorTool::addButtonToGridLayout(QGridLayout *)
 {
-    layout->addWidget(button_, 1, 8);
+    // No toolbar button — activated via foreground/background color rectangles
+}
+
+void PickColorTool::activateOneShotForeground(Tool *previousTool)
+{
+    oneShotTarget_ = Foreground;
+    previousTool_ = previousTool;
+    Tool::activate();
+}
+
+void PickColorTool::activateOneShotBackground(Tool *previousTool)
+{
+    oneShotTarget_ = Background;
+    previousTool_ = previousTool;
+    Tool::activate();
 }
