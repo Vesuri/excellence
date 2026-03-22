@@ -51,6 +51,15 @@ public:
     QPoint smearDirection() const;
     void setDrawModeAmount(int amount);
     int drawModeAmount() const;
+    void setGridEnabled(bool enabled);
+    bool gridEnabled() const;
+    void setGridSpacing(int w, int h);
+    int gridW() const;
+    int gridH() const;
+    void setGridOffset(int x, int y);
+    int gridOffsetX() const;
+    int gridOffsetY() const;
+    QPoint snapToGrid(const QPoint &p) const;
     QVector<int> gradientColors() const;
     int nextCycleColor(bool reverse = false);
     void resetCycle();
@@ -75,6 +84,7 @@ signals:
     void paletteModified();
     void paintColorChanged(unsigned colorIndex, QColor color);
     void eraseColorChanged(unsigned colorIndex, QColor color);
+    void gridChanged();
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 8);
@@ -95,6 +105,9 @@ private:
     QPoint smearDirection_;
     int cycleIndex_;
     int drawModeAmount_;
+    bool gridEnabled_;
+    int gridW_, gridH_;
+    int gridOffsetX_, gridOffsetY_;
 };
 
 #endif // BUFFER_H

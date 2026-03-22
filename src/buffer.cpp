@@ -284,7 +284,10 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     paintMode_(Normal),
     smearDirection_(0, 0),
     cycleIndex_(0),
-    drawModeAmount_(50)
+    drawModeAmount_(50),
+    gridEnabled_(false),
+    gridW_(8), gridH_(8),
+    gridOffsetX_(0), gridOffsetY_(0)
 {
     initialize(width, height, colors);
 }
@@ -300,7 +303,10 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     paintMode_(Normal),
     smearDirection_(0, 0),
     cycleIndex_(0),
-    drawModeAmount_(50)
+    drawModeAmount_(50),
+    gridEnabled_(false),
+    gridW_(8), gridH_(8),
+    gridOffsetX_(0), gridOffsetY_(0)
 {
     if (!path.isEmpty()) {
         image_.load(path);
@@ -369,10 +375,11 @@ void Buffer::clearWithColor(unsigned colorIndex)
 void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers)
 {
     tool_->setMouseButton(button);
+    const QPoint p = snapToGrid(point);
 
     switch (tool_->type()) {
     case Tool::Zoom: {
-        QRect zoomedArea = tool_->press(point, modifiers);
+        QRect zoomedArea = tool_->press(p, modifiers);
 
         emit zoomed(zoomedArea);
         break;
@@ -386,7 +393,7 @@ void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt:
 
         preModificationImage = image_.copy();
 
-        modifiedArea = tool_->press(point, modifiers);
+        modifiedArea = tool_->press(p, modifiers);
 
         emit modified(modifiedArea);
         break;
@@ -395,6 +402,8 @@ void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt:
 
 void Buffer::move(const QPoint &point)
 {
+    const QPoint p = snapToGrid(point);
+
     if (moveUndoBuffer) {
         moveUndoBuffer->apply(this);
         delete moveUndoBuffer;
@@ -402,13 +411,13 @@ void Buffer::move(const QPoint &point)
     }
 
     if (tool_->mouseButton() == Qt::NoButton) {
-        QRect rect = tool_->hover(point);
+        QRect rect = tool_->hover(p);
         if (!rect.isNull()) {
             moveUndoBuffer = new UndoBuffer(rect.topLeft(), image().copy(rect));
         }
     }
 
-    QRect area = tool_->move(point);
+    QRect area = tool_->move(p);
 
     switch (tool_->type()) {
     case Tool::Zoom:
@@ -424,7 +433,7 @@ void Buffer::move(const QPoint &point)
 
 void Buffer::release(const QPoint &point)
 {
-    QRect area = tool_->release(point);
+    QRect area = tool_->release(snapToGrid(point));
 
     switch (tool_->type()) {
     case Tool::Zoom:
@@ -650,6 +659,40 @@ void Buffer::resetCycle() { cycleIndex_ = 0; }
 
 void Buffer::setDrawModeAmount(int amount) { drawModeAmount_ = qBound(0, amount, 100); }
 int Buffer::drawModeAmount() const { return drawModeAmount_; }
+
+void Buffer::setGridEnabled(bool enabled)
+{
+    gridEnabled_ = enabled;
+    emit gridChanged();
+}
+bool Buffer::gridEnabled() const { return gridEnabled_; }
+
+void Buffer::setGridSpacing(int w, int h)
+{
+    gridW_ = qMax(1, w);
+    gridH_ = qMax(1, h);
+    emit gridChanged();
+}
+int Buffer::gridW() const { return gridW_; }
+int Buffer::gridH() const { return gridH_; }
+
+void Buffer::setGridOffset(int x, int y)
+{
+    gridOffsetX_ = x;
+    gridOffsetY_ = y;
+    emit gridChanged();
+}
+int Buffer::gridOffsetX() const { return gridOffsetX_; }
+int Buffer::gridOffsetY() const { return gridOffsetY_; }
+
+QPoint Buffer::snapToGrid(const QPoint &p) const
+{
+    if (!gridEnabled_ || gridW_ <= 0 || gridH_ <= 0)
+        return p;
+    int x = qRound(static_cast<double>(p.x() - gridOffsetX_) / gridW_) * gridW_ + gridOffsetX_;
+    int y = qRound(static_cast<double>(p.y() - gridOffsetY_) / gridH_) * gridH_ + gridOffsetY_;
+    return QPoint(x, y);
+}
 
 void Buffer::resetToDefaultPalette()
 {

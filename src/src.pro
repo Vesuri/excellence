@@ -42,7 +42,8 @@ SOURCES += main.cpp\
     texttool.cpp \
     pentiptool.cpp \
     drawmodetool.cpp \
-    pickcolortool.cpp
+    pickcolortool.cpp \
+    gridlocktool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -73,6 +74,7 @@ HEADERS  += mainwindow.h \
     pentiptool.h \
     drawmodetool.h \
     pickcolortool.h \
+    gridlocktool.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \

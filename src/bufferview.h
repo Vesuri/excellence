@@ -7,7 +7,7 @@ namespace Ui {
 class BufferView;
 }
 
-class QGraphicsScene;
+class CanvasScene;
 class QGraphicsPixmapItem;
 class Buffer;
 class QPixmap;
@@ -35,7 +35,7 @@ private slots:
 
 private:
     Ui::BufferView *ui;
-    QGraphicsScene *scene;
+    CanvasScene *scene;
     QGraphicsPixmapItem *pixmapItem;
     Buffer *buffer;
     QPoint lastMousePoint;
