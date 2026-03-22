@@ -36,11 +36,21 @@ QRect ClearTool::release(const QPoint &)
     return QRect();
 }
 
+void ClearTool::clearWithEraseColor()
+{
+    if (buffer_)
+        buffer_->clearWithColor(buffer_->eraseColor());
+}
+
 void ClearTool::registerTool()
 {
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/clear.png"));
+
+    // Override default right-click (options widget) with erase-color clear
+    disconnect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
+    connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(clearWithEraseColor()));
 }
 
 void ClearTool::addButtonToGridLayout(QGridLayout *layout)

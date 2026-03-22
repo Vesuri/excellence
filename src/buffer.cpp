@@ -344,9 +344,14 @@ QImage &Buffer::image()
 
 void Buffer::clear()
 {
+    clearWithColor(0);
+}
+
+void Buffer::clearWithColor(unsigned colorIndex)
+{
     undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
 
-    image_.fill(0);
+    image_.fill(colorIndex);
 
     emit modified(image_.rect());
 }

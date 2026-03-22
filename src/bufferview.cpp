@@ -12,6 +12,7 @@
 #include "airtool.h"
 #include "filltool.h"
 #include "texttool.h"
+#include "cleartool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -194,6 +195,12 @@ void BufferView::keyPressEvent(QKeyEvent *event)
                 break;
             }
         }
+        break;
+    case Qt::Key_K:
+        if (event->modifiers() & Qt::ShiftModifier)
+            buffer->clearWithColor(buffer->eraseColor());
+        else
+            buffer->clear();
         break;
     default:
         break;

@@ -16,6 +16,9 @@ public:
     QRect release(const QPoint &point) override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
+public slots:
+    void clearWithEraseColor();
+
 protected:
     void registerTool() override;
 

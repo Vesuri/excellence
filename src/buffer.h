@@ -44,6 +44,7 @@ public:
 
 public slots:
     void clear();
+    void clearWithColor(unsigned colorIndex);
     void undo();
     void notifyModified(const QRect &rect);
 
