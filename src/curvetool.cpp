@@ -146,10 +146,10 @@ QRect CurveTool::curveBoundingRect(const QPoint &p0, const QPoint &p2, const QPo
     int penW = penRect.width();
     int penH = penRect.height();
     // Conservative bounding rect covering p0, p2, and control midpoint
-    int minX = qMin({p0.x(), p2.x(), controlMid.x()});
-    int minY = qMin({p0.y(), p2.y(), controlMid.y()});
-    int maxX = qMax({p0.x(), p2.x(), controlMid.x()});
-    int maxY = qMax({p0.y(), p2.y(), controlMid.y()});
+    int minX = qMin(p0.x(), qMin(p2.x(), controlMid.x()));
+    int minY = qMin(p0.y(), qMin(p2.y(), controlMid.y()));
+    int maxX = qMax(p0.x(), qMax(p2.x(), controlMid.x()));
+    int maxY = qMax(p0.y(), qMax(p2.y(), controlMid.y()));
     return QRect(minX - penW, minY - penH, maxX - minX + 2 * penW + 1, maxY - minY + 2 * penH + 1);
 }
 
