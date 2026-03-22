@@ -9,6 +9,7 @@
 #include "connectedlinestool.h"
 #include "filledpolygontool.h"
 #include "curvetool.h"
+#include "beziercurvetool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -139,7 +140,7 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_Q:
         for (Tool *tool : tools) {
-            if (qobject_cast<CurveTool *>(tool)) {
+            if (qobject_cast<BezierCurveTool *>(tool)) {
                 tool->click();
                 break;
             }
