@@ -8,6 +8,7 @@
 #include "drawtool.h"
 #include "connectedlinestool.h"
 #include "filledpolygontool.h"
+#include "curvetool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -131,6 +132,14 @@ void BufferView::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D:
         for (Tool *tool : tools) {
             if (qobject_cast<DrawTool *>(tool)) {
+                tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_Q:
+        for (Tool *tool : tools) {
+            if (qobject_cast<CurveTool *>(tool)) {
                 tool->click();
                 break;
             }
