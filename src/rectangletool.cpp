@@ -92,8 +92,11 @@ void RectangleTool::cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) 
     } else {
         int dx = qAbs(current.x() - startPoint.x());
         int dy = qAbs(current.y() - startPoint.y());
-        p0 = QPoint(startPoint.x() - dx, startPoint.y() - dy);
-        p1 = QPoint(startPoint.x() + dx, startPoint.y() + dy);
+        QRect ir = buffer_->image().rect();
+        p0 = QPoint(qMax(ir.left(),   startPoint.x() - dx),
+                    qMax(ir.top(),    startPoint.y() - dy));
+        p1 = QPoint(qMin(ir.right(),  startPoint.x() + dx),
+                    qMin(ir.bottom(), startPoint.y() + dy));
     }
 }
 
