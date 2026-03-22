@@ -402,6 +402,7 @@ void CurveTool::setCurveMode(CurveMode mode)
 {
     curveMode_ = mode;
     button_->setIcon(QIcon(mode == Quadratic ? ":/curve.png" : ":/beziercurve.png"));
+    button_->setToolTip(mode == Quadratic ? "Curve – Quadratic [Q]" : "Curve – Bézier [Q]");
 }
 
 void CurveTool::registerTool()

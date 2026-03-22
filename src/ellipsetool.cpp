@@ -35,6 +35,9 @@ void EllipseTool::setDrawMode(DrawMode mode)
 {
     drawMode_ = mode;
     button_->setIcon(QIcon(icons[mode]));
+    button_->setToolTip(mode == Ellipse
+        ? "Ellipse [C]  Shift+C: filled  Ctrl: circle\nRight-click: anchor options"
+        : "Ellipse – Filled [C]  Ctrl: circle\nRight-click: anchor options");
 }
 
 void EllipseTool::setBuffer(Buffer *buffer)

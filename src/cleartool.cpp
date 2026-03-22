@@ -47,6 +47,7 @@ void ClearTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/clear.png"));
+    button_->setToolTip("CLR – Clear to color 0 [K]\nRight-click: clear to background color [Shift+K]");
 
     // Override default right-click (options widget) with erase-color clear
     disconnect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));

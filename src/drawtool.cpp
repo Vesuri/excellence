@@ -22,6 +22,13 @@ void DrawTool::setDrawMode(const DrawMode &drawMode)
     this->drawMode = drawMode;
 
     button_->setIcon(QIcon(icons[drawMode]));
+
+    static const char *tips[] = {
+        "Draw – Dotted [D]",
+        "Draw – Connected [D]",
+        "Draw – Filled Shape [D]"
+    };
+    button_->setToolTip(tips[drawMode]);
 }
 
 void DrawTool::setBuffer(Buffer *buffer)

@@ -334,6 +334,7 @@ void BrushTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/cutbrush.png"));
+    button_->setToolTip("Brush – Rectangle selection\nRight-click: wells & handle options");
     button_->setCheckable(true);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));

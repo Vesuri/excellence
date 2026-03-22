@@ -42,6 +42,7 @@ void ZoomTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/zoom.png"));
+    button_->setToolTip("Zoom [+/-]");
 
     button_->setCheckable(true);
 

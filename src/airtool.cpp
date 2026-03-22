@@ -32,6 +32,13 @@ void AirTool::setMode(SprayMode mode)
 {
     sprayMode_ = mode;
     button_->setIcon(QIcon(icons[mode]));
+
+    static const char *tips[] = {
+        "Airbrush – Fine Spray [A]  Shift+A: options",
+        "Airbrush – Splatter [A]  Shift+A: options",
+        "Airbrush – Shape [A]  Shift+A: options"
+    };
+    button_->setToolTip(tips[mode]);
 }
 
 void AirTool::setBuffer(Buffer *buffer)

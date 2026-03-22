@@ -41,6 +41,7 @@ void UndoTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/undo.png"));
+    button_->setToolTip("Undo [U]\nShift+U: Redo  Alt+U: Undo All  Alt+Shift+U: Redo All  Ctrl+U: Clear Undo Buffer");
 }
 
 void UndoTool::addButtonToGridLayout(QGridLayout *layout)

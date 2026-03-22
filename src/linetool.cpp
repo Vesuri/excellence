@@ -82,6 +82,7 @@ void LineTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/line.png"));
+    button_->setToolTip("Line");
     button_->setCheckable(true);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));

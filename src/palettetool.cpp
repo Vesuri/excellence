@@ -47,6 +47,7 @@ void PaletteTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/palette.png"));
+    button_->setToolTip("Palette – Edit active color");
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(toggleColorDialogVisibility()));
 
     colorDialog = new QColorDialog;

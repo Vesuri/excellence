@@ -115,6 +115,7 @@ void TextTool::registerTool()
 {
     Tool::registerTool();
     button_->setIcon(QIcon(":/text.png"));
+    button_->setToolTip("Text [T]");
     button_->setCheckable(true);
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }

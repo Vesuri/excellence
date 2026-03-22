@@ -81,6 +81,7 @@ void FillTool::registerTool()
 {
     Tool::registerTool();
     button_->setIcon(QIcon(":/fill.png"));
+    button_->setToolTip("Fill [F]");
     button_->setCheckable(true);
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }

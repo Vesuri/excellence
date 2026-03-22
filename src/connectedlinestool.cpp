@@ -198,6 +198,7 @@ void ConnectedLinesTool::setDrawMode(DrawMode mode)
 {
     drawMode_ = mode;
     button_->setIcon(QIcon(mode == Lines ? ":/connectedlines.png" : ":/filledlines.png"));
+    button_->setToolTip(mode == Lines ? "Connected Lines [W]" : "Connected Lines – Filled Polygon [W]");
 }
 
 void ConnectedLinesTool::registerTool()

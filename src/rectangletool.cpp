@@ -25,6 +25,12 @@ void RectangleTool::setDrawMode(const DrawMode &drawMode)
     this->drawMode = drawMode;
 
     button_->setIcon(QIcon(icons[drawMode]));
+
+    static const char *tips[] = {
+        "Rectangle – Outline\nRight-click: anchor options",
+        "Rectangle – Filled\nRight-click: anchor options"
+    };
+    button_->setToolTip(tips[drawMode]);
 }
 
 void RectangleTool::setBuffer(Buffer *buffer)
