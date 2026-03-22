@@ -202,6 +202,19 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         else
             buffer->clear();
         break;
+    case Qt::Key_U:
+        if (event->modifiers() & Qt::ControlModifier)
+            buffer->clearUndoBuffer();
+        else if (event->modifiers() & Qt::AltModifier) {
+            if (event->modifiers() & Qt::ShiftModifier)
+                buffer->redoAll();
+            else
+                buffer->undoAll();
+        } else if (event->modifiers() & Qt::ShiftModifier)
+            buffer->redo();
+        else
+            buffer->undo();
+        break;
     default:
         break;
     }

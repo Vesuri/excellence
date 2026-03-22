@@ -350,6 +350,8 @@ void Buffer::clear()
 void Buffer::clearWithColor(unsigned colorIndex)
 {
     undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
+    qDeleteAll(redoStack);
+    redoStack.clear();
 
     image_.fill(colorIndex);
 
@@ -426,6 +428,8 @@ void Buffer::release(const QPoint &point)
         emit modified(area);
 
         undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
+        qDeleteAll(redoStack);
+        redoStack.clear();
 
         modifiedArea = QRect();
         preModificationImage = QImage();
@@ -445,10 +449,42 @@ void Buffer::undo()
 {
     if (!undoBuffers.isEmpty()) {
         UndoBuffer *undoBuffer = undoBuffers.takeLast();
+        redoStack.append(new UndoBuffer(undoBuffer->pos(), image_.copy(undoBuffer->rect())));
         undoBuffer->apply(this);
         emit modified(undoBuffer->rect());
         delete undoBuffer;
     }
+}
+
+void Buffer::redo()
+{
+    if (!redoStack.isEmpty()) {
+        UndoBuffer *redoBuffer = redoStack.takeLast();
+        undoBuffers.append(new UndoBuffer(redoBuffer->pos(), image_.copy(redoBuffer->rect())));
+        redoBuffer->apply(this);
+        emit modified(redoBuffer->rect());
+        delete redoBuffer;
+    }
+}
+
+void Buffer::undoAll()
+{
+    while (!undoBuffers.isEmpty())
+        undo();
+}
+
+void Buffer::redoAll()
+{
+    while (!redoStack.isEmpty())
+        redo();
+}
+
+void Buffer::clearUndoBuffer()
+{
+    qDeleteAll(undoBuffers);
+    undoBuffers.clear();
+    qDeleteAll(redoStack);
+    redoStack.clear();
 }
 
 void Buffer::setPen(Pen *pen)

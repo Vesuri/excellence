@@ -46,6 +46,10 @@ public slots:
     void clear();
     void clearWithColor(unsigned colorIndex);
     void undo();
+    void redo();
+    void undoAll();
+    void redoAll();
+    void clearUndoBuffer();
     void notifyModified(const QRect &rect);
 
 signals:
@@ -65,6 +69,7 @@ private:
     QRect modifiedArea;
     QImage preModificationImage;
     QList<UndoBuffer *> undoBuffers;
+    QList<UndoBuffer *> redoStack;
     UndoBuffer *moveUndoBuffer;
     Tool *tool_;
     Pen *pen_;
