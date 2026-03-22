@@ -94,9 +94,7 @@ QWidget *PenTipTool::createOptionsWidget()
 
     for (const auto &preset : presets) {
         QPushButton *btn = new QPushButton(w);
-        btn->setFixedSize(32, 32);
         btn->setIcon(QIcon(renderTip(preset.shape, preset.size)));
-        btn->setIconSize(QSize(24, 24));
         PenTip::Shape shape = preset.shape;
         int size = preset.size;
         connect(btn, &QPushButton::clicked, [this, shape, size]() {
