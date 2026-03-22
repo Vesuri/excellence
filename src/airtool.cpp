@@ -137,8 +137,10 @@ QRect AirTool::sprayDots()
 {
     int dots = qMax(1, flow_ * qMax(1, nozzleRadius_) / 100);
     QRect changedRect;
-    for (int i = 0; i < dots; i++)
-        changedRect = changedRect.united(paintDot(randomNozzlePoint()));
+    for (int i = 0; i < dots; i++) {
+        QPoint p = (sprayMode_ == ShapeAirbrush) ? center_ : randomNozzlePoint();
+        changedRect = changedRect.united(paintDot(p));
+    }
     return changedRect;
 }
 
