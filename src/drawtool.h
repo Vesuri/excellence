@@ -24,6 +24,7 @@ public:
 protected:
     void registerTool() override;
     void activate() override;
+    QWidget *createOptionsWidget() override;
 
 private:
     QRect draw(const QPoint &point);

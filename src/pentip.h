@@ -15,13 +15,19 @@ public:
     QRect erase(const QPoint &point, Buffer *buffer) const override;
     QRect rect(const QPoint &point) const override;
 
+    int size() const;
+
 public slots:
     void setPaintColor(unsigned paintColor);
     void setEraseColor(unsigned eraseColor);
+    void setSize(int size);
 
 private:
+    void applyColor(const QPoint &point, Buffer *buffer, unsigned color) const;
+
     unsigned paintColor_;
     unsigned eraseColor_;
+    int size_;
 };
 
 #endif // PENTIP_H
