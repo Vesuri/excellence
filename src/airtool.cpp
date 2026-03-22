@@ -8,6 +8,7 @@
 #include <QtCore/qmath.h>
 #include <cmath>
 #include "pen.h"
+#include "pentip.h"
 #include "brush.h"
 #include "buffer.h"
 #include "airtool.h"
@@ -81,25 +82,50 @@ QRect AirTool::paintDot(const QPoint &point)
         return buffer_->pen()->paint(point, buffer_);
 
     case ShapeAirbrush: {
-        Brush *brush = qobject_cast<Brush *>(buffer_->pen());
-        if (!brush) {
-            // No brush loaded — fall back to fine spray
-            img.setPixel(point.x(), point.y(),
-                         erasing_ ? buffer_->eraseColor() : buffer_->paintColor());
-            return QRect(point, point);
-        }
-        // Pick a random pixel within the brush and paint it if non-background
-        const QImage &bimg = brush->image();
-        int bx = QRandomGenerator::global()->bounded(bimg.width());
-        int by = QRandomGenerator::global()->bounded(bimg.height());
-        if (bimg.pixelIndex(bx, by) != 0) {
-            QPoint cp(point.x() + bx - bimg.width() / 2,
-                      point.y() + by - bimg.height() / 2);
-            if (img.rect().contains(cp)) {
-                img.setPixel(cp.x(), cp.y(),
-                             erasing_ ? buffer_->eraseColor() : buffer_->paintColor());
-                return QRect(cp, cp);
+        const uint color = erasing_ ? buffer_->eraseColor() : buffer_->paintColor();
+
+        if (Brush *brush = qobject_cast<Brush *>(buffer_->pen())) {
+            const QImage &bimg = brush->image();
+            for (int attempt = 0; attempt < 16; attempt++) {
+                int bx = QRandomGenerator::global()->bounded(bimg.width());
+                int by = QRandomGenerator::global()->bounded(bimg.height());
+                if (bimg.pixelIndex(bx, by) == 0)
+                    continue;
+                QPoint cp(point.x() + bx - bimg.width() / 2,
+                          point.y() + by - bimg.height() / 2);
+                if (img.rect().contains(cp)) {
+                    img.setPixel(cp, color);
+                    return QRect(cp, cp);
+                }
             }
+            return QRect();
+        }
+
+        if (PenTip *tip = qobject_cast<PenTip *>(buffer_->pen())) {
+            if (tip->size() == 1) {
+                if (!img.rect().contains(point)) return QRect();
+                img.setPixel(point, color);
+                return QRect(point, point);
+            }
+            const int r = tip->size() / 2;
+            for (int attempt = 0; attempt < 16; attempt++) {
+                int dx = static_cast<int>(QRandomGenerator::global()->bounded(2 * r + 1)) - r;
+                int dy = static_cast<int>(QRandomGenerator::global()->bounded(2 * r + 1)) - r;
+                if (tip->shape() == PenTip::Circle && dx * dx + dy * dy > r * r + r / 2)
+                    continue;
+                QPoint cp(point.x() + dx, point.y() + dy);
+                if (img.rect().contains(cp)) {
+                    img.setPixel(cp, color);
+                    return QRect(cp, cp);
+                }
+            }
+            return QRect();
+        }
+
+        // Fallback: fine spray
+        if (img.rect().contains(point)) {
+            img.setPixel(point, color);
+            return QRect(point, point);
         }
         return QRect();
     }
