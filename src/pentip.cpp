@@ -1,3 +1,4 @@
+#include <climits>
 #include <QRect>
 #include <QImage>
 #include "buffer.h"
@@ -44,15 +45,83 @@ void PenTip::applyColor(const QPoint &point, Buffer *buffer, unsigned color) con
     }
 }
 
+void PenTip::applySmear(const QPoint &point, Buffer *buffer, unsigned fallbackColor) const
+{
+    QPoint dir = buffer->smearDirection();
+    QRect imageRect = buffer->image().rect();
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        QPoint src = p - dir;
+        if (dir.isNull() || !imageRect.contains(src))
+            buffer->image().setPixel(p, fallbackColor);
+        else
+            buffer->image().setPixel(p, static_cast<uint>(buffer->image().pixelIndex(src)));
+    };
+    if (size_ == 1) { doPixel(point); return; }
+    int r = size_ / 2;
+    for (int dy = -r; dy <= r; dy++)
+        for (int dx = -r; dx <= r; dx++)
+            if (dx*dx + dy*dy <= r*r + r/2)
+                doPixel(QPoint(point.x()+dx, point.y()+dy));
+}
+
+void PenTip::applySmooth(const QPoint &point, Buffer *buffer) const
+{
+    QRect imageRect = buffer->image().rect();
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    auto findNearest = [&](QRgb color) -> int {
+        int bestIdx = 0, bestDist = INT_MAX;
+        for (int i = 0; i < palette.size(); i++) {
+            int dr = qRed(color) - qRed(palette[i]);
+            int dg = qGreen(color) - qGreen(palette[i]);
+            int db = qBlue(color) - qBlue(palette[i]);
+            int dist = dr*dr + dg*dg + db*db;
+            if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+        }
+        return bestIdx;
+    };
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        int rSum = 0, gSum = 0, bSum = 0, count = 0;
+        const int nx[] = {0, 0, -1, 1};
+        const int ny[] = {-1, 1, 0, 0};
+        for (int i = 0; i < 4; i++) {
+            QPoint n(p.x() + nx[i], p.y() + ny[i]);
+            if (imageRect.contains(n)) {
+                QRgb c = buffer->image().color(buffer->image().pixelIndex(n));
+                rSum += qRed(c); gSum += qGreen(c); bSum += qBlue(c); count++;
+            }
+        }
+        if (count > 0) {
+            QRgb avg = qRgb(rSum/count, gSum/count, bSum/count);
+            buffer->image().setPixel(p, static_cast<uint>(findNearest(avg)));
+        }
+    };
+    if (size_ == 1) { doPixel(point); return; }
+    int r = size_ / 2;
+    for (int dy = -r; dy <= r; dy++)
+        for (int dx = -r; dx <= r; dx++)
+            if (dx*dx + dy*dy <= r*r + r/2)
+                doPixel(QPoint(point.x()+dx, point.y()+dy));
+}
+
 QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 {
-    applyColor(point, buffer, paintColor_);
+    switch (buffer->paintMode()) {
+    case Buffer::Smear:  applySmear(point, buffer, paintColor_); break;
+    case Buffer::Smooth: applySmooth(point, buffer); break;
+    default:             applyColor(point, buffer, paintColor_); break;
+    }
     return rect(point).intersected(buffer->image().rect());
 }
 
 QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 {
-    applyColor(point, buffer, eraseColor_);
+    switch (buffer->paintMode()) {
+    case Buffer::Smear:  applySmear(point, buffer, eraseColor_); break;
+    case Buffer::Smooth: applySmooth(point, buffer); break;
+    default:             applyColor(point, buffer, eraseColor_); break;
+    }
     return rect(point).intersected(buffer->image().rect());
 }
 

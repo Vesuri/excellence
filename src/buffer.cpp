@@ -280,7 +280,9 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     pen_(nullptr),
     toolPen_(nullptr),
     paintColor_(1),
-    eraseColor_(0)
+    eraseColor_(0),
+    paintMode_(Normal),
+    smearDirection_(0, 0)
 {
     initialize(width, height, colors);
 }
@@ -292,7 +294,9 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     pen_(nullptr),
     toolPen_(nullptr),
     paintColor_(1),
-    eraseColor_(0)
+    eraseColor_(0),
+    paintMode_(Normal),
+    smearDirection_(0, 0)
 {
     if (!path.isEmpty()) {
         image_.load(path);
@@ -596,3 +600,8 @@ void Buffer::setColor(unsigned colorIndex, const QColor &color)
     emit paletteModified();
     emit modified(image_.rect());
 }
+
+void Buffer::setPaintMode(PaintMode mode) { paintMode_ = mode; }
+Buffer::PaintMode Buffer::paintMode() const { return paintMode_; }
+void Buffer::setSmearDirection(const QPoint &dir) { smearDirection_ = dir; }
+QPoint Buffer::smearDirection() const { return smearDirection_; }

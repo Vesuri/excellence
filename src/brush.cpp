@@ -24,12 +24,13 @@ void Brush::setHandleOffset(const QPoint &offset)
 
 QRect Brush::paint(const QPoint &point, Buffer *buffer) const
 {
+    bool replace = (buffer->paintMode() == Buffer::Replace);
     QPoint origin = point - handleOffset_;
     QRect imageRect = buffer->image().rect();
     for (int y = 0; y < image_.height(); y++) {
         for (int x = 0; x < image_.width(); x++) {
             int idx = image_.pixelIndex(x, y);
-            if (idx == transparentIndex_)
+            if (!replace && idx == transparentIndex_)
                 continue;
             QPoint p(origin.x() + x, origin.y() + y);
             if (imageRect.contains(p))

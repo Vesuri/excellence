@@ -24,6 +24,8 @@ public slots:
 
 private:
     void applyColor(const QPoint &point, Buffer *buffer, unsigned color) const;
+    void applySmear(const QPoint &point, Buffer *buffer, unsigned fallbackColor) const;
+    void applySmooth(const QPoint &point, Buffer *buffer) const;
 
     unsigned paintColor_;
     unsigned eraseColor_;

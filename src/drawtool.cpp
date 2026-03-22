@@ -1,6 +1,7 @@
 #include <QImage>
 #include <QLabel>
 #include <QRect>
+#include <QButtonGroup>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -55,6 +56,7 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     startingPoint = point;
     previousPoint = point;
     lastStampedPoint = point;
+    buffer_->setSmearDirection(QPoint(0, 0));
     drawnBounds_ = buffer_->pen()->rect(point).intersected(buffer_->image().rect());
     return draw(point);
 }
@@ -67,12 +69,14 @@ QRect DrawTool::move(const QPoint &point)
         QPoint delta = point - lastStampedPoint;
         constexpr int threshold = 1;
         if (delta.x() * delta.x() + delta.y() * delta.y() >= threshold * threshold) {
+            buffer_->setSmearDirection(point - lastStampedPoint);
             lastStampedPoint = point;
             return draw(point);
         }
         return QRect();
     } else {
         QRect changedRect;
+        buffer_->setSmearDirection(point - previousPoint);
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         previousPoint = point;
         drawnBounds_ = drawnBounds_.united(changedRect);
@@ -164,6 +168,26 @@ QWidget *DrawTool::createOptionsWidget()
         row->addWidget(btn);
     }
     vbox->addLayout(row);
+
+    vbox->addWidget(new QLabel("Draw Mode:", w));
+
+    const char *modeLabels[] = {"Normal", "Replace", "Smear", "Smooth"};
+    const Buffer::PaintMode paintModes[] = {Buffer::Normal, Buffer::Replace, Buffer::Smear, Buffer::Smooth};
+    QButtonGroup *modeGroup = new QButtonGroup(w);
+    modeGroup->setExclusive(true);
+    QHBoxLayout *modeRow = new QHBoxLayout;
+    for (int i = 0; i < 4; i++) {
+        QPushButton *btn = new QPushButton(modeLabels[i], w);
+        btn->setFixedSize(52, 24);
+        btn->setCheckable(true);
+        btn->setChecked(buffer_->paintMode() == paintModes[i]);
+        modeGroup->addButton(btn);
+        Buffer::PaintMode m = paintModes[i];
+        connect(btn, &QPushButton::clicked, [this, m]() { buffer_->setPaintMode(m); });
+        modeRow->addWidget(btn);
+    }
+    vbox->addLayout(modeRow);
+
     vbox->addStretch();
     return w;
 }
