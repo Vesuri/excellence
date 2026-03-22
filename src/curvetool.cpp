@@ -8,7 +8,8 @@
 CurveTool CurveTool::instance;
 
 CurveTool::CurveTool(QObject *parent) : Tool(parent),
-    phase_(0)
+    phase_(0),
+    undoBuffer_(nullptr)
 {
 }
 
@@ -19,6 +20,8 @@ void CurveTool::setBuffer(Buffer *buffer)
     }
 
     phase_ = 0;
+    delete undoBuffer_;
+    undoBuffer_ = nullptr;
     Tool::setBuffer(buffer);
 
     if (buffer_ != nullptr) {
@@ -34,14 +37,19 @@ QRect CurveTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     }
 
     if (phase_ == 0) {
-        // Phase 1: record start point, stamp a dot
+        // Phase 1: record start point, save area and stamp a dot
         phase_ = 1;
         p0_ = point;
+        QRect dotRect = buffer_->pen()->rect(point);
+        undoBuffer_ = new UndoBuffer(dotRect.topLeft(), buffer_->image().copy(dotRect), this);
         return draw(point);
     }
 
     if (phase_ == 1) {
-        // Phase 2: record end point; segment committed on release
+        // User clicked P2 without dragging (button-up hover path);
+        // Buffer already cleared moveUndoBuffer, so just discard our drag undo.
+        delete undoBuffer_;
+        undoBuffer_ = nullptr;
         p2_ = point;
         return QRect();
     }
@@ -53,11 +61,24 @@ QRect CurveTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 QRect CurveTool::move(const QPoint &point)
 {
     if (mouseButton_ != Qt::NoButton) {
+        if (phase_ == 1) {
+            // Drag preview: clear previous, save new area, draw straight line
+            undoBuffer_->apply(buffer_);
+            delete undoBuffer_;
+
+            QRect changedRect;
+            Algorithms::line(p0_, point, [this, &changedRect](const QPoint &p) {
+                changedRect = changedRect.united(buffer_->pen()->rect(p));
+            });
+            undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+            Algorithms::line(p0_, point, [this](const QPoint &p) { draw(p); });
+            return changedRect;
+        }
         return QRect();
     }
 
     if (phase_ == 1) {
-        // Straight line preview p0_ -> point
+        // Button-up hover: straight line preview via Buffer's moveUndoBuffer mechanism
         QRect changedRect;
         Algorithms::line(p0_, point, [this, &changedRect](const QPoint &p) {
             changedRect = changedRect.united(draw(p));
@@ -80,7 +101,10 @@ QRect CurveTool::release(const QPoint &point)
     }
 
     if (phase_ == 1) {
-        // Commit straight line, advance to phase 2
+        // Commit straight line (clear drag preview first), advance to phase 2
+        undoBuffer_->apply(buffer_);
+        delete undoBuffer_;
+        undoBuffer_ = nullptr;
         p2_ = point;
         phase_ = 2;
         QRect changedRect;
@@ -169,6 +193,8 @@ void CurveTool::registerTool()
 void CurveTool::activate()
 {
     phase_ = 0;
+    delete undoBuffer_;
+    undoBuffer_ = nullptr;
     Tool::activate();
 }
 

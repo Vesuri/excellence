@@ -3,6 +3,7 @@
 
 #include <QPoint>
 #include "tool.h"
+#include "undobuffer.h"
 
 class CurveTool : public Tool
 {
@@ -30,6 +31,7 @@ private:
     int phase_;       // 0=idle, 1=P0 set, 2=P0+P2 set (bending)
     QPoint p0_;
     QPoint p2_;
+    UndoBuffer *undoBuffer_;
 
     static CurveTool instance;
 };
