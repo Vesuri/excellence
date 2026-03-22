@@ -59,11 +59,11 @@ Each plugin has its own `.pro` file and a `.json` metadata file. The main app lo
 
 The toolbar is a two-row `QGridLayout` (`ui->toolsLayout`). Each tool declares its own position in `addButtonToGridLayout()`. The layout follows the Brilliance toolbox order — see the memory file `project_brilliance_toolbox_layout.md` for the full reference. Current positions:
 
-**Row 0:** Clear(0), Palette(1), Draw(2), Line(3), ConnectedLines(4), Curve(5), Rectangle(6), Ellipse(7), Airbrush(8), Fill(9), Text(10), Brush(11), Undo(13)
+**Row 0:** Clear(0), Palette(1), Draw(2), Line(3), ConnectedLines(4), Curve(5), Rectangle(6), Ellipse(7), Airbrush(8), Fill(9), Text(10), Brush(11), Undo(12)
 
 Note: Brush(11) cycles between Rectangle and Freehand (carve) modes on repeated activation — CarveBrushTool no longer exists as a separate tool.
 
-**Row 1:** PenTipTool(11), DrawModeTool(12), Zoom(13) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
+**Row 1:** PenTipTool(10), DrawModeTool(11), Zoom(12) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
 
 ### Brush Handle
 
