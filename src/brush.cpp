@@ -34,3 +34,8 @@ QRect Brush::rect(const QPoint &point) const
 {
     return image_.rect().translated(point);
 }
+
+const QImage &Brush::image() const
+{
+    return image_;
+}

@@ -31,11 +31,13 @@ public:
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
     virtual Type type() const;
 
+public slots:
+    void toggleOptionsWidget();
+
 protected slots:
     virtual void registerTool();
     virtual void activate();
     virtual void setCheckedIfEqual(Tool *tool);
-    void toggleOptionsWidget();
 
 protected:
     virtual QWidget* createOptionsWidget();

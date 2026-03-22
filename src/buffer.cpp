@@ -430,6 +430,12 @@ void Buffer::release(const QPoint &point)
     tool_->setMouseButton(Qt::NoButton);
 }
 
+void Buffer::notifyModified(const QRect &rect)
+{
+    modifiedArea = modifiedArea.united(rect);
+    emit modified(rect);
+}
+
 void Buffer::undo()
 {
     if (!undoBuffers.isEmpty()) {

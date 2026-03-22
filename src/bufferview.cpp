@@ -9,6 +9,7 @@
 #include "connectedlinestool.h"
 #include "curvetool.h"
 #include "ellipsetool.h"
+#include "airtool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -149,6 +150,17 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         for (Tool *tool : tools) {
             if (qobject_cast<ConnectedLinesTool *>(tool)) {
                 tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_A:
+        for (Tool *tool : tools) {
+            if (auto *at = qobject_cast<AirTool *>(tool)) {
+                if (event->modifiers() & Qt::ShiftModifier)
+                    at->toggleOptionsWidget();
+                else
+                    tool->click();
                 break;
             }
         }

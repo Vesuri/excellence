@@ -13,6 +13,7 @@ public:
     QRect paint(const QPoint &point, Buffer *buffer) const override;
     QRect erase(const QPoint &point, Buffer *buffer) const override;
     QRect rect(const QPoint &point) const override;
+    const QImage &image() const;
 
 private:
     QImage image_;
