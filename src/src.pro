@@ -41,7 +41,6 @@ SOURCES += main.cpp\
     airtool.cpp \
     filltool.cpp \
     texttool.cpp \
-    carvebrushtool.cpp \
     pentiptool.cpp \
     drawmodetool.cpp
 
@@ -72,7 +71,6 @@ HEADERS  += mainwindow.h \
     airtool.h \
     filltool.h \
     texttool.h \
-    carvebrushtool.h \
     pentiptool.h \
     drawmodetool.h \
     spatial_color_quant.h

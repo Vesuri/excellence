@@ -137,7 +137,8 @@ void BrushHandleWidget::mousePressEvent(QMouseEvent *event)
 BrushTool BrushTool::instance;
 
 BrushTool::BrushTool(QObject *parent) : Tool(parent),
-    undoBuffer(nullptr),
+    mode_(Rectangle),
+    undoBuffer_(nullptr),
     handleWidget_(nullptr),
     dimensionsLabel_(nullptr)
 {
@@ -160,43 +161,91 @@ void BrushTool::setBuffer(Buffer *buffer)
 
 QRect BrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
-    startPoint = point;
+    if (mode_ == Freehand) {
+        polygon_.clear();
+        polygon_ << point;
+        prevPoint_ = point;
+        undoBuffer_ = new UndoBuffer(QPoint(), buffer_->image().copy(), this);
+        return buffer_->toolPen()->paint(point, buffer_);
+    }
 
+    startPoint_ = point;
     QRect rect = changes(point);
-    undoBuffer = new UndoBuffer(rect.topLeft(), buffer_->image().copy(rect), this);
+    undoBuffer_ = new UndoBuffer(rect.topLeft(), buffer_->image().copy(rect), this);
     return draw(point);
 }
 
 QRect BrushTool::move(const QPoint &point)
 {
-    if (mouseButton_ == Qt::NoButton) {
+    if (mouseButton_ == Qt::NoButton)
         return QRect();
+
+    if (mode_ == Freehand) {
+        polygon_ << point;
+        QRect changedRect;
+        Algorithms::line(prevPoint_, point, [this, &changedRect](const QPoint &p) {
+            changedRect = changedRect.united(buffer_->toolPen()->paint(p, buffer_));
+        });
+        prevPoint_ = point;
+        return changedRect;
     }
 
-    undoBuffer->apply(buffer_);
-    delete undoBuffer;
+    undoBuffer_->apply(buffer_);
+    delete undoBuffer_;
 
     QRect changedRect;
-    Algorithms::rectangle(startPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->changes(point)); });
-    undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-    Algorithms::rectangle(startPoint, point, [this](const QPoint &point) { this->draw(point); });
+    Algorithms::rectangle(startPoint_, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->changes(point)); });
+    undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+    Algorithms::rectangle(startPoint_, point, [this](const QPoint &point) { this->draw(point); });
     return changedRect;
 }
 
 QRect BrushTool::release(const QPoint &point)
 {
-    QRect changedRect = undoBuffer->rect();
-    undoBuffer->apply(buffer_);
-    delete undoBuffer;
-    undoBuffer = nullptr;
+    if (mode_ == Freehand) {
+        polygon_ << point;
 
-    QImage image = buffer_->image().copy(QRect(startPoint, point));
+        undoBuffer_->apply(buffer_);
+        delete undoBuffer_;
+        undoBuffer_ = nullptr;
+
+        QRect bounds = polygon_.boundingRect().intersected(buffer_->image().rect());
+        if (bounds.isEmpty())
+            return buffer_->image().rect();
+
+        QImage areaImage = buffer_->image().copy(bounds);
+
+        QImage mask(bounds.size(), QImage::Format_ARGB32);
+        mask.fill(Qt::transparent);
+        {
+            QPainter p(&mask);
+            p.setPen(Qt::NoPen);
+            p.setBrush(Qt::white);
+            p.drawPolygon(polygon_.translated(-bounds.topLeft()));
+        }
+
+        int eraseIdx = static_cast<int>(buffer_->eraseColor());
+        for (int y = 0; y < bounds.height(); y++)
+            for (int x = 0; x < bounds.width(); x++)
+                if (qAlpha(mask.pixel(x, y)) == 0)
+                    areaImage.setPixel(x, y, static_cast<uint>(eraseIdx));
+
+        buffer_->setPen(new Brush(areaImage, eraseIdx, buffer_));
+        buffer_->setTool(tools.at(0));
+        return buffer_->image().rect();
+    }
+
+    QRect changedRect = undoBuffer_->rect();
+    undoBuffer_->apply(buffer_);
+    delete undoBuffer_;
+    undoBuffer_ = nullptr;
+
+    QImage image = buffer_->image().copy(QRect(startPoint_, point));
     buffer_->setPen(new Brush(image));
     buffer_->setTool(tools.at(0));
 
-    if (mouseButton_ == Qt::RightButton) {
-        Algorithms::fillRectangle(startPoint, point, [this](const QPoint &point) { this->draw(point); });
-    }
+    if (mouseButton_ == Qt::RightButton)
+        Algorithms::fillRectangle(startPoint_, point, [this](const QPoint &p) { draw(p); });
 
     return changedRect;
 }
@@ -431,12 +480,32 @@ void BrushTool::brushTileCut() { BRUSH_TRANSFORM(tileCut()) }
 
 #undef BRUSH_TRANSFORM
 
+void BrushTool::activate()
+{
+    if (buffer_->tool() == this) {
+        mode_ = (mode_ == Rectangle) ? Freehand : Rectangle;
+    }
+    updateButton();
+    Tool::activate();
+}
+
+void BrushTool::updateButton()
+{
+    if (mode_ == Freehand) {
+        button_->setIcon(QIcon(":/carvebrush.png"));
+        button_->setToolTip("Brush – Freehand selection [B]");
+    } else {
+        button_->setIcon(QIcon(":/cutbrush.png"));
+        button_->setToolTip("Brush – Rectangle selection [B]");
+    }
+}
+
 void BrushTool::registerTool()
 {
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/cutbrush.png"));
-    button_->setToolTip("Brush – Rectangle selection\nRight-click: wells & handle options");
+    button_->setToolTip("Brush – Rectangle selection [B]");
     button_->setCheckable(true);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));

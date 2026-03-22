@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QPixmap>
 #include <QPoint>
+#include <QPolygon>
 #include "tool.h"
 
 class UndoBuffer;
@@ -49,6 +50,8 @@ class BrushTool : public Tool
     Q_OBJECT
 
 public:
+    enum Mode { Rectangle, Freehand };
+
     explicit BrushTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
@@ -59,6 +62,7 @@ public:
 
 protected:
     void registerTool() override;
+    void activate() override;
     QWidget *createOptionsWidget() override;
 
 public:
@@ -96,12 +100,18 @@ private slots:
     void brushTileCut();
 
 private:
+    void updateButton();
     QRect changes(const QPoint &point);
     QRect draw(const QPoint &point);
     void storeToWell(int index);
 
-    QPoint startPoint;
-    UndoBuffer *undoBuffer;
+    Mode mode_;
+    QPoint startPoint_;
+    UndoBuffer *undoBuffer_;
+
+    // Freehand (carve) mode state
+    QPolygon polygon_;
+    QPoint prevPoint_;
 
     static const int WellCount = 8;
     QImage wells_[WellCount];
