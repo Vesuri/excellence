@@ -10,6 +10,7 @@
 #include "curvetool.h"
 #include "ellipsetool.h"
 #include "airtool.h"
+#include "filltool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -149,6 +150,14 @@ void BufferView::keyPressEvent(QKeyEvent *event)
     case Qt::Key_W:
         for (Tool *tool : tools) {
             if (qobject_cast<ConnectedLinesTool *>(tool)) {
+                tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_F:
+        for (Tool *tool : tools) {
+            if (qobject_cast<FillTool *>(tool)) {
                 tool->click();
                 break;
             }
