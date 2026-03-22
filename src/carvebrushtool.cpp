@@ -108,5 +108,5 @@ void CarveBrushTool::registerTool()
 
 void CarveBrushTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 5);
+    layout->addWidget(button_, 0, 12);
 }

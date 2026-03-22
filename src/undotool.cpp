@@ -46,5 +46,5 @@ void UndoTool::registerTool()
 
 void UndoTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 9);
+    layout->addWidget(button_, 0, 13);
 }

@@ -427,5 +427,5 @@ void CurveTool::activate()
 
 void CurveTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 3);
+    layout->addWidget(button_, 0, 5);
 }

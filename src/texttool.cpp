@@ -172,5 +172,5 @@ void TextTool::activate()
 
 void TextTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 4);
+    layout->addWidget(button_, 0, 10);
 }

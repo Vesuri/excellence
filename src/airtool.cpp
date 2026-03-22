@@ -216,5 +216,5 @@ void AirTool::activate()
 
 void AirTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 3);
+    layout->addWidget(button_, 0, 8);
 }
