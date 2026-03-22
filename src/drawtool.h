@@ -9,7 +9,7 @@ class DrawTool : public Tool
     Q_OBJECT
 
 public:
-    enum DrawMode { Draw, ConnectedDraw, FilledShape };
+    enum DrawMode { Dotted, ConnectedDraw, FilledShape };
 
     explicit DrawTool(QObject *parent = nullptr);
 
@@ -31,6 +31,7 @@ private:
     DrawMode drawMode;
     QPoint startingPoint;
     QPoint previousPoint;
+    QPoint lastStampedPoint;
 
     static DrawTool instance;
     static const char* icons[];

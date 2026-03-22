@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QtCore/qmath.h>
 #include "tool.h"
+#include "drawtool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -119,6 +120,14 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         break;
     case '-':
         setZoom(QRect(lastMousePoint, QSize(-2, -2)));
+        break;
+    case Qt::Key_D:
+        for (Tool *tool : tools) {
+            if (qobject_cast<DrawTool *>(tool)) {
+                tool->click();
+                break;
+            }
+        }
         break;
     default:
         break;

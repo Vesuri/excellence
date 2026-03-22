@@ -41,13 +41,23 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
     startingPoint = point;
     previousPoint = point;
+    lastStampedPoint = point;
     return draw(point);
 }
 
 QRect DrawTool::move(const QPoint &point)
 {
-    if (drawMode == Draw || mouseButton_ == Qt::NoButton) {
+    if (mouseButton_ == Qt::NoButton) {
         return draw(point);
+    } else if (drawMode == Dotted) {
+        QPoint delta = point - lastStampedPoint;
+        QRect penRect = buffer_->pen()->rect(QPoint(0, 0));
+        int threshold = qMax(1, qMax(penRect.width(), penRect.height()));
+        if (delta.x() * delta.x() + delta.y() * delta.y() >= threshold * threshold) {
+            lastStampedPoint = point;
+            return draw(point);
+        }
+        return QRect();
     } else {
         QRect changedRect;
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
@@ -63,8 +73,8 @@ QRect DrawTool::hover(const QPoint &point)
 
 QRect DrawTool::release(const QPoint &point)
 {
-    if (drawMode == Draw) {
-        return draw(point);
+    if (drawMode == Dotted) {
+        return QRect();
     } else if (drawMode == ConnectedDraw) {
         QRect changedRect;
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
@@ -90,7 +100,7 @@ void DrawTool::registerTool()
 {
     Tool::registerTool();
 
-    setDrawMode(ConnectedDraw);
+    setDrawMode(Dotted);
     button_->setCheckable(true);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));

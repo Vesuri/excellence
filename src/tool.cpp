@@ -37,6 +37,11 @@ Tool::Type Tool::type() const
     return Modify;
 }
 
+void Tool::click()
+{
+    button_->click();
+}
+
 void Tool::registerTool()
 {
     button_ = new QToolButton;

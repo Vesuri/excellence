@@ -22,6 +22,7 @@ public:
     Qt::MouseButton mouseButton() const;
     virtual void setBuffer(Buffer *buffer);
 
+    void click();
     virtual QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) = 0;
     virtual QRect move(const QPoint &point) = 0;
     virtual QRect release(const QPoint &point) = 0;
