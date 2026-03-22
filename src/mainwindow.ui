@@ -132,6 +132,27 @@
     <addaction name="actionBrushRemap"/>
     <addaction name="actionBrushBgFgSwap"/>
     <addaction name="actionBrushAutoBackground"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushFlipHorizontal"/>
+    <addaction name="actionBrushFlipVertical"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushRotate90CW"/>
+    <addaction name="actionBrushRotate90CCW"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushDouble"/>
+    <addaction name="actionBrushHalve"/>
+    <addaction name="actionBrushScaleToSize"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushShearX"/>
+    <addaction name="actionBrushShearY"/>
+    <addaction name="actionBrushBendX"/>
+    <addaction name="actionBrushBendY"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushOutline"/>
+    <addaction name="actionBrushTrim"/>
+    <addaction name="actionBrushTileCut"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushRestore"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menuImage"/>
@@ -268,6 +289,105 @@
   <action name="actionBrushAutoBackground">
    <property name="text">
     <string>Auto Background</string>
+   </property>
+  </action>
+  <action name="actionBrushFlipHorizontal">
+   <property name="text">
+    <string>Flip Horizontal</string>
+   </property>
+   <property name="shortcut">
+    <string>x</string>
+   </property>
+  </action>
+  <action name="actionBrushFlipVertical">
+   <property name="text">
+    <string>Flip Vertical</string>
+   </property>
+   <property name="shortcut">
+    <string>y</string>
+   </property>
+  </action>
+  <action name="actionBrushRotate90CW">
+   <property name="text">
+    <string>Rotate 90° CW</string>
+   </property>
+   <property name="shortcut">
+    <string>z</string>
+   </property>
+  </action>
+  <action name="actionBrushRotate90CCW">
+   <property name="text">
+    <string>Rotate 90° CCW</string>
+   </property>
+  </action>
+  <action name="actionBrushDouble">
+   <property name="text">
+    <string>Double Size</string>
+   </property>
+   <property name="shortcut">
+    <string>H</string>
+   </property>
+  </action>
+  <action name="actionBrushHalve">
+   <property name="text">
+    <string>Halve Size</string>
+   </property>
+   <property name="shortcut">
+    <string>h</string>
+   </property>
+  </action>
+  <action name="actionBrushScaleToSize">
+   <property name="text">
+    <string>Scale to Size...</string>
+   </property>
+  </action>
+  <action name="actionBrushShearX">
+   <property name="text">
+    <string>Shear X...</string>
+   </property>
+  </action>
+  <action name="actionBrushShearY">
+   <property name="text">
+    <string>Shear Y...</string>
+   </property>
+  </action>
+  <action name="actionBrushBendX">
+   <property name="text">
+    <string>Bend X...</string>
+   </property>
+  </action>
+  <action name="actionBrushBendY">
+   <property name="text">
+    <string>Bend Y...</string>
+   </property>
+  </action>
+  <action name="actionBrushOutline">
+   <property name="text">
+    <string>Outline</string>
+   </property>
+   <property name="shortcut">
+    <string>o</string>
+   </property>
+  </action>
+  <action name="actionBrushTrim">
+   <property name="text">
+    <string>Trim</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+O</string>
+   </property>
+  </action>
+  <action name="actionBrushTileCut">
+   <property name="text">
+    <string>Tile Cut</string>
+   </property>
+  </action>
+  <action name="actionBrushRestore">
+   <property name="text">
+    <string>Restore</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+B</string>
    </property>
   </action>
   <action name="actionPaletteLoad">

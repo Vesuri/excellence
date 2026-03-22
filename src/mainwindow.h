@@ -55,6 +55,21 @@ private slots:
     void brushRemap();
     void brushBgFgSwap();
     void brushAutoBackground();
+    void brushFlipHorizontal();
+    void brushFlipVertical();
+    void brushRotate90CW();
+    void brushRotate90CCW();
+    void brushDouble();
+    void brushHalve();
+    void brushScaleToSize();
+    void brushShearX();
+    void brushShearY();
+    void brushBendX();
+    void brushBendY();
+    void brushOutline();
+    void brushTrim();
+    void brushTileCut();
+    void brushRestore();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap };
