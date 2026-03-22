@@ -58,6 +58,7 @@ public:
 public slots:
     void clear();
     void clearWithColor(unsigned colorIndex);
+    void resetToDefaultPalette();
     void undo();
     void redo();
     void undoAll();

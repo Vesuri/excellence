@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVector>
+#include <QRgb>
 
 namespace Ui {
 class MainWindow;
@@ -72,6 +74,12 @@ private slots:
     void brushRestore();
     void pickForegroundColor();
     void pickBackgroundColor();
+    void paletteSave(const QString &path = QString());
+    void paletteSpread();
+    void paletteDefault();
+    void paletteRestore();
+    void paletteUndo();
+    void paletteRemapPage();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap };
@@ -82,6 +90,7 @@ private:
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
     QFileDialog *loadPaletteDialog;
+    QFileDialog *savePaletteDialog;
     PropertiesDialog *propertiesDialog;
     QVector<BufferView *> bufferViews;
     BufferView *activeBufferView;
@@ -89,6 +98,8 @@ private:
     PenTip *penTip;
     PenTip *toolPenTip;
     PaletteMode paletteMode;
+    QVector<QRgb> paletteUndoSnapshot_;
+    QVector<QRgb> paletteRestorePoint_;
 };
 
 #endif // MAINWINDOW_H

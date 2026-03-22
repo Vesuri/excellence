@@ -651,3 +651,13 @@ void Buffer::resetCycle() { cycleIndex_ = 0; }
 
 void Buffer::setDrawModeAmount(int amount) { drawModeAmount_ = qBound(0, amount, 100); }
 int Buffer::drawModeAmount() const { return drawModeAmount_; }
+
+void Buffer::resetToDefaultPalette()
+{
+    int count = image_.colorCount();
+    for (int i = 0; i < count; i++) {
+        image_.setColor(i, defaultPalette[i]);
+    }
+    emit paletteModified();
+    emit modified(image_.rect());
+}

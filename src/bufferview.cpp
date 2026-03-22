@@ -228,6 +228,22 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         else
             buffer->clear();
         break;
+    case Qt::Key_BracketLeft: {
+        int n = buffer->image().colorCount();
+        if (event->modifiers() & Qt::ShiftModifier)
+            buffer->setEraseColor((buffer->eraseColor() + n - 1) % n);
+        else
+            buffer->setPaintColor((buffer->paintColor() + n - 1) % n);
+        break;
+    }
+    case Qt::Key_BracketRight: {
+        int n = buffer->image().colorCount();
+        if (event->modifiers() & Qt::ShiftModifier)
+            buffer->setEraseColor((buffer->eraseColor() + 1) % n);
+        else
+            buffer->setPaintColor((buffer->paintColor() + 1) % n);
+        break;
+    }
     case Qt::Key_U:
         if (event->modifiers() & Qt::ControlModifier)
             buffer->clearUndoBuffer();

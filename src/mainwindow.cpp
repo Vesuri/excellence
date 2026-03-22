@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     openDialog(new QFileDialog(nullptr, tr("Open file"))),
     loadPaletteDialog(new QFileDialog(nullptr, tr("Load palette"))),
+    savePaletteDialog(new QFileDialog(nullptr, tr("Save palette"))),
     propertiesDialog(new PropertiesDialog),
     buffer(nullptr),
     penTip(new PenTip(this)),
@@ -35,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
     connect(loadPaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(loadPalette(QString)));
+    savePaletteDialog->setAcceptMode(QFileDialog::AcceptSave);
+    connect(savePaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(paletteSave(QString)));
     connect(ui->actionFileQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(ui->actionFileNew, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
@@ -47,9 +50,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionImageHistogram, SIGNAL(triggered()), this, SLOT(imageHistogram()));
     connect(ui->actionImageProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
     connect(ui->actionPaletteLoad, SIGNAL(triggered()), loadPaletteDialog, SLOT(show()));
+    connect(ui->actionPaletteSave, SIGNAL(triggered()), savePaletteDialog, SLOT(show()));
+    connect(ui->actionPaletteSpread, SIGNAL(triggered()), this, SLOT(paletteSpread()));
     connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(paletteCopyColor()));
     connect(ui->actionPaletteSwapColors, SIGNAL(triggered()), this, SLOT(paletteSwapColors()));
     connect(ui->actionPaletteSwapAndRemapColors, SIGNAL(triggered()), this, SLOT(paletteSwapAndRemapColors()));
+    connect(ui->actionPaletteDefault, SIGNAL(triggered()), this, SLOT(paletteDefault()));
+    connect(ui->actionPaletteRestore, SIGNAL(triggered()), this, SLOT(paletteRestore()));
+    connect(ui->actionPaletteUndo, SIGNAL(triggered()), this, SLOT(paletteUndo()));
+    connect(ui->actionPaletteRemapPage, SIGNAL(triggered()), this, SLOT(paletteRemapPage()));
     connect(ui->actionBrushLoad, SIGNAL(triggered()), this, SLOT(brushLoad()));
     connect(ui->actionBrushSave, SIGNAL(triggered()), this, SLOT(brushSave()));
     connect(ui->actionBrushCopy, SIGNAL(triggered()), this, SLOT(brushCopy()));
@@ -197,6 +206,8 @@ void MainWindow::setBuffer(Buffer *newBuffer)
 
     updatePalette();
     connect(buffer, SIGNAL(paletteModified()), this, SLOT(updatePalette()));
+    paletteRestorePoint_ = buffer->image().colorTable();
+    paletteUndoSnapshot_ = paletteRestorePoint_;
     connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), penTip, SLOT(setPaintColor(unsigned)));
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), penTip, SLOT(setEraseColor(unsigned)));
     connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setPaintColor(unsigned, QColor)));
@@ -580,6 +591,113 @@ void MainWindow::pickBackgroundColor()
             break;
         }
     }
+}
+
+void MainWindow::paletteSave(const QString &path)
+{
+    if (path.isEmpty()) {
+        savePaletteDialog->show();
+        return;
+    }
+    int n = buffer->image().colorCount();
+    QImage paletteImage(n, 1, QImage::Format_Indexed8);
+    paletteImage.setColorTable(buffer->image().colorTable());
+    for (int i = 0; i < n; i++)
+        paletteImage.setPixel(i, 0, static_cast<uint>(i));
+    if (!paletteImage.save(path)) {
+        QMessageBox msgBox;
+        msgBox.setText(tr("Failed to save palette."));
+        msgBox.exec();
+    }
+}
+
+void MainWindow::paletteSpread()
+{
+    int from = static_cast<int>(buffer->eraseColor());
+    int to   = static_cast<int>(buffer->paintColor());
+    if (from == to)
+        return;
+    if (from > to)
+        qSwap(from, to);
+
+    paletteUndoSnapshot_ = buffer->image().colorTable();
+
+    QRgb cFrom = buffer->image().color(from);
+    QRgb cTo   = buffer->image().color(to);
+    int steps  = to - from;
+    for (int i = 1; i < steps; i++) {
+        int r = qRed(cFrom)   + (qRed(cTo)   - qRed(cFrom))   * i / steps;
+        int g = qGreen(cFrom) + (qGreen(cTo) - qGreen(cFrom)) * i / steps;
+        int b = qBlue(cFrom)  + (qBlue(cTo)  - qBlue(cFrom))  * i / steps;
+        buffer->setColor(static_cast<unsigned>(from + i), QColor(r, g, b));
+    }
+}
+
+void MainWindow::paletteDefault()
+{
+    paletteUndoSnapshot_ = buffer->image().colorTable();
+    buffer->resetToDefaultPalette();
+}
+
+void MainWindow::paletteRestore()
+{
+    paletteUndoSnapshot_ = buffer->image().colorTable();
+    QVector<QRgb> restore = paletteRestorePoint_;
+    int count = buffer->image().colorCount();
+    for (int i = 0; i < qMin(restore.size(), count); i++)
+        buffer->image().setColor(i, restore[i]);
+    emit buffer->paletteModified();
+    emit buffer->modified(buffer->image().rect());
+}
+
+void MainWindow::paletteUndo()
+{
+    QVector<QRgb> current = buffer->image().colorTable();
+    int count = buffer->image().colorCount();
+    for (int i = 0; i < qMin(paletteUndoSnapshot_.size(), count); i++)
+        buffer->image().setColor(i, paletteUndoSnapshot_[i]);
+    paletteUndoSnapshot_ = current;
+    emit buffer->paletteModified();
+    emit buffer->modified(buffer->image().rect());
+}
+
+void MainWindow::paletteRemapPage()
+{
+    if (paletteRestorePoint_.isEmpty())
+        return;
+
+    const QVector<QRgb> &origPalette = paletteRestorePoint_;
+    const int colorCount = buffer->image().colorCount();
+    QImage &image = buffer->image();
+
+    // Build a lookup: for each original palette index, find the closest entry in the current palette
+    QVector<int> remap(qMin(origPalette.size(), colorCount));
+    for (int i = 0; i < remap.size(); i++) {
+        QRgb origColor = origPalette[i];
+        int bestIndex = i;
+        int bestDist = INT_MAX;
+        for (int j = 0; j < colorCount; j++) {
+            QRgb c = image.color(j);
+            int dr = qRed(origColor)   - qRed(c);
+            int dg = qGreen(origColor) - qGreen(c);
+            int db = qBlue(origColor)  - qBlue(c);
+            int dist = dr*dr + dg*dg + db*db;
+            if (dist < bestDist) {
+                bestDist = dist;
+                bestIndex = j;
+            }
+        }
+        remap[i] = bestIndex;
+    }
+
+    for (int y = 0; y < image.height(); y++) {
+        for (int x = 0; x < image.width(); x++) {
+            int idx = image.pixelIndex(x, y);
+            if (idx < remap.size())
+                image.setPixel(x, y, static_cast<uint>(remap[idx]));
+        }
+    }
+    emit buffer->modified(image.rect());
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)

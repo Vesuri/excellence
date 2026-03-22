@@ -98,10 +98,20 @@
      <string>Palette</string>
     </property>
     <addaction name="actionPaletteLoad"/>
+    <addaction name="actionPaletteSave"/>
+    <addaction name="separator"/>
+    <addaction name="actionPaletteSpread"/>
     <addaction name="separator"/>
     <addaction name="actionPaletteCopyColor"/>
     <addaction name="actionPaletteSwapColors"/>
     <addaction name="actionPaletteSwapAndRemapColors"/>
+    <addaction name="separator"/>
+    <addaction name="actionPaletteDefault"/>
+    <addaction name="actionPaletteRestore"/>
+    <addaction name="separator"/>
+    <addaction name="actionPaletteUndo"/>
+    <addaction name="separator"/>
+    <addaction name="actionPaletteRemapPage"/>
    </widget>
    <widget class="QMenu" name="menuImage">
     <property name="title">
@@ -393,6 +403,36 @@
   <action name="actionPaletteLoad">
    <property name="text">
     <string>Load</string>
+   </property>
+  </action>
+  <action name="actionPaletteSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionPaletteSpread">
+   <property name="text">
+    <string>Spread</string>
+   </property>
+  </action>
+  <action name="actionPaletteDefault">
+   <property name="text">
+    <string>Default</string>
+   </property>
+  </action>
+  <action name="actionPaletteRestore">
+   <property name="text">
+    <string>Restore</string>
+   </property>
+  </action>
+  <action name="actionPaletteUndo">
+   <property name="text">
+    <string>Palette Undo</string>
+   </property>
+  </action>
+  <action name="actionPaletteRemapPage">
+   <property name="text">
+    <string>Remap Page</string>
    </property>
   </action>
   <action name="actionImageCopy">
