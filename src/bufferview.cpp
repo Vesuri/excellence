@@ -8,6 +8,7 @@
 #include "drawtool.h"
 #include "connectedlinestool.h"
 #include "curvetool.h"
+#include "ellipsetool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -147,6 +148,18 @@ void BufferView::keyPressEvent(QKeyEvent *event)
     case Qt::Key_W:
         for (Tool *tool : tools) {
             if (qobject_cast<ConnectedLinesTool *>(tool)) {
+                tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_C:
+        for (Tool *tool : tools) {
+            if (auto *et = qobject_cast<EllipseTool *>(tool)) {
+                if (event->modifiers() & Qt::ShiftModifier)
+                    et->setDrawMode(EllipseTool::FilledEllipse);
+                else
+                    et->setDrawMode(EllipseTool::Ellipse);
                 tool->click();
                 break;
             }

@@ -1,6 +1,9 @@
 #include <QImage>
 #include <QPoint>
+#include <cmath>
 #include "algorithms.h"
+
+static const double ALG_PI = 3.14159265358979323846;
 
 void Algorithms::line(const QPoint &from, const QPoint &to, std::function<void(const QPoint &)> point)
 {
@@ -59,5 +62,58 @@ void Algorithms::fillRectangle(const QPoint &topLeft, const QPoint &bottomRight,
         QPoint left(topLeft.x(), y);
         QPoint right(bottomRight.x(), y);
         line(left, right, point);
+    }
+}
+
+void Algorithms::ellipse(int cx, int cy, int rx, int ry, double angle,
+                          std::function<void(const QPoint &)> fn)
+{
+    if (rx < 0) rx = -rx;
+    if (ry < 0) ry = -ry;
+    if (rx == 0 && ry == 0) { fn(QPoint(cx, cy)); return; }
+    if (rx == 0) { line(QPoint(cx, cy - ry), QPoint(cx, cy + ry), fn); return; }
+    if (ry == 0) { line(QPoint(cx - rx, cy), QPoint(cx + rx, cy), fn); return; }
+
+    int steps = qMax(4, 4 * (rx + ry));
+    double cosA = std::cos(angle), sinA = std::sin(angle);
+    auto pt = [&](double t) {
+        double ex = rx * std::cos(t);
+        double ey = ry * std::sin(t);
+        return QPoint(cx + qRound(ex * cosA - ey * sinA),
+                      cy + qRound(ex * sinA + ey * cosA));
+    };
+    QPoint prev = pt(0.0);
+    for (int i = 1; i <= steps; i++) {
+        QPoint cur = pt(2.0 * ALG_PI * i / steps);
+        line(prev, cur, fn);
+        prev = cur;
+    }
+}
+
+void Algorithms::fillEllipse(int cx, int cy, int rx, int ry, double angle,
+                               std::function<void(const QPoint &)> fn)
+{
+    if (rx < 0) rx = -rx;
+    if (ry < 0) ry = -ry;
+    if (rx == 0 && ry == 0) { fn(QPoint(cx, cy)); return; }
+    if (rx == 0) { line(QPoint(cx, cy - ry), QPoint(cx, cy + ry), fn); return; }
+    if (ry == 0) { line(QPoint(cx - rx, cy), QPoint(cx + rx, cy), fn); return; }
+
+    double cosA = std::cos(angle), sinA = std::sin(angle);
+    double rx2 = (double)rx * rx, ry2 = (double)ry * ry;
+    int yBound = (int)std::ceil(std::sqrt(rx2 * sinA * sinA + ry2 * cosA * cosA)) + 1;
+
+    for (int dy = -yBound; dy <= yBound; dy++) {
+        // Solve (dx*cosA + dy*sinA)^2/rx^2 + (-dx*sinA + dy*cosA)^2/ry^2 = 1 for dx
+        double A = cosA * cosA / rx2 + sinA * sinA / ry2;
+        double B = 2.0 * dy * cosA * sinA * (1.0 / rx2 - 1.0 / ry2);
+        double C = (double)dy * dy * (sinA * sinA / rx2 + cosA * cosA / ry2) - 1.0;
+        double disc = B * B - 4.0 * A * C;
+        if (disc < 0) continue;
+        double sqrtD = std::sqrt(disc);
+        int x1 = cx + qRound((-B - sqrtD) / (2.0 * A));
+        int x2 = cx + qRound((-B + sqrtD) / (2.0 * A));
+        if (x1 > x2) qSwap(x1, x2);
+        line(QPoint(x1, cy + dy), QPoint(x2, cy + dy), fn);
     }
 }
