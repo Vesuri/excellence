@@ -11,6 +11,7 @@
 #include "ellipsetool.h"
 #include "airtool.h"
 #include "filltool.h"
+#include "texttool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -181,6 +182,14 @@ void BufferView::keyPressEvent(QKeyEvent *event)
                     et->setDrawMode(EllipseTool::FilledEllipse);
                 else
                     et->setDrawMode(EllipseTool::Ellipse);
+                tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_T:
+        for (Tool *tool : tools) {
+            if (qobject_cast<TextTool *>(tool)) {
                 tool->click();
                 break;
             }

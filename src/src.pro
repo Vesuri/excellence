@@ -39,7 +39,8 @@ SOURCES += main.cpp\
     curvetool.cpp \
     ellipsetool.cpp \
     airtool.cpp \
-    filltool.cpp
+    filltool.cpp \
+    texttool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -67,6 +68,7 @@ HEADERS  += mainwindow.h \
     ellipsetool.h \
     airtool.h \
     filltool.h \
+    texttool.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \
