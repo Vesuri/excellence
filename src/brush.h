@@ -14,10 +14,13 @@ public:
     QRect erase(const QPoint &point, Buffer *buffer) const override;
     QRect rect(const QPoint &point) const override;
     const QImage &image() const;
+    QPoint handleOffset() const;
+    void setHandleOffset(const QPoint &offset);
 
 private:
     QImage image_;
     int transparentIndex_;
+    QPoint handleOffset_;
 };
 
 #endif // BRUSH_H

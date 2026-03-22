@@ -1,11 +1,14 @@
 #include <QApplication>
+#include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QImage>
 #include <QMouseEvent>
 #include <QPainter>
+#include <QPushButton>
 #include <QRect>
 #include <QSignalMapper>
+#include <QVBoxLayout>
 #include <QWidget>
 #include "brush.h"
 #include "buffer.h"
@@ -77,10 +80,64 @@ void BrushWellButton::mouseReleaseEvent(QMouseEvent *event)
 
 // ── BrushTool ────────────────────────────────────────────────────────────────
 
+// ── BrushHandleWidget ────────────────────────────────────────────────────────
+
+BrushHandleWidget::BrushHandleWidget(BrushTool *tool, QWidget *parent)
+    : QWidget(parent), tool_(tool)
+{
+    setFixedSize(80, 80);
+    setCursor(Qt::CrossCursor);
+}
+
+void BrushHandleWidget::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    update();
+}
+
+void BrushHandleWidget::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    QImage img = tool_->currentBrushImage();
+    if (!img.isNull()) {
+        QImage rgb = img.convertToFormat(QImage::Format_RGB32);
+        p.drawImage(rect(), rgb);
+    } else {
+        p.fillRect(rect(), QColor(80, 80, 80));
+    }
+
+    // Draw anchor crosshair
+    QPoint handle = tool_->currentHandleOffset();
+    if (!img.isNull() && img.width() > 0 && img.height() > 0) {
+        int hx = handle.x() * width()  / img.width();
+        int hy = handle.y() * height() / img.height();
+        p.setPen(QPen(Qt::red, 1));
+        p.drawLine(hx - 4, hy, hx + 4, hy);
+        p.drawLine(hx, hy - 4, hx, hy + 4);
+    }
+
+    p.setPen(Qt::black);
+    p.drawRect(rect().adjusted(0, 0, -1, -1));
+}
+
+void BrushHandleWidget::mousePressEvent(QMouseEvent *event)
+{
+    QImage img = tool_->currentBrushImage();
+    if (img.isNull() || width() == 0 || height() == 0)
+        return;
+    int ox = event->pos().x() * img.width()  / width();
+    int oy = event->pos().y() * img.height() / height();
+    tool_->setHandle(QPoint(ox, oy));
+    update();
+}
+
+// ── BrushTool ────────────────────────────────────────────────────────────────
+
 BrushTool BrushTool::instance;
 
 BrushTool::BrushTool(QObject *parent) : Tool(parent),
-    undoBuffer(nullptr)
+    undoBuffer(nullptr),
+    handleWidget_(nullptr)
 {
     for (int i = 0; i < WellCount; i++)
         wellButtons_[i] = nullptr;
@@ -156,6 +213,34 @@ QRect BrushTool::draw(const QPoint &point)
     }
 }
 
+QImage BrushTool::currentBrushImage() const
+{
+    Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
+    return brush ? brush->image() : QImage();
+}
+
+QPoint BrushTool::currentHandleOffset() const
+{
+    Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
+    return brush ? brush->handleOffset() : QPoint();
+}
+
+void BrushTool::setHandle(const QPoint &offset)
+{
+    Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
+    if (!brush)
+        return;
+    brush->setHandleOffset(offset);
+    if (handleWidget_)
+        handleWidget_->update();
+}
+
+void BrushTool::setHandleTopLeft()     { setHandle(QPoint(0, 0)); }
+void BrushTool::setHandleTopRight()    { QImage img = currentBrushImage(); setHandle(QPoint(img.width() - 1, 0)); }
+void BrushTool::setHandleCenter()      { QImage img = currentBrushImage(); setHandle(QPoint(img.width() / 2, img.height() / 2)); }
+void BrushTool::setHandleBottomLeft()  { QImage img = currentBrushImage(); setHandle(QPoint(0, img.height() - 1)); }
+void BrushTool::setHandleBottomRight() { QImage img = currentBrushImage(); setHandle(QPoint(img.width() - 1, img.height() - 1)); }
+
 void BrushTool::storeToWell(int index)
 {
     Brush *brush = qobject_cast<Brush *>(buffer_->pen());
@@ -182,11 +267,15 @@ void BrushTool::wellCtrlClicked(int index)
 QWidget *BrushTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Brush Wells");
+    w->setWindowTitle("Brush");
 
-    QHBoxLayout *layout = new QHBoxLayout(w);
-    layout->setSpacing(2);
-    layout->setContentsMargins(4, 4, 4, 4);
+    QVBoxLayout *vbox = new QVBoxLayout(w);
+    vbox->setSpacing(4);
+    vbox->setContentsMargins(4, 4, 4, 4);
+
+    // ── Wells row ──────────────────────────────────────────────────────────
+    QHBoxLayout *wellsRow = new QHBoxLayout;
+    wellsRow->setSpacing(2);
 
     QSignalMapper *clickMapper = new QSignalMapper(w);
     QSignalMapper *ctrlMapper  = new QSignalMapper(w);
@@ -200,10 +289,42 @@ QWidget *BrushTool::createOptionsWidget()
             btn->store(wells_[i]);
         clickMapper->setMapping(btn, i);
         ctrlMapper->setMapping(btn, i);
-        connect(btn, SIGNAL(clicked()),    clickMapper, SLOT(map()));
+        connect(btn, SIGNAL(clicked()),     clickMapper, SLOT(map()));
         connect(btn, SIGNAL(ctrlClicked()), ctrlMapper,  SLOT(map()));
-        layout->addWidget(btn);
+        wellsRow->addWidget(btn);
     }
+    vbox->addLayout(wellsRow);
+
+    // ── Separator ──────────────────────────────────────────────────────────
+    QFrame *sep = new QFrame(w);
+    sep->setFrameShape(QFrame::HLine);
+    vbox->addWidget(sep);
+
+    // ── Handle section ─────────────────────────────────────────────────────
+    QHBoxLayout *handleRow = new QHBoxLayout;
+
+    // Preset buttons arranged as a 3x2 grid (TL, TR / C / BL, BR)
+    QGridLayout *presetGrid = new QGridLayout;
+    presetGrid->setSpacing(2);
+    auto makePreset = [&](const QString &label, const char *slot, int row, int col) {
+        QPushButton *btn = new QPushButton(label, w);
+        btn->setFixedSize(28, 22);
+        connect(btn, SIGNAL(clicked()), this, slot);
+        presetGrid->addWidget(btn, row, col);
+    };
+    makePreset("TL", SLOT(setHandleTopLeft()),     0, 0);
+    makePreset("TR", SLOT(setHandleTopRight()),    0, 1);
+    makePreset("C",  SLOT(setHandleCenter()),      1, 0);
+    makePreset("BL", SLOT(setHandleBottomLeft()),  2, 0);
+    makePreset("BR", SLOT(setHandleBottomRight()), 2, 1);
+
+    handleRow->addLayout(presetGrid);
+
+    // Clickable preview
+    handleWidget_ = new BrushHandleWidget(this, w);
+    handleRow->addWidget(handleWidget_);
+
+    vbox->addLayout(handleRow);
 
     return w;
 }

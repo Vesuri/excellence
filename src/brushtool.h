@@ -29,6 +29,20 @@ private:
     QPixmap thumbnail_;
 };
 
+class BrushTool;
+
+class BrushHandleWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit BrushHandleWidget(BrushTool *tool, QWidget *parent = nullptr);
+    void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+private:
+    BrushTool *tool_;
+};
+
 class BrushTool : public Tool
 {
     Q_OBJECT
@@ -46,9 +60,21 @@ protected:
     void registerTool() override;
     QWidget *createOptionsWidget() override;
 
+public:
+    QImage currentBrushImage() const;
+    QPoint currentHandleOffset() const;
+
+public slots:
+    void setHandle(const QPoint &offset);
+
 private slots:
     void wellClicked(int index);
     void wellCtrlClicked(int index);
+    void setHandleTopLeft();
+    void setHandleTopRight();
+    void setHandleCenter();
+    void setHandleBottomLeft();
+    void setHandleBottomRight();
 
 private:
     QRect changes(const QPoint &point);
@@ -61,6 +87,7 @@ private:
     static const int WellCount = 8;
     QImage wells_[WellCount];
     BrushWellButton *wellButtons_[WellCount];
+    BrushHandleWidget *handleWidget_;
 
     static BrushTool instance;
 };
