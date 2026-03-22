@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <QGridLayout>
 #include <QImage>
 #include <QRect>
+#include <QVector>
 #include "pen.h"
 #include "buffer.h"
 #include "algorithms.h"
@@ -52,6 +54,8 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     buffer_->setSmearDirection(QPoint(0, 0));
     buffer_->resetCycle();
     drawnBounds_ = buffer_->pen()->rect(point).intersected(buffer_->image().rect());
+    pathPoints_.clear();
+    pathPoints_.append(point);
     return draw(point);
 }
 
@@ -74,6 +78,8 @@ QRect DrawTool::move(const QPoint &point)
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         previousPoint = point;
         drawnBounds_ = drawnBounds_.united(changedRect);
+        if (drawMode == FilledShape)
+            pathPoints_.append(point);
         return changedRect;
     }
 }
@@ -92,21 +98,14 @@ QRect DrawTool::release(const QPoint &point)
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         return changedRect;
     } else {
+        pathPoints_.append(point);
         QRect changedRect;
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         Algorithms::line(point, startingPoint, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
-        drawnBounds_ = drawnBounds_.united(changedRect);
-        // Flood fill the interior of the closed shape
-        QImage &img = buffer_->image();
-        QPoint seed = drawnBounds_.intersected(img.rect()).center();
         int fillColor = static_cast<int>(mouseButton_ == Qt::RightButton
                                          ? buffer_->eraseColor()
                                          : buffer_->paintColor());
-        if (img.rect().contains(seed)) {
-            int targetColor = img.pixelIndex(seed);
-            if (targetColor != fillColor)
-                changedRect = changedRect.united(Algorithms::floodFill(img, seed, targetColor, fillColor));
-        }
+        changedRect = changedRect.united(polygonFill(fillColor));
         return changedRect;
     }
 }
@@ -118,6 +117,47 @@ QRect DrawTool::draw(const QPoint &point)
     } else {
         return buffer_->pen()->paint(point, buffer_);
     }
+}
+
+QRect DrawTool::polygonFill(int fillColor)
+{
+    if (pathPoints_.size() < 3)
+        return QRect();
+
+    QImage &image = buffer_->image();
+    const QRect imageRect = image.rect();
+    const int n = pathPoints_.size();
+
+    int minY = imageRect.bottom(), maxY = imageRect.top();
+    for (const QPoint &v : pathPoints_) {
+        minY = qMin(minY, v.y());
+        maxY = qMax(maxY, v.y());
+    }
+    minY = qMax(minY, imageRect.top());
+    maxY = qMin(maxY, imageRect.bottom());
+
+    QRect changedRect;
+    for (int y = minY; y <= maxY; y++) {
+        QVector<int> xs;
+        for (int i = 0; i < n; i++) {
+            const QPoint &p1 = pathPoints_[i];
+            const QPoint &p2 = pathPoints_[(i + 1) % n];
+            if ((p1.y() <= y && p2.y() > y) || (p2.y() <= y && p1.y() > y)) {
+                int x = p1.x() + (y - p1.y()) * (p2.x() - p1.x()) / (p2.y() - p1.y());
+                xs.append(x);
+            }
+        }
+        std::sort(xs.begin(), xs.end());
+        for (int i = 0; i + 1 < xs.size(); i += 2) {
+            int x1 = qMax(xs[i], imageRect.left());
+            int x2 = qMin(xs[i + 1], imageRect.right());
+            for (int x = x1; x <= x2; x++)
+                image.setPixel(x, y, static_cast<uint>(fillColor));
+            if (x1 <= x2)
+                changedRect = changedRect.united(QRect(x1, y, x2 - x1 + 1, 1));
+        }
+    }
+    return changedRect;
 }
 
 void DrawTool::registerTool()

@@ -1,6 +1,7 @@
 #ifndef DRAWTOOL_H
 #define DRAWTOOL_H
 
+#include <QList>
 #include <QPoint>
 #include "tool.h"
 
@@ -27,12 +28,14 @@ protected:
 
 private:
     QRect draw(const QPoint &point);
+    QRect polygonFill(int fillColor);
 
     DrawMode drawMode;
     QPoint startingPoint;
     QPoint previousPoint;
     QPoint lastStampedPoint;
     QRect drawnBounds_;
+    QList<QPoint> pathPoints_;
 
     static DrawTool instance;
     static const char* icons[];
