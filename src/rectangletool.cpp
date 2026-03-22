@@ -66,6 +66,9 @@ QRect RectangleTool::move(const QPoint &point)
         return buffer_->pen()->paint(point, buffer_);
     }
 
+    if (!undoBuffer)
+        return QRect();
+
     undoBuffer->apply(buffer_);
     delete undoBuffer;
 
@@ -88,6 +91,9 @@ QRect RectangleTool::move(const QPoint &point)
 
 QRect RectangleTool::release(const QPoint &point)
 {
+    if (!undoBuffer)
+        return QRect();
+
     undoBuffer->apply(buffer_);
     delete undoBuffer;
     undoBuffer = nullptr;

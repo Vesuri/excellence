@@ -190,6 +190,9 @@ QRect BrushTool::move(const QPoint &point)
         return changedRect;
     }
 
+    if (!undoBuffer_)
+        return QRect();
+
     undoBuffer_->apply(buffer_);
     delete undoBuffer_;
 
@@ -204,6 +207,9 @@ QRect BrushTool::release(const QPoint &point)
 {
     if (mode_ == Freehand) {
         polygon_ << point;
+
+        if (!undoBuffer_)
+            return QRect();
 
         undoBuffer_->apply(buffer_);
         delete undoBuffer_;
@@ -234,6 +240,9 @@ QRect BrushTool::release(const QPoint &point)
         buffer_->setTool(tools.at(0));
         return buffer_->image().rect();
     }
+
+    if (!undoBuffer_)
+        return QRect();
 
     QRect changedRect = undoBuffer_->rect();
     undoBuffer_->apply(buffer_);

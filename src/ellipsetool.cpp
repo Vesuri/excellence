@@ -159,6 +159,9 @@ QRect EllipseTool::move(const QPoint &point)
     if (phase_ != 1)
         return QRect();
 
+    if (!undoBuffer_)
+        return QRect();
+
     undoBuffer_->apply(buffer_);
     delete undoBuffer_;
 
@@ -177,6 +180,8 @@ QRect EllipseTool::move(const QPoint &point)
 QRect EllipseTool::release(const QPoint &point)
 {
     if (phase_ != 1) return QRect();
+
+    if (!undoBuffer_) return QRect();
 
     QPoint p0, p1;
     cornerPoints(point, p0, p1);

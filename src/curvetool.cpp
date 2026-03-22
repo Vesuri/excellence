@@ -97,6 +97,8 @@ QRect CurveTool::move(const QPoint &point)
     if (curveMode_ == Quadratic) {
         if (mouseButton_ != Qt::NoButton) {
             if (phase_ == 1) {
+                if (!undoBuffer_)
+                    return QRect();
                 undoBuffer_->apply(buffer_);
                 delete undoBuffer_;
 
@@ -132,6 +134,8 @@ QRect CurveTool::move(const QPoint &point)
     // Bezier
     if (mouseButton_ != Qt::NoButton) {
         if (phase_ == 4 && draggedHandle_ >= 0) {
+            if (!undoBuffer_)
+                return QRect();
             undoBuffer_->apply(buffer_);
             delete undoBuffer_;
             undoBuffer_ = nullptr;
@@ -166,6 +170,8 @@ QRect CurveTool::release(const QPoint &point)
         }
 
         if (phase_ == 1) {
+            if (!undoBuffer_)
+                return QRect();
             undoBuffer_->apply(buffer_);
             delete undoBuffer_;
             undoBuffer_ = nullptr;
@@ -184,6 +190,8 @@ QRect CurveTool::release(const QPoint &point)
 
     // Bezier
     if (mouseButton_ == Qt::LeftButton && phase_ == 4 && draggedHandle_ >= 0) {
+        if (!undoBuffer_)
+            return QRect();
         undoBuffer_->apply(buffer_);
         delete undoBuffer_;
         undoBuffer_ = nullptr;
