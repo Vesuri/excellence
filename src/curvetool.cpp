@@ -235,9 +235,7 @@ QRect CurveTool::drawQuadraticCurve(const QPoint &p0, const QPoint &p2, const QP
         qreal y = u * u * p0.y() + 2.0 * u * t * p1y + t * t * p2.y();
         QPoint cur(qFloor(x), qFloor(y));
         Algorithms::line(prev, cur, [this, &changedRect](const QPoint &p) {
-            if (buffer_->image().rect().contains(p)) {
-                changedRect = changedRect.united(draw(p));
-            }
+            changedRect = changedRect.united(draw(p));
         });
         prev = cur;
     }
@@ -277,9 +275,7 @@ QRect CurveTool::drawCubicBezier(const QPoint &p0, const QPoint &p1,
         qreal y = u*u*u * p0.y() + 3.0*u*u*t * p1.y() + 3.0*u*t*t * p2.y() + t*t*t * p3.y();
         QPoint cur(qRound(x), qRound(y));
         Algorithms::line(prev, cur, [this, &changedRect](const QPoint &p) {
-            if (buffer_->image().rect().contains(p)) {
-                changedRect = changedRect.united(buffer_->pen()->paint(p, buffer_));
-            }
+            changedRect = changedRect.united(buffer_->pen()->paint(p, buffer_));
         });
         prev = cur;
     }
@@ -292,10 +288,8 @@ QRect CurveTool::drawHandle(const QPoint &center)
     for (int dy = -1; dy <= 1; dy++) {
         for (int dx = -1; dx <= 1; dx++) {
             QPoint p(center.x() + dx, center.y() + dy);
-            if (buffer_->image().rect().contains(p)) {
-                buffer_->pen()->paint(p, buffer_);
-                changedRect = changedRect.united(QRect(p, p));
-            }
+            buffer_->pen()->paint(p, buffer_);
+            changedRect = changedRect.united(QRect(p, p));
         }
     }
     return changedRect;
@@ -306,7 +300,7 @@ QRect CurveTool::drawDashedLine(const QPoint &from, const QPoint &to)
     QRect changedRect;
     int i = 0;
     Algorithms::line(from, to, [this, &changedRect, &i](const QPoint &p) {
-        if ((i & 1) == 0 && buffer_->image().rect().contains(p)) {
+        if ((i & 1) == 0) {
             buffer_->pen()->paint(p, buffer_);
             changedRect = changedRect.united(QRect(p, p));
         }

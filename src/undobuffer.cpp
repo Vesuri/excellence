@@ -25,9 +25,12 @@ QRect UndoBuffer::rect() const
 
 void UndoBuffer::apply(Buffer *buffer) const
 {
+    const QRect imageRect = buffer->image().rect();
     for (int y = 0; y < image_.height(); y++) {
         for (int x = 0; x < image_.width(); x++) {
-            buffer->image().setPixel(pos_.x() + x, pos_.y() + y, static_cast<uint>(image_.pixelIndex(x, y)));
+            QPoint p(pos_.x() + x, pos_.y() + y);
+            if (imageRect.contains(p))
+                buffer->image().setPixel(p, static_cast<uint>(image_.pixelIndex(x, y)));
         }
     }
 }

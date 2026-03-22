@@ -92,8 +92,7 @@ QRect EllipseTool::drawEllipseShape(double angle)
 {
     QRect changedRect;
     auto fn = [this, &changedRect](const QPoint &p) {
-        if (buffer_->image().rect().contains(p))
-            changedRect = changedRect.united(draw(p));
+        changedRect = changedRect.united(draw(p));
     };
     if (drawMode_ == Ellipse) {
         Algorithms::ellipse(cx_, cy_, rx_, ry_, angle, fn);
