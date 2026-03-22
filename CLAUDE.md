@@ -61,7 +61,7 @@ The toolbar is a two-row `QGridLayout` (`ui->toolsLayout`). Each tool declares i
 
 **Row 0:** Clear(0), Palette(1), Draw(2), Line(3), ConnectedLines(4), Curve(5), Rectangle(6), Ellipse(7), Airbrush(8), Fill(9), Text(10), Brush(11), CarveBrush(12), Undo(13)
 
-**Row 1:** PenTipTool(12), Zoom(13) — Zoom is under Undo, matching Brilliance's Magnify-under-Undo placement. PenTipTool clicking toggles its floating panel (does not replace the active drawing tool). Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, Draw Mode, etc.).
+**Row 1:** PenTipTool(12), DrawModeTool(13), Zoom(14) — PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
 
 ### Brush Handle
 
