@@ -523,9 +523,8 @@ void Buffer::setTool(Tool *tool)
         clearHoverPreview();
         tool_ = tool;
         tool_->setMouseButton(Qt::NoButton);
-
-        emit toolChanged(tool);
     }
+    emit toolChanged(tool);
 }
 
 void Buffer::clearHoverPreview()
