@@ -7,7 +7,8 @@ QList<Tool *> tools;
 
 Tool::Tool(QObject *parent) : QObject(parent),
     mouseButton_(Qt::NoButton),
-    buffer_(nullptr)
+    buffer_(nullptr),
+    optionsWidget_(nullptr)
 {
     QTimer::singleShot(0, this, SLOT(registerTool()));
 }
@@ -45,7 +46,26 @@ void Tool::click()
 void Tool::registerTool()
 {
     button_ = new QToolButton;
+    button_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
     tools.append(this);
+}
+
+void Tool::toggleOptionsWidget()
+{
+    if (optionsWidget_ == nullptr) {
+        optionsWidget_ = createOptionsWidget();
+        if (optionsWidget_ == nullptr) {
+            return;
+        }
+        optionsWidget_->setWindowFlags(Qt::Tool);
+    }
+    optionsWidget_->setVisible(!optionsWidget_->isVisible());
+}
+
+QWidget* Tool::createOptionsWidget()
+{
+    return nullptr;
 }
 
 void Tool::activate()

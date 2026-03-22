@@ -1,6 +1,8 @@
 #include <QImage>
 #include <QRect>
 #include <QGridLayout>
+#include <QRadioButton>
+#include <QVBoxLayout>
 #include "pen.h"
 #include "buffer.h"
 #include "undobuffer.h"
@@ -14,7 +16,7 @@ const char *RectangleTool::icons[] = {
 };
 
 RectangleTool::RectangleTool(QObject *parent) : Tool(parent),
-    undoBuffer(nullptr)
+    anchorMode_(CornerToCorner), undoBuffer(nullptr)
 {
 }
 
@@ -56,10 +58,12 @@ QRect RectangleTool::move(const QPoint &point)
     undoBuffer->apply(buffer_);
     delete undoBuffer;
 
+    QPoint p0, p1;
+    cornerPoints(point, p0, p1);
     QRect changedRect;
-    Algorithms::rectangle(startPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->changes(point)); });
+    Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->changes(point)); });
     undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-    Algorithms::rectangle(startPoint, point, [this](const QPoint &point) { this->draw(point); });
+    Algorithms::rectangle(p0, p1, [this](const QPoint &point) { this->draw(point); });
     return changedRect;
 }
 
@@ -69,13 +73,48 @@ QRect RectangleTool::release(const QPoint &point)
     delete undoBuffer;
     undoBuffer = nullptr;
 
+    QPoint p0, p1;
+    cornerPoints(point, p0, p1);
     QRect changedRect;
     if (drawMode == Rectangle) {
-        Algorithms::rectangle(startPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
     } else {
-        Algorithms::fillRectangle(startPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
     }
     return changedRect;
+}
+
+void RectangleTool::cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const
+{
+    if (anchorMode_ == CornerToCorner) {
+        p0 = startPoint;
+        p1 = current;
+    } else {
+        int dx = qAbs(current.x() - startPoint.x());
+        int dy = qAbs(current.y() - startPoint.y());
+        p0 = QPoint(startPoint.x() - dx, startPoint.y() - dy);
+        p1 = QPoint(startPoint.x() + dx, startPoint.y() + dy);
+    }
+}
+
+QWidget* RectangleTool::createOptionsWidget()
+{
+    QWidget *w = new QWidget;
+    w->setWindowTitle("Rectangle");
+    QVBoxLayout *layout = new QVBoxLayout(w);
+    QRadioButton *cornerBtn = new QRadioButton("Corner to Corner");
+    QRadioButton *centerBtn = new QRadioButton("Center to Corner");
+    cornerBtn->setChecked(anchorMode_ == CornerToCorner);
+    centerBtn->setChecked(anchorMode_ == CenterToCorner);
+    connect(centerBtn, &QRadioButton::toggled, this, &RectangleTool::setAnchorMode);
+    layout->addWidget(cornerBtn);
+    layout->addWidget(centerBtn);
+    return w;
+}
+
+void RectangleTool::setAnchorMode(bool centerToCorner)
+{
+    anchorMode_ = centerToCorner ? CenterToCorner : CornerToCorner;
 }
 
 QRect RectangleTool::changes(const QPoint &point)

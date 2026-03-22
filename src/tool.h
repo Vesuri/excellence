@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QToolButton>
 #include <QList>
+#include <QWidget>
 
 class Buffer;
 class QToolButton;
@@ -34,11 +35,15 @@ protected slots:
     virtual void registerTool();
     virtual void activate();
     virtual void setCheckedIfEqual(Tool *tool);
+    void toggleOptionsWidget();
 
 protected:
+    virtual QWidget* createOptionsWidget();
+
     Qt::MouseButton mouseButton_;
     Buffer *buffer_;
     QToolButton *button_;
+    QWidget *optionsWidget_;
 };
 
 extern QList<Tool *> tools;

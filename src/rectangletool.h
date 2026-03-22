@@ -12,6 +12,7 @@ class RectangleTool : public Tool
 
 public:
     enum DrawMode { Rectangle, FilledRectangle };
+    enum AnchorMode { CornerToCorner, CenterToCorner };
 
     explicit RectangleTool(QObject *parent = nullptr);
 
@@ -25,12 +26,18 @@ public:
 protected:
     void registerTool() override;
     void activate() override;
+    QWidget* createOptionsWidget() override;
+
+private slots:
+    void setAnchorMode(bool centerToCorner);
 
 private:
     QRect changes(const QPoint &point);
     QRect draw(const QPoint &point);
+    void cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const;
 
     DrawMode drawMode;
+    AnchorMode anchorMode_;
     QPoint startPoint;
     UndoBuffer *undoBuffer;
 
