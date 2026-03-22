@@ -182,6 +182,13 @@ void PenTip::applyCycleRandom(const QPoint &point, Buffer *buffer, bool isErase,
     applyColor(point, buffer, static_cast<unsigned>(color));
 }
 
+static const int kBayer4x4[4][4] = {
+    { 0,  8,  2, 10},
+    {12,  4, 14,  6},
+    { 3, 11,  1,  9},
+    {15,  7, 13,  5}
+};
+
 static int findNearestPalette(const QVector<QRgb> &palette, QRgb color)
 {
     int bestIdx = 0, bestDist = INT_MAX;
@@ -201,7 +208,7 @@ void PenTip::applyColorEffect(const QPoint &point, Buffer *buffer, unsigned base
     const QVector<QRgb> palette = buffer->image().colorTable();
     QRgb paintRgb = (baseColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(baseColor)] : 0;
     QColor paintHSV = QColor(paintRgb).toHsv();
-    constexpr int kStep = 32;
+    const int kStep = qMax(1, buffer->drawModeAmount() * 255 / 100);
 
     auto doPixel = [&](const QPoint &p) {
         if (!imageRect.contains(p)) return;
@@ -248,6 +255,49 @@ void PenTip::applyColorEffect(const QPoint &point, Buffer *buffer, unsigned base
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
+void PenTip::applyDither(const QPoint &point, Buffer *buffer, unsigned fgColor, unsigned bgColor, bool useBg) const
+{
+    int amount = buffer->drawModeAmount(); // 0-100
+    QRect imageRect = buffer->image().rect();
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        int threshold = kBayer4x4[p.y() % 4][p.x() % 4] * 100 / 15;
+        if (amount > threshold)
+            buffer->image().setPixel(p, fgColor);
+        else if (useBg)
+            buffer->image().setPixel(p, bgColor);
+    };
+    if (size_ == 1) { doPixel(point); return; }
+    int r = size_ / 2;
+    for (int dy = -r; dy <= r; dy++)
+        for (int dx = -r; dx <= r; dx++)
+            if (dx*dx + dy*dy <= r*r + r/2)
+                doPixel(QPoint(point.x()+dx, point.y()+dy));
+}
+
+void PenTip::applyTransparent(const QPoint &point, Buffer *buffer, unsigned paintColor) const
+{
+    QRect imageRect = buffer->image().rect();
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    QRgb paintRgb = (paintColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(paintColor)] : 0;
+    int opacity = buffer->drawModeAmount(); // 0-100
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        QRgb canvasRgb = buffer->image().color(buffer->image().pixelIndex(p));
+        QRgb blended = qRgb(
+            (qRed(paintRgb)   * opacity + qRed(canvasRgb)   * (100 - opacity)) / 100,
+            (qGreen(paintRgb) * opacity + qGreen(canvasRgb) * (100 - opacity)) / 100,
+            (qBlue(paintRgb)  * opacity + qBlue(canvasRgb)  * (100 - opacity)) / 100);
+        buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, blended)));
+    };
+    if (size_ == 1) { doPixel(point); return; }
+    int r = size_ / 2;
+    for (int dy = -r; dy <= r; dy++)
+        for (int dx = -r; dx <= r; dx++)
+            if (dx*dx + dy*dy <= r*r + r/2)
+                doPixel(QPoint(point.x()+dx, point.y()+dy));
+}
+
 QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 {
     switch (buffer->paintMode()) {
@@ -263,6 +313,9 @@ QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
     case Buffer::Darken:
     case Buffer::Mix:
     case Buffer::Negative:     applyColorEffect(point, buffer, paintColor_, buffer->paintMode()); break;
+    case Buffer::Dither1:      applyDither(point, buffer, paintColor_, eraseColor_, false); break;
+    case Buffer::Dither2:      applyDither(point, buffer, paintColor_, eraseColor_, true); break;
+    case Buffer::Transparent:  applyTransparent(point, buffer, paintColor_); break;
     default:                   applyColor(point, buffer, paintColor_); break;
     }
     return rect(point).intersected(buffer->image().rect());
@@ -283,6 +336,9 @@ QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
     case Buffer::Darken:
     case Buffer::Mix:
     case Buffer::Negative:     applyColorEffect(point, buffer, eraseColor_, buffer->paintMode()); break;
+    case Buffer::Dither1:      applyDither(point, buffer, eraseColor_, paintColor_, false); break;
+    case Buffer::Dither2:      applyDither(point, buffer, eraseColor_, paintColor_, true); break;
+    case Buffer::Transparent:  applyTransparent(point, buffer, eraseColor_); break;
     default:                   applyColor(point, buffer, eraseColor_); break;
     }
     return rect(point).intersected(buffer->image().rect());

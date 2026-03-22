@@ -283,7 +283,8 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     eraseColor_(0),
     paintMode_(Normal),
     smearDirection_(0, 0),
-    cycleIndex_(0)
+    cycleIndex_(0),
+    drawModeAmount_(50)
 {
     initialize(width, height, colors);
 }
@@ -298,7 +299,8 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     eraseColor_(0),
     paintMode_(Normal),
     smearDirection_(0, 0),
-    cycleIndex_(0)
+    cycleIndex_(0),
+    drawModeAmount_(50)
 {
     if (!path.isEmpty()) {
         image_.load(path);
@@ -633,3 +635,6 @@ int Buffer::nextCycleColor(bool reverse)
 }
 
 void Buffer::resetCycle() { cycleIndex_ = 0; }
+
+void Buffer::setDrawModeAmount(int amount) { drawModeAmount_ = qBound(0, amount, 100); }
+int Buffer::drawModeAmount() const { return drawModeAmount_; }

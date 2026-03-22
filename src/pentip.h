@@ -29,6 +29,8 @@ private:
     void applyAverageSmear(const QPoint &point, Buffer *buffer) const;
     void applyCycleRandom(const QPoint &point, Buffer *buffer, bool isErase, bool isRandom) const;
     void applyColorEffect(const QPoint &point, Buffer *buffer, unsigned baseColor, Buffer::PaintMode mode) const;
+    void applyDither(const QPoint &point, Buffer *buffer, unsigned paintColor, unsigned bgColor, bool useBg) const;
+    void applyTransparent(const QPoint &point, Buffer *buffer, unsigned paintColor) const;
 
     unsigned paintColor_;
     unsigned eraseColor_;

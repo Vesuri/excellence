@@ -2,6 +2,8 @@
 #include <QLabel>
 #include <QRect>
 #include <QButtonGroup>
+#include <QSlider>
+#include <QSpinBox>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -187,11 +189,14 @@ QWidget *DrawTool::createOptionsWidget()
         {"Darken",    Buffer::Darken},
         {"Mix",       Buffer::Mix},
         {"Negative",  Buffer::Negative},
+        {"Dither1",   Buffer::Dither1},
+        {"Dither2",   Buffer::Dither2},
+        {"Transp.",   Buffer::Transparent},
     };
     QButtonGroup *modeGroup = new QButtonGroup(w);
     modeGroup->setExclusive(true);
     QGridLayout *modeGrid = new QGridLayout;
-    for (int i = 0; i < 14; i++) {
+    for (int i = 0; i < 17; i++) {
         QPushButton *btn = new QPushButton(kModes[i].label, w);
         btn->setFixedSize(60, 24);
         btn->setCheckable(true);
@@ -202,6 +207,22 @@ QWidget *DrawTool::createOptionsWidget()
         modeGrid->addWidget(btn, i / 4, i % 4);
     }
     vbox->addLayout(modeGrid);
+
+    vbox->addWidget(new QLabel("Amount (Dither/Brighten/Darken/Transp.):", w));
+    QHBoxLayout *amountRow = new QHBoxLayout;
+    QSlider *amountSlider = new QSlider(Qt::Horizontal, w);
+    amountSlider->setRange(0, 100);
+    amountSlider->setValue(buffer_->drawModeAmount());
+    QSpinBox *amountSpin = new QSpinBox(w);
+    amountSpin->setRange(0, 100);
+    amountSpin->setValue(buffer_->drawModeAmount());
+    amountSpin->setFixedWidth(48);
+    connect(amountSlider, &QSlider::valueChanged, amountSpin, &QSpinBox::setValue);
+    connect(amountSpin, QOverload<int>::of(&QSpinBox::valueChanged), amountSlider, &QSlider::setValue);
+    connect(amountSlider, &QSlider::valueChanged, [this](int v) { buffer_->setDrawModeAmount(v); });
+    amountRow->addWidget(amountSlider);
+    amountRow->addWidget(amountSpin);
+    vbox->addLayout(amountRow);
 
     vbox->addStretch();
     return w;
