@@ -114,5 +114,5 @@ void RectangleTool::activate()
 
 void RectangleTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 4);
+    layout->addWidget(button_, 0, 6);
 }

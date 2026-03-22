@@ -8,13 +8,14 @@
 CurveTool CurveTool::instance;
 
 CurveTool::CurveTool(QObject *parent) : Tool(parent),
-    curveMode_(Quadratic), phase_(0), draggedHandle_(-1), undoBuffer_(nullptr)
+    curveMode_(Quadratic), phase_(0), erasing_(false), draggedHandle_(-1), undoBuffer_(nullptr)
 {
 }
 
 void CurveTool::resetState()
 {
     phase_ = 0;
+    erasing_ = false;
     draggedHandle_ = -1;
     delete undoBuffer_;
     undoBuffer_ = nullptr;
@@ -39,12 +40,8 @@ void CurveTool::setBuffer(Buffer *buffer)
 QRect CurveTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
     if (curveMode_ == Quadratic) {
-        if (mouseButton_ == Qt::RightButton) {
-            resetState();
-            return QRect();
-        }
-
         if (phase_ == 0) {
+            erasing_ = (mouseButton_ == Qt::RightButton);
             phase_ = 1;
             p0_ = point;
             QRect dotRect = buffer_->pen()->rect(point);
@@ -216,6 +213,9 @@ QRect CurveTool::hover(const QPoint &point)
 
 QRect CurveTool::draw(const QPoint &point)
 {
+    if (erasing_) {
+        return buffer_->pen()->erase(point, buffer_);
+    }
     return buffer_->pen()->paint(point, buffer_);
 }
 
@@ -426,5 +426,5 @@ void CurveTool::activate()
 
 void CurveTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 2, 5);
+    layout->addWidget(button_, 0, 3);
 }

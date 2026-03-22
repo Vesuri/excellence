@@ -29,9 +29,19 @@ There are no automated tests; testing is manual UI interaction.
 
 All tools inherit from `Tool` (two subtypes: `Modify` and `Zoom`). The active tool is set on `BufferView` and receives mouse press/move/release events.
 
-Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`.
+Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `ConnectedLinesTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`.
 
-When adding a new tool, follow the pattern in `rectangletool.{h,cpp}` (the most recent addition). Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism introduced in a recent commit.
+When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism: `hover()` returns the rect to save/restore, and `move()` with `mouseButton_ == Qt::NoButton` draws the preview.
+
+#### Tool paradigms
+
+**Mode cycling on repeated activation** — Tools with multiple sub-modes (e.g. outline vs. filled, quadratic vs. Bezier curve, connected lines vs. filled polygon) share a single toolbar button. Clicking the button when the tool is already active cycles to the next mode. Implemented in `activate()` by checking `buffer_->tool() == this`. See `RectangleTool`, `CurveTool`, `ConnectedLinesTool`.
+
+**Right mouse button draws with background/erase color** — Most drawing tools treat the right mouse button as "draw with background color" (i.e., erase). The tool records the button at the start of the operation (`mouseButton_` from the base class, or an `erasing_` flag set in `press()`) and uses `pen()->erase()` instead of `pen()->paint()` throughout. Do not re-check the button mid-operation; record the intent at press time to keep all phases consistent. See `LineTool`, `CurveTool`.
+
+**Tool-managed undo buffer for drag preview** — When a tool needs to show a live preview while a mouse button is held down (the Buffer's built-in hover/move undo only runs with `mouseButton_ == Qt::NoButton`), the tool holds its own `UndoBuffer *undoBuffer_` member. Pattern: save area in `press()`, then in each `move()` call: `undoBuffer_->apply(buffer_)`, `delete undoBuffer_`, recompute the save rect, allocate a new `UndoBuffer`, draw the preview. On `release()`: `undoBuffer_->apply(buffer_)`, `delete undoBuffer_`, draw the permanent result. See `LineTool`, `CurveTool`.
+
+**UndoBuffer bounds safety** — `UndoBuffer::apply()` uses `pos_` with no bounds check. Any rect saved into an `UndoBuffer` (including `hover()` return values) must be clipped to `buffer_->image().rect()` before use, otherwise `setPixel` will be called with out-of-bounds coordinates.
 
 ### Palette System
 

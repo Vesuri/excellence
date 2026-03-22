@@ -46,6 +46,7 @@ private:
 
     CurveMode curveMode_;
     int phase_;
+    bool erasing_;
     QPoint p0_, p1_, p2_, p3_;
     int draggedHandle_;
     UndoBuffer *undoBuffer_;

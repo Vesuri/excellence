@@ -223,5 +223,5 @@ void ConnectedLinesTool::activate()
 
 void ConnectedLinesTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 5);
+    layout->addWidget(button_, 0, 4);
 }
