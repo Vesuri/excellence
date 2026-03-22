@@ -145,11 +145,14 @@ QRect CurveTool::curveBoundingRect(const QPoint &p0, const QPoint &p2, const QPo
     QRect penRect = buffer_->pen()->rect(QPoint(0, 0));
     int penW = penRect.width();
     int penH = penRect.height();
-    // Conservative bounding rect covering p0, p2, and control midpoint
-    int minX = qMin(p0.x(), qMin(p2.x(), controlMid.x()));
-    int minY = qMin(p0.y(), qMin(p2.y(), controlMid.y()));
-    int maxX = qMax(p0.x(), qMax(p2.x(), controlMid.x()));
-    int maxY = qMax(p0.y(), qMax(p2.y(), controlMid.y()));
+    // Curve lies within convex hull of P0, P1, P2 where P1 is the actual
+    // Bezier control point (not the visible midpoint M = controlMid)
+    int p1x = qRound(2.0 * controlMid.x() - 0.5 * (p0.x() + p2.x()));
+    int p1y = qRound(2.0 * controlMid.y() - 0.5 * (p0.y() + p2.y()));
+    int minX = qMin(p0.x(), qMin(p1x, p2.x()));
+    int minY = qMin(p0.y(), qMin(p1y, p2.y()));
+    int maxX = qMax(p0.x(), qMax(p1x, p2.x()));
+    int maxY = qMax(p0.y(), qMax(p1y, p2.y()));
     return QRect(minX - penW, minY - penH, maxX - minX + 2 * penW + 1, maxY - minY + 2 * penH + 1);
 }
 
