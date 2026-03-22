@@ -435,9 +435,11 @@ void Buffer::release(const QPoint &point)
 
         emit modified(area);
 
-        undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
-        qDeleteAll(redoStack);
-        redoStack.clear();
+        if (!modifiedArea.isNull()) {
+            undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
+            qDeleteAll(redoStack);
+            redoStack.clear();
+        }
 
         modifiedArea = QRect();
         preModificationImage = QImage();

@@ -11,6 +11,7 @@ class QGraphicsScene;
 class QGraphicsPixmapItem;
 class Buffer;
 class QPixmap;
+class Tool;
 
 class BufferView : public QWidget
 {
@@ -24,7 +25,8 @@ public:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 protected:
-    virtual void keyPressEvent(QKeyEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 
 private slots:
     void setPixmap(const QRect &area);
@@ -37,6 +39,7 @@ private:
     QGraphicsPixmapItem *pixmapItem;
     Buffer *buffer;
     QPoint lastMousePoint;
+    Tool *altPreviousTool_;
 };
 
 #endif // BUFFERVIEW_H

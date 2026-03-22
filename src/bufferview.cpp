@@ -7,6 +7,7 @@
 #include "tool.h"
 #include "drawtool.h"
 #include "linetool.h"
+#include "pickcolortool.h"
 #include "curvetool.h"
 #include "ellipsetool.h"
 #include "airtool.h"
@@ -23,7 +24,8 @@ BufferView::BufferView(QWidget *parent) :
     scene(new QGraphicsScene(this)),
     pixmapItem(new QGraphicsPixmapItem),
     buffer(nullptr),
-    lastMousePoint()
+    lastMousePoint(),
+    altPreviousTool_(nullptr)
 {
     ui->setupUi(this);
 
@@ -198,6 +200,27 @@ void BufferView::keyPressEvent(QKeyEvent *event)
             }
         }
         break;
+    case Qt::Key_Comma:
+        for (Tool *tool : tools) {
+            if (qobject_cast<PickColorTool *>(tool)) {
+                tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_Alt:
+        if (buffer && buffer->tool()) {
+            if (!qobject_cast<PickColorTool *>(buffer->tool())) {
+                altPreviousTool_ = buffer->tool();
+                for (Tool *tool : tools) {
+                    if (qobject_cast<PickColorTool *>(tool)) {
+                        tool->click();
+                        break;
+                    }
+                }
+            }
+        }
+        break;
     case Qt::Key_K:
         if (event->modifiers() & Qt::ShiftModifier)
             buffer->clearWithColor(buffer->eraseColor());
@@ -219,6 +242,14 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         break;
     default:
         break;
+    }
+}
+
+void BufferView::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Alt && altPreviousTool_ && buffer) {
+        altPreviousTool_->click();
+        altPreviousTool_ = nullptr;
     }
 }
 

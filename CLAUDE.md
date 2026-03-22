@@ -29,7 +29,7 @@ There are no automated tests; testing is manual UI interaction.
 
 All tools inherit from `Tool` (two subtypes: `Modify` and `Zoom`). The active tool is set on `BufferView` and receives mouse press/move/release events.
 
-Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`.
+Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`, `PickColorTool`.
 
 When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism: `hover()` returns the rect to save/restore, and `move()` with `mouseButton_ == Qt::NoButton` draws the preview.
 
@@ -63,7 +63,7 @@ The toolbar is a two-row `QGridLayout` (`ui->toolsLayout`). Each tool declares i
 
 Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on repeated activation — ConnectedLinesTool no longer exists as a separate tool. Brush(10) cycles between Rectangle and Freehand (carve) modes on repeated activation — CarveBrushTool no longer exists as a separate tool.
 
-**Row 1:** PenTipTool(9), DrawModeTool(10), Zoom(11) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
+**Row 1:** PickColorTool(8), PenTipTool(9), DrawModeTool(10), Zoom(11) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
 
 ### Brush Handle
 
