@@ -67,9 +67,17 @@ QRect RectangleTool::move(const QPoint &point)
     QPoint p0, p1;
     cornerPoints(point, p0, p1);
     QRect changedRect;
-    Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->changes(point)); });
-    undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-    Algorithms::rectangle(p0, p1, [this](const QPoint &point) { this->draw(point); });
+    auto changesLambda = [this, &changedRect](const QPoint &p) { changedRect = changedRect.united(this->changes(p)); };
+    auto drawLambda = [this](const QPoint &p) { this->draw(p); };
+    if (drawMode == Rectangle) {
+        Algorithms::rectangle(p0, p1, changesLambda);
+        undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+        Algorithms::rectangle(p0, p1, drawLambda);
+    } else {
+        Algorithms::fillRectangle(p0, p1, changesLambda);
+        undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+        Algorithms::fillRectangle(p0, p1, drawLambda);
+    }
     return changedRect;
 }
 

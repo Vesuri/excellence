@@ -49,6 +49,7 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     startingPoint = point;
     previousPoint = point;
     lastStampedPoint = point;
+    drawnBounds_ = buffer_->pen()->rect(point).intersected(buffer_->image().rect());
     return draw(point);
 }
 
@@ -58,8 +59,7 @@ QRect DrawTool::move(const QPoint &point)
         return draw(point);
     } else if (drawMode == Dotted) {
         QPoint delta = point - lastStampedPoint;
-        QRect penRect = buffer_->pen()->rect(QPoint(0, 0));
-        int threshold = qMax(1, qMax(penRect.width(), penRect.height()));
+        constexpr int threshold = 1;
         if (delta.x() * delta.x() + delta.y() * delta.y() >= threshold * threshold) {
             lastStampedPoint = point;
             return draw(point);
@@ -69,6 +69,7 @@ QRect DrawTool::move(const QPoint &point)
         QRect changedRect;
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         previousPoint = point;
+        drawnBounds_ = drawnBounds_.united(changedRect);
         return changedRect;
     }
 }
@@ -90,6 +91,18 @@ QRect DrawTool::release(const QPoint &point)
         QRect changedRect;
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         Algorithms::line(point, startingPoint, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        drawnBounds_ = drawnBounds_.united(changedRect);
+        // Flood fill the interior of the closed shape
+        QImage &img = buffer_->image();
+        QPoint seed = drawnBounds_.intersected(img.rect()).center();
+        int fillColor = static_cast<int>(mouseButton_ == Qt::RightButton
+                                         ? buffer_->eraseColor()
+                                         : buffer_->paintColor());
+        if (img.rect().contains(seed)) {
+            int targetColor = img.pixelIndex(seed);
+            if (targetColor != fillColor)
+                changedRect = changedRect.united(Algorithms::floodFill(img, seed, targetColor, fillColor));
+        }
         return changedRect;
     }
 }

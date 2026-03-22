@@ -5,6 +5,8 @@
 #include <QList>
 #include "tool.h"
 
+class UndoBuffer;
+
 class ConnectedLinesTool : public Tool
 {
     Q_OBJECT
@@ -38,6 +40,7 @@ private:
     QPoint firstPoint_;
     QPoint lastPoint_;
     QList<QPoint> vertices_;
+    UndoBuffer *dragUndoBuffer_;
 
     static ConnectedLinesTool instance;
 };

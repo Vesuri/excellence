@@ -32,6 +32,7 @@ private:
     QPoint startingPoint;
     QPoint previousPoint;
     QPoint lastStampedPoint;
+    QRect drawnBounds_;
 
     static DrawTool instance;
     static const char* icons[];

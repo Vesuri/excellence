@@ -1,5 +1,7 @@
 #include <QImage>
 #include <QPoint>
+#include <QRect>
+#include <QStack>
 #include <cmath>
 #include "algorithms.h"
 
@@ -88,6 +90,48 @@ void Algorithms::ellipse(int cx, int cy, int rx, int ry, double angle,
         line(prev, cur, fn);
         prev = cur;
     }
+}
+
+QRect Algorithms::floodFill(QImage &image, const QPoint &seed, int targetColor, int fillColor)
+{
+    if (!image.rect().contains(seed))
+        return QRect();
+    if (targetColor == fillColor)
+        return QRect();
+
+    QStack<QPoint> stack;
+    stack.push(seed);
+    QRect changedRect;
+
+    while (!stack.isEmpty()) {
+        QPoint p = stack.pop();
+        if (!image.rect().contains(p) || image.pixelIndex(p) != targetColor)
+            continue;
+
+        int x1 = p.x();
+        while (x1 > 0 && image.pixelIndex(x1 - 1, p.y()) == targetColor) x1--;
+        int x2 = p.x();
+        while (x2 < image.width() - 1 && image.pixelIndex(x2 + 1, p.y()) == targetColor) x2++;
+
+        for (int x = x1; x <= x2; x++)
+            image.setPixel(x, p.y(), static_cast<uint>(fillColor));
+        changedRect = changedRect.united(QRect(x1, p.y(), x2 - x1 + 1, 1));
+
+        bool prevAbove = false, prevBelow = false;
+        for (int x = x1; x <= x2; x++) {
+            if (p.y() > 0) {
+                bool above = image.pixelIndex(x, p.y() - 1) == targetColor;
+                if (above && !prevAbove) stack.push(QPoint(x, p.y() - 1));
+                prevAbove = above;
+            }
+            if (p.y() < image.height() - 1) {
+                bool below = image.pixelIndex(x, p.y() + 1) == targetColor;
+                if (below && !prevBelow) stack.push(QPoint(x, p.y() + 1));
+                prevBelow = below;
+            }
+        }
+    }
+    return changedRect;
 }
 
 void Algorithms::fillEllipse(int cx, int cy, int rx, int ry, double angle,
