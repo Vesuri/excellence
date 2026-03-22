@@ -33,8 +33,7 @@ private:
     QRect drawPixel(const QPoint &point);
     QRect paintPixel(const QPoint &point);
     QRect lineBoundingRect(const QPoint &from, const QPoint &to) const;
-    QPoint centroid() const;
-    QRect floodFill(const QPoint &seed);
+    QRect polygonFill();
 
     Mode mode_;
 

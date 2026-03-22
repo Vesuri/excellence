@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <QImage>
 #include <QRect>
+#include <QVector>
 #include <QGridLayout>
 #include "pen.h"
 #include "buffer.h"
@@ -64,7 +66,7 @@ QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
             Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
                 changedRect = changedRect.united(paintPixel(p));
             });
-            changedRect = changedRect.united(floodFill(centroid()));
+            changedRect = changedRect.united(polygonFill());
             vertices_.clear();
             return changedRect;
         }
@@ -198,37 +200,46 @@ QRect LineTool::lineBoundingRect(const QPoint &from, const QPoint &to) const
     return QRect(from, to).normalized().adjusted(-penW, -penH, penW, penH);
 }
 
-QPoint LineTool::centroid() const
+QRect LineTool::polygonFill()
 {
-    if (vertices_.isEmpty())
-        return firstPoint_;
-    int sumX = 0, sumY = 0;
-    for (const QPoint &v : vertices_) {
-        sumX += v.x();
-        sumY += v.y();
-    }
-    return QPoint(sumX / vertices_.size(), sumY / vertices_.size());
-}
+    if (vertices_.size() < 3)
+        return QRect();
 
-QRect LineTool::floodFill(const QPoint &seed)
-{
     QImage &image = buffer_->image();
-    int fillColor = static_cast<int>(buffer_->paintColor());
+    const QRect imageRect = image.rect();
+    const int fillColor = static_cast<int>(buffer_->paintColor());
+    const int n = vertices_.size();
 
-    static const int offsets[][2] = {
-        {0,0},{1,0},{-1,0},{0,1},{0,-1},{2,0},{-2,0},{0,2},{0,-2},
-        {1,1},{-1,1},{1,-1},{-1,-1},{3,0},{-3,0},{0,3},{0,-3}
-    };
-    for (auto &off : offsets) {
-        QPoint candidate(seed.x() + off[0], seed.y() + off[1]);
-        if (!image.rect().contains(candidate))
-            continue;
-        int targetColor = image.pixelIndex(candidate);
-        if (targetColor == fillColor)
-            continue;
-        return Algorithms::floodFill(image, candidate, targetColor, fillColor);
+    int minY = imageRect.bottom(), maxY = imageRect.top();
+    for (const QPoint &v : vertices_) {
+        minY = qMin(minY, v.y());
+        maxY = qMax(maxY, v.y());
     }
-    return QRect();
+    minY = qMax(minY, imageRect.top());
+    maxY = qMin(maxY, imageRect.bottom());
+
+    QRect changedRect;
+    for (int y = minY; y <= maxY; y++) {
+        QVector<int> xs;
+        for (int i = 0; i < n; i++) {
+            const QPoint &p1 = vertices_[i];
+            const QPoint &p2 = vertices_[(i + 1) % n];
+            if ((p1.y() <= y && p2.y() > y) || (p2.y() <= y && p1.y() > y)) {
+                int x = p1.x() + (y - p1.y()) * (p2.x() - p1.x()) / (p2.y() - p1.y());
+                xs.append(x);
+            }
+        }
+        std::sort(xs.begin(), xs.end());
+        for (int i = 0; i + 1 < xs.size(); i += 2) {
+            int x1 = qMax(xs[i], imageRect.left());
+            int x2 = qMin(xs[i + 1], imageRect.right());
+            for (int x = x1; x <= x2; x++)
+                image.setPixel(x, y, static_cast<uint>(fillColor));
+            if (x1 <= x2)
+                changedRect = changedRect.united(QRect(x1, y, x2 - x1 + 1, 1));
+        }
+    }
+    return changedRect;
 }
 
 // ── Tool registration / activation ────────────────────────────────────────
