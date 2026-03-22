@@ -52,6 +52,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushCopy, SIGNAL(triggered()), this, SLOT(brushCopy()));
     connect(ui->actionBrushPaste, SIGNAL(triggered()), this, SLOT(brushPaste()));
     connect(ui->actionBrushDelete, SIGNAL(triggered()), this, SLOT(brushDelete()));
+    connect(ui->actionBrushRemap, SIGNAL(triggered()), this, SLOT(brushRemap()));
+    connect(ui->actionBrushBgFgSwap, SIGNAL(triggered()), this, SLOT(brushBgFgSwap()));
+    connect(ui->actionBrushAutoBackground, SIGNAL(triggered()), this, SLOT(brushAutoBackground()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
@@ -399,6 +402,34 @@ void MainWindow::brushPaste()
 void MainWindow::brushDelete()
 {
     buffer->setPen(penTip);
+}
+
+void MainWindow::brushRemap()
+{
+    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    if (!brush)
+        return;
+    brush->remap(buffer->image().colorTable());
+}
+
+void MainWindow::brushBgFgSwap()
+{
+    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    if (!brush)
+        return;
+    brush->replaceColor(static_cast<int>(buffer->eraseColor()),
+                        static_cast<int>(buffer->paintColor()));
+    unsigned fg = buffer->paintColor();
+    buffer->setPaintColor(buffer->eraseColor());
+    buffer->setEraseColor(fg);
+}
+
+void MainWindow::brushAutoBackground()
+{
+    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    if (!brush)
+        return;
+    brush->detectBackground();
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)

@@ -16,6 +16,11 @@ public:
     const QImage &image() const;
     QPoint handleOffset() const;
     void setHandleOffset(const QPoint &offset);
+    int transparentIndex() const;
+    void setTransparentIndex(int index);
+    void remap(const QVector<QRgb> &palette);
+    void replaceColor(int fromIndex, int toIndex);
+    void detectBackground();
 
 private:
     QImage image_;

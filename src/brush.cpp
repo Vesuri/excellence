@@ -1,5 +1,6 @@
 #include <QRect>
 #include <QImage>
+#include <climits>
 #include "buffer.h"
 #include "brush.h"
 
@@ -63,4 +64,52 @@ QRect Brush::rect(const QPoint &point) const
 const QImage &Brush::image() const
 {
     return image_;
+}
+
+int Brush::transparentIndex() const
+{
+    return transparentIndex_;
+}
+
+void Brush::setTransparentIndex(int index)
+{
+    transparentIndex_ = index;
+}
+
+void Brush::remap(const QVector<QRgb> &palette)
+{
+    for (int y = 0; y < image_.height(); y++) {
+        for (int x = 0; x < image_.width(); x++) {
+            QRgb color = image_.color(image_.pixelIndex(x, y));
+            int bestIdx = 0, bestDist = INT_MAX;
+            for (int i = 0; i < palette.size(); i++) {
+                int dr = qRed(color)   - qRed(palette[i]);
+                int dg = qGreen(color) - qGreen(palette[i]);
+                int db = qBlue(color)  - qBlue(palette[i]);
+                int dist = dr*dr + dg*dg + db*db;
+                if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+            }
+            image_.setPixel(x, y, static_cast<uint>(bestIdx));
+        }
+    }
+}
+
+void Brush::replaceColor(int fromIndex, int toIndex)
+{
+    for (int y = 0; y < image_.height(); y++)
+        for (int x = 0; x < image_.width(); x++)
+            if (image_.pixelIndex(x, y) == fromIndex)
+                image_.setPixel(x, y, static_cast<uint>(toIndex));
+}
+
+void Brush::detectBackground()
+{
+    if (image_.width() < 1 || image_.height() < 1)
+        return;
+    int tl = image_.pixelIndex(0, 0);
+    int tr = image_.pixelIndex(image_.width() - 1, 0);
+    int bl = image_.pixelIndex(0, image_.height() - 1);
+    int br = image_.pixelIndex(image_.width() - 1, image_.height() - 1);
+    if (tl == tr && tl == bl && tl == br)
+        transparentIndex_ = tl;
 }
