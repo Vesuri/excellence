@@ -238,12 +238,12 @@
   </action>
   <action name="actionBrushCopy">
    <property name="text">
-    <string>Copy</string>
+    <string>Copy Brush</string>
    </property>
   </action>
   <action name="actionBrushPaste">
    <property name="text">
-    <string>Paste</string>
+    <string>Paste Brush</string>
    </property>
   </action>
   <action name="actionBrushDelete">
@@ -258,12 +258,12 @@
   </action>
   <action name="actionImageCopy">
    <property name="text">
-    <string>Copy</string>
+    <string>Copy Image</string>
    </property>
   </action>
   <action name="actionImagePaste">
    <property name="text">
-    <string>Paste</string>
+    <string>Paste Image</string>
    </property>
   </action>
  </widget>
