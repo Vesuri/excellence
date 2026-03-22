@@ -42,10 +42,26 @@ static QPixmap renderTip(PenTip::Shape shape, int size)
     return pm;
 }
 
+void PenTipTool::updateButtonIcon()
+{
+    PenTip *tip = buffer_ ? qobject_cast<PenTip *>(buffer_->pen()) : nullptr;
+    if (tip)
+        button_->setIcon(QIcon(renderTip(tip->shape(), tip->size())));
+    else
+        button_->setIcon(QIcon(":/pentip.png"));
+}
+
+void PenTipTool::setBuffer(Buffer *buffer)
+{
+    Tool::setBuffer(buffer);
+    updateButtonIcon();
+}
+
 void PenTipTool::registerTool()
 {
     Tool::registerTool();
     button_->setIcon(QIcon(":/pentip.png"));
+    button_->setIconSize(QSize(24, 24));
     button_->setToolTip("Pen Tip");
     button_->setCheckable(false);
     connect(button_, &QToolButton::clicked, this, &PenTipTool::activate);
@@ -89,6 +105,7 @@ QWidget *PenTipTool::createOptionsWidget()
             if (tip) {
                 tip->setSize(size);
                 tip->setShape(shape);
+                updateButtonIcon();
             }
         });
         hbox->addWidget(btn);

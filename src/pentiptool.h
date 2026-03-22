@@ -13,6 +13,7 @@ public:
     QRect press(const QPoint &, const Qt::KeyboardModifiers &) override { return {}; }
     QRect move(const QPoint &) override { return {}; }
     QRect release(const QPoint &) override { return {}; }
+    void setBuffer(Buffer *buffer) override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
@@ -21,6 +22,8 @@ protected:
     QWidget *createOptionsWidget() override;
 
 private:
+    void updateButtonIcon();
+
     static PenTipTool instance;
 };
 
