@@ -126,10 +126,10 @@ QRect CurveTool::release(const QPoint &point)
 QRect CurveTool::hover(const QPoint &point)
 {
     if (phase_ == 1) {
-        return curveBoundingRect(p0_, point, point);
+        return curveBoundingRect(p0_, point, point).intersected(buffer_->image().rect());
     }
     if (phase_ == 2) {
-        return curveBoundingRect(p0_, p2_, point);
+        return curveBoundingRect(p0_, p2_, point).intersected(buffer_->image().rect());
     }
     return QRect();
 }
