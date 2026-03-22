@@ -171,11 +171,7 @@ QRect CurveTool::release(const QPoint &point)
             undoBuffer_ = nullptr;
             p2_ = point;
             phase_ = 2;
-            QRect changedRect;
-            Algorithms::line(p0_, p2_, [this, &changedRect](const QPoint &p) {
-                changedRect = changedRect.united(draw(p));
-            });
-            return changedRect;
+            return QRect();
         }
 
         if (phase_ == 2) {
