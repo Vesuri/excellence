@@ -61,7 +61,6 @@ void PenTipTool::registerTool()
 {
     Tool::registerTool();
     button_->setIcon(QIcon(":/pentip.png"));
-    button_->setIconSize(QSize(24, 24));
     button_->setToolTip("Pen Tip");
     button_->setCheckable(false);
     connect(button_, &QToolButton::clicked, this, &PenTipTool::activate);
