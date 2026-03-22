@@ -7,6 +7,7 @@
 #include "tool.h"
 #include "drawtool.h"
 #include "connectedlinestool.h"
+#include "filledpolygontool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -136,10 +137,19 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         }
         break;
     case Qt::Key_W:
-        for (Tool *tool : tools) {
-            if (qobject_cast<ConnectedLinesTool *>(tool)) {
-                tool->click();
-                break;
+        if (event->modifiers() & Qt::ShiftModifier) {
+            for (Tool *tool : tools) {
+                if (qobject_cast<FilledPolygonTool *>(tool)) {
+                    tool->click();
+                    break;
+                }
+            }
+        } else {
+            for (Tool *tool : tools) {
+                if (qobject_cast<ConnectedLinesTool *>(tool)) {
+                    tool->click();
+                    break;
+                }
             }
         }
         break;
