@@ -16,7 +16,8 @@ class Buffer : public QObject
 {
     Q_OBJECT
 public:
-    enum PaintMode { Normal, Replace, Smear, Smooth, Range, AverageSmear, Cycle, Random };
+    enum PaintMode { Normal, Replace, Smear, Smooth, Range, AverageSmear, Cycle, Random,
+                     Tint, Colorize, Brighten, Darken, Mix, Negative };
 
     explicit Buffer(int width = 320, int height = 256, int colors = 8, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);

@@ -181,11 +181,17 @@ QWidget *DrawTool::createOptionsWidget()
         {"AvgSmear",  Buffer::AverageSmear},
         {"Cycle",     Buffer::Cycle},
         {"Random",    Buffer::Random},
+        {"Tint",      Buffer::Tint},
+        {"Colorize",  Buffer::Colorize},
+        {"Brighten",  Buffer::Brighten},
+        {"Darken",    Buffer::Darken},
+        {"Mix",       Buffer::Mix},
+        {"Negative",  Buffer::Negative},
     };
     QButtonGroup *modeGroup = new QButtonGroup(w);
     modeGroup->setExclusive(true);
     QGridLayout *modeGrid = new QGridLayout;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 14; i++) {
         QPushButton *btn = new QPushButton(kModes[i].label, w);
         btn->setFixedSize(60, 24);
         btn->setCheckable(true);

@@ -1,5 +1,6 @@
 #include <climits>
 #include <cstdlib>
+#include <QColor>
 #include <QRect>
 #include <QImage>
 #include "buffer.h"
@@ -181,6 +182,72 @@ void PenTip::applyCycleRandom(const QPoint &point, Buffer *buffer, bool isErase,
     applyColor(point, buffer, static_cast<unsigned>(color));
 }
 
+static int findNearestPalette(const QVector<QRgb> &palette, QRgb color)
+{
+    int bestIdx = 0, bestDist = INT_MAX;
+    for (int i = 0; i < palette.size(); i++) {
+        int dr = qRed(color)   - qRed(palette[i]);
+        int dg = qGreen(color) - qGreen(palette[i]);
+        int db = qBlue(color)  - qBlue(palette[i]);
+        int dist = dr*dr + dg*dg + db*db;
+        if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+    return bestIdx;
+}
+
+void PenTip::applyColorEffect(const QPoint &point, Buffer *buffer, unsigned baseColor, Buffer::PaintMode mode) const
+{
+    QRect imageRect = buffer->image().rect();
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    QRgb paintRgb = (baseColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(baseColor)] : 0;
+    QColor paintHSV = QColor(paintRgb).toHsv();
+    constexpr int kStep = 32;
+
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        QRgb canvasRgb = buffer->image().color(buffer->image().pixelIndex(p));
+        QColor canvasHSV = QColor(canvasRgb).toHsv();
+        QRgb target = canvasRgb;
+
+        switch (mode) {
+        case Buffer::Tint:
+            target = QColor::fromHsv(paintHSV.hsvHue(), paintHSV.hsvSaturation(),
+                                     canvasHSV.value()).rgb();
+            break;
+        case Buffer::Colorize:
+            if (canvasHSV.hsvSaturation() < 32) return;
+            target = QColor::fromHsv(paintHSV.hsvHue(), paintHSV.hsvSaturation(),
+                                     canvasHSV.value()).rgb();
+            break;
+        case Buffer::Brighten:
+            target = QColor::fromHsv(canvasHSV.hsvHue(), canvasHSV.hsvSaturation(),
+                                     qMin(255, canvasHSV.value() + kStep)).rgb();
+            break;
+        case Buffer::Darken:
+            target = QColor::fromHsv(canvasHSV.hsvHue(), canvasHSV.hsvSaturation(),
+                                     qMax(0, canvasHSV.value() - kStep)).rgb();
+            break;
+        case Buffer::Mix:
+            target = qRgb((qRed(canvasRgb)   + qRed(paintRgb))   / 2,
+                          (qGreen(canvasRgb) + qGreen(paintRgb)) / 2,
+                          (qBlue(canvasRgb)  + qBlue(paintRgb))  / 2);
+            break;
+        case Buffer::Negative:
+            target = qRgb(255 - qRed(canvasRgb), 255 - qGreen(canvasRgb), 255 - qBlue(canvasRgb));
+            break;
+        default: return;
+        }
+        buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, target)));
+    };
+
+    if (size_ == 1) { doPixel(point); return; }
+    int r = size_ / 2;
+    for (int dy = -r; dy <= r; dy++)
+        for (int dx = -r; dx <= r; dx++)
+            if (dx*dx + dy*dy <= r*r + r/2)
+                doPixel(QPoint(point.x()+dx, point.y()+dy));
+}
+
 QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 {
     switch (buffer->paintMode()) {
@@ -190,6 +257,12 @@ QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
     case Buffer::AverageSmear: applyAverageSmear(point, buffer); break;
     case Buffer::Cycle:        applyCycleRandom(point, buffer, false, false); break;
     case Buffer::Random:       applyCycleRandom(point, buffer, false, true); break;
+    case Buffer::Tint:
+    case Buffer::Colorize:
+    case Buffer::Brighten:
+    case Buffer::Darken:
+    case Buffer::Mix:
+    case Buffer::Negative:     applyColorEffect(point, buffer, paintColor_, buffer->paintMode()); break;
     default:                   applyColor(point, buffer, paintColor_); break;
     }
     return rect(point).intersected(buffer->image().rect());
@@ -204,6 +277,12 @@ QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
     case Buffer::AverageSmear: applyAverageSmear(point, buffer); break;
     case Buffer::Cycle:        applyCycleRandom(point, buffer, true, false); break;
     case Buffer::Random:       applyCycleRandom(point, buffer, true, true); break;
+    case Buffer::Tint:
+    case Buffer::Colorize:
+    case Buffer::Brighten:
+    case Buffer::Darken:
+    case Buffer::Mix:
+    case Buffer::Negative:     applyColorEffect(point, buffer, eraseColor_, buffer->paintMode()); break;
     default:                   applyColor(point, buffer, eraseColor_); break;
     }
     return rect(point).intersected(buffer->image().rect());
