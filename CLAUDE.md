@@ -29,7 +29,7 @@ There are no automated tests; testing is manual UI interaction.
 
 All tools inherit from `Tool` (two subtypes: `Modify` and `Zoom`). The active tool is set on `BufferView` and receives mouse press/move/release events.
 
-Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `ConnectedLinesTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`.
+Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `ConnectedLinesTool`, `AirTool`, `FillTool`, `TextTool`, `CarveBrushTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`.
 
 When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism: `hover()` returns the rect to save/restore, and `move()` with `mouseButton_ == Qt::NoButton` draws the preview.
 
@@ -55,13 +55,35 @@ Image format support is plugin-based (Qt plugin API). Plugins live under `src/pl
 
 Each plugin has its own `.pro` file and a `.json` metadata file. The main app loads plugins at startup (see `main.cpp`).
 
+### Tool Grid Layout
+
+The toolbar is a two-row `QGridLayout` (`ui->toolsLayout`). Each tool declares its own position in `addButtonToGridLayout()`. The layout follows the Brilliance toolbox order — see the memory file `project_brilliance_toolbox_layout.md` for the full reference. Current positions:
+
+**Row 0:** Clear(0), Palette(1), Draw(2), Line(3), ConnectedLines(4), Curve(5), Rectangle(6), Ellipse(7), Airbrush(8), Fill(9), Text(10), Brush(11), CarveBrush(12), Undo(13)
+
+**Row 1:** Zoom(13) — under Undo, matching Brilliance's Magnify-under-Undo placement. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, Draw Mode, Pen Tip, etc.).
+
+### Brush Handle
+
+`Brush` has a `handleOffset_` (`QPoint`) that is subtracted from the stamp point so a chosen anchor pixel aligns with the cursor. Defaults to the image center. `paint()`, `erase()`, and `rect()` all apply the offset via `point - handleOffset_`.
+
 ### Drawing Algorithms
 
-`Algorithms` (`algorithms.{h,cpp}`) contains Bresenham-style `line()`, `rectangle()`, and `fillRectangle()` helpers used by multiple tools.
+`Algorithms` (`algorithms.{h,cpp}`) contains:
+- Bresenham-style `line()`, `rectangle()`, `fillRectangle()`, `ellipse()`, `fillEllipse()` — used by multiple tools
+- `floodFill(QImage&, seed, targetColor, fillColor)` — scanline flood fill returning the changed rect; shared by `DrawTool` (FilledShape) and `ConnectedLinesTool` (FilledPolygon)
+
+### Palette Quantization
+
+`MainWindow::convertToIndexed(QImage)` converts any RGB image to the current buffer palette using nearest-color (squared RGB distance) matching. Use this whenever an external image (clipboard, file) needs to be mapped to the indexed canvas. The higher-quality `PaletteQuantizer` / `spatial_color_quant.h` path is used when reducing a full image to a new palette (e.g. on file open).
 
 ### Undo
 
 `UndoBuffer` (`undobuffer.{h,cpp}`) manages undo history. Tools snapshot state through `Buffer` before committing changes.
+
+### Image Menu
+
+`mainwindow.cpp` implements image-level operations under the Image menu. Actions are declared in `mainwindow.ui` and connected in `MainWindow::MainWindow()`. Adding a new Image menu item requires: (1) a `<action>` element in `mainwindow.ui`, (2) a `<addaction>` entry in `menuImage`, (3) a slot in `mainwindow.h`, and (4) a `connect()` + implementation in `mainwindow.cpp`.
 
 ## Project documents
 
