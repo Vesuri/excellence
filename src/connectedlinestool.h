@@ -2,6 +2,7 @@
 #define CONNECTEDLINESTOOL_H
 
 #include <QPoint>
+#include <QList>
 #include "tool.h"
 
 class ConnectedLinesTool : public Tool
@@ -9,6 +10,8 @@ class ConnectedLinesTool : public Tool
     Q_OBJECT
 
 public:
+    enum DrawMode { Lines, FilledPolygon };
+
     explicit ConnectedLinesTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
@@ -23,11 +26,18 @@ protected:
     void activate() override;
 
 private:
+    void setDrawMode(DrawMode mode);
     QRect draw(const QPoint &point);
+    QRect paint(const QPoint &point);
     QRect lineBoundingRect(const QPoint &from, const QPoint &to) const;
+    QPoint centroid() const;
+    QRect floodFill(const QPoint &seed);
 
+    DrawMode drawMode_;
     bool active_;
+    QPoint firstPoint_;
     QPoint lastPoint_;
+    QList<QPoint> vertices_;
 
     static ConnectedLinesTool instance;
 };

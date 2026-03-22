@@ -36,9 +36,7 @@ SOURCES += main.cpp\
     brush.cpp \
     rectangletool.cpp \
     connectedlinestool.cpp \
-    filledpolygontool.cpp \
-    curvetool.cpp \
-    beziercurvetool.cpp
+    curvetool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -62,9 +60,7 @@ HEADERS  += mainwindow.h \
     brush.h \
     rectangletool.h \
     connectedlinestool.h \
-    filledpolygontool.h \
     curvetool.h \
-    beziercurvetool.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \
