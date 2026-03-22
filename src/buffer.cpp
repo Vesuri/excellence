@@ -282,7 +282,8 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     paintColor_(1),
     eraseColor_(0),
     paintMode_(Normal),
-    smearDirection_(0, 0)
+    smearDirection_(0, 0),
+    cycleIndex_(0)
 {
     initialize(width, height, colors);
 }
@@ -296,7 +297,8 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     paintColor_(1),
     eraseColor_(0),
     paintMode_(Normal),
-    smearDirection_(0, 0)
+    smearDirection_(0, 0),
+    cycleIndex_(0)
 {
     if (!path.isEmpty()) {
         image_.load(path);
@@ -605,3 +607,29 @@ void Buffer::setPaintMode(PaintMode mode) { paintMode_ = mode; }
 Buffer::PaintMode Buffer::paintMode() const { return paintMode_; }
 void Buffer::setSmearDirection(const QPoint &dir) { smearDirection_ = dir; }
 QPoint Buffer::smearDirection() const { return smearDirection_; }
+
+QVector<int> Buffer::gradientColors() const
+{
+    QVector<int> range;
+    int from = static_cast<int>(eraseColor_);
+    int to   = static_cast<int>(paintColor_);
+    int total = image_.colorCount();
+    if (from <= to) {
+        for (int i = from; i <= to && i < total; i++) range.append(i);
+    } else {
+        for (int i = from; i >= to && i >= 0; i--) range.append(i);
+    }
+    return range;
+}
+
+int Buffer::nextCycleColor(bool reverse)
+{
+    QVector<int> grad = gradientColors();
+    if (grad.isEmpty()) return static_cast<int>(reverse ? eraseColor_ : paintColor_);
+    int idx = cycleIndex_ % grad.size();
+    int color = reverse ? grad[grad.size() - 1 - idx] : grad[idx];
+    cycleIndex_++;
+    return color;
+}
+
+void Buffer::resetCycle() { cycleIndex_ = 0; }

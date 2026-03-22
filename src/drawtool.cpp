@@ -57,6 +57,7 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     previousPoint = point;
     lastStampedPoint = point;
     buffer_->setSmearDirection(QPoint(0, 0));
+    buffer_->resetCycle();
     drawnBounds_ = buffer_->pen()->rect(point).intersected(buffer_->image().rect());
     return draw(point);
 }
@@ -171,22 +172,30 @@ QWidget *DrawTool::createOptionsWidget()
 
     vbox->addWidget(new QLabel("Draw Mode:", w));
 
-    const char *modeLabels[] = {"Normal", "Replace", "Smear", "Smooth"};
-    const Buffer::PaintMode paintModes[] = {Buffer::Normal, Buffer::Replace, Buffer::Smear, Buffer::Smooth};
+    static const struct { const char *label; Buffer::PaintMode mode; } kModes[] = {
+        {"Normal",    Buffer::Normal},
+        {"Replace",   Buffer::Replace},
+        {"Smear",     Buffer::Smear},
+        {"Smooth",    Buffer::Smooth},
+        {"Range",     Buffer::Range},
+        {"AvgSmear",  Buffer::AverageSmear},
+        {"Cycle",     Buffer::Cycle},
+        {"Random",    Buffer::Random},
+    };
     QButtonGroup *modeGroup = new QButtonGroup(w);
     modeGroup->setExclusive(true);
-    QHBoxLayout *modeRow = new QHBoxLayout;
-    for (int i = 0; i < 4; i++) {
-        QPushButton *btn = new QPushButton(modeLabels[i], w);
-        btn->setFixedSize(52, 24);
+    QGridLayout *modeGrid = new QGridLayout;
+    for (int i = 0; i < 8; i++) {
+        QPushButton *btn = new QPushButton(kModes[i].label, w);
+        btn->setFixedSize(60, 24);
         btn->setCheckable(true);
-        btn->setChecked(buffer_->paintMode() == paintModes[i]);
+        btn->setChecked(buffer_->paintMode() == kModes[i].mode);
         modeGroup->addButton(btn);
-        Buffer::PaintMode m = paintModes[i];
+        Buffer::PaintMode m = kModes[i].mode;
         connect(btn, &QPushButton::clicked, [this, m]() { buffer_->setPaintMode(m); });
-        modeRow->addWidget(btn);
+        modeGrid->addWidget(btn, i / 4, i % 4);
     }
-    vbox->addLayout(modeRow);
+    vbox->addLayout(modeGrid);
 
     vbox->addStretch();
     return w;

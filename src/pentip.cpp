@@ -1,4 +1,5 @@
 #include <climits>
+#include <cstdlib>
 #include <QRect>
 #include <QImage>
 #include "buffer.h"
@@ -105,12 +106,91 @@ void PenTip::applySmooth(const QPoint &point, Buffer *buffer) const
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
+void PenTip::applyRange(const QPoint &point, Buffer *buffer, bool isErase) const
+{
+    QVector<int> grad = buffer->gradientColors();
+    if (grad.size() < 2) return;
+    QRect imageRect = buffer->image().rect();
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        int curIdx = buffer->image().pixelIndex(p);
+        int pos = grad.indexOf(curIdx);
+        if (pos < 0) return;
+        if (!isErase && pos < grad.size() - 1)
+            buffer->image().setPixel(p, static_cast<uint>(grad[pos + 1]));
+        else if (isErase && pos > 0)
+            buffer->image().setPixel(p, static_cast<uint>(grad[pos - 1]));
+    };
+    if (size_ == 1) { doPixel(point); return; }
+    int r = size_ / 2;
+    for (int dy = -r; dy <= r; dy++)
+        for (int dx = -r; dx <= r; dx++)
+            if (dx*dx + dy*dy <= r*r + r/2)
+                doPixel(QPoint(point.x()+dx, point.y()+dy));
+}
+
+void PenTip::applyAverageSmear(const QPoint &point, Buffer *buffer) const
+{
+    QPoint dir = buffer->smearDirection();
+    QVector<int> grad = buffer->gradientColors();
+    QRect imageRect = buffer->image().rect();
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    auto findNearest = [&](QRgb color) -> int {
+        if (grad.isEmpty()) return 0;
+        int bestIdx = grad[0], bestDist = INT_MAX;
+        for (int gi : grad) {
+            if (gi >= palette.size()) continue;
+            int dr = qRed(color)   - qRed(palette[gi]);
+            int dg = qGreen(color) - qGreen(palette[gi]);
+            int db = qBlue(color)  - qBlue(palette[gi]);
+            int dist = dr*dr + dg*dg + db*db;
+            if (dist < bestDist) { bestDist = dist; bestIdx = gi; }
+        }
+        return bestIdx;
+    };
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        QPoint src = p - dir;
+        QRgb srcColor = (imageRect.contains(src) && !dir.isNull())
+                        ? buffer->image().color(buffer->image().pixelIndex(src))
+                        : buffer->image().color(buffer->image().pixelIndex(p));
+        QRgb dstColor = buffer->image().color(buffer->image().pixelIndex(p));
+        QRgb avg = qRgb((qRed(srcColor)   + qRed(dstColor))   / 2,
+                        (qGreen(srcColor) + qGreen(dstColor)) / 2,
+                        (qBlue(srcColor)  + qBlue(dstColor))  / 2);
+        buffer->image().setPixel(p, static_cast<uint>(findNearest(avg)));
+    };
+    if (size_ == 1) { doPixel(point); return; }
+    int r = size_ / 2;
+    for (int dy = -r; dy <= r; dy++)
+        for (int dx = -r; dx <= r; dx++)
+            if (dx*dx + dy*dy <= r*r + r/2)
+                doPixel(QPoint(point.x()+dx, point.y()+dy));
+}
+
+void PenTip::applyCycleRandom(const QPoint &point, Buffer *buffer, bool isErase, bool isRandom) const
+{
+    int color;
+    if (isRandom) {
+        QVector<int> grad = buffer->gradientColors();
+        color = grad.isEmpty() ? static_cast<int>(isErase ? buffer->eraseColor() : buffer->paintColor())
+                               : grad[rand() % grad.size()];
+    } else {
+        color = buffer->nextCycleColor(isErase);
+    }
+    applyColor(point, buffer, static_cast<unsigned>(color));
+}
+
 QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 {
     switch (buffer->paintMode()) {
-    case Buffer::Smear:  applySmear(point, buffer, paintColor_); break;
-    case Buffer::Smooth: applySmooth(point, buffer); break;
-    default:             applyColor(point, buffer, paintColor_); break;
+    case Buffer::Smear:        applySmear(point, buffer, paintColor_); break;
+    case Buffer::Smooth:       applySmooth(point, buffer); break;
+    case Buffer::Range:        applyRange(point, buffer, false); break;
+    case Buffer::AverageSmear: applyAverageSmear(point, buffer); break;
+    case Buffer::Cycle:        applyCycleRandom(point, buffer, false, false); break;
+    case Buffer::Random:       applyCycleRandom(point, buffer, false, true); break;
+    default:                   applyColor(point, buffer, paintColor_); break;
     }
     return rect(point).intersected(buffer->image().rect());
 }
@@ -118,9 +198,13 @@ QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 {
     switch (buffer->paintMode()) {
-    case Buffer::Smear:  applySmear(point, buffer, eraseColor_); break;
-    case Buffer::Smooth: applySmooth(point, buffer); break;
-    default:             applyColor(point, buffer, eraseColor_); break;
+    case Buffer::Smear:        applySmear(point, buffer, eraseColor_); break;
+    case Buffer::Smooth:       applySmooth(point, buffer); break;
+    case Buffer::Range:        applyRange(point, buffer, true); break;
+    case Buffer::AverageSmear: applyAverageSmear(point, buffer); break;
+    case Buffer::Cycle:        applyCycleRandom(point, buffer, true, false); break;
+    case Buffer::Random:       applyCycleRandom(point, buffer, true, true); break;
+    default:                   applyColor(point, buffer, eraseColor_); break;
     }
     return rect(point).intersected(buffer->image().rect());
 }

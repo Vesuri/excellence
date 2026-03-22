@@ -16,7 +16,7 @@ class Buffer : public QObject
 {
     Q_OBJECT
 public:
-    enum PaintMode { Normal, Replace, Smear, Smooth };
+    enum PaintMode { Normal, Replace, Smear, Smooth, Range, AverageSmear, Cycle, Random };
 
     explicit Buffer(int width = 320, int height = 256, int colors = 8, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);
@@ -47,6 +47,9 @@ public:
     PaintMode paintMode() const;
     void setSmearDirection(const QPoint &dir);
     QPoint smearDirection() const;
+    QVector<int> gradientColors() const;
+    int nextCycleColor(bool reverse = false);
+    void resetCycle();
 
 public slots:
     void clear();
@@ -84,6 +87,7 @@ private:
     unsigned eraseColor_;
     PaintMode paintMode_;
     QPoint smearDirection_;
+    int cycleIndex_;
 };
 
 #endif // BUFFER_H
