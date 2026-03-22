@@ -363,6 +363,12 @@ void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt:
         break;
     }
     default:
+        if (moveUndoBuffer) {
+            moveUndoBuffer->apply(this);
+            delete moveUndoBuffer;
+            moveUndoBuffer = nullptr;
+        }
+
         preModificationImage = image_.copy();
 
         modifiedArea = tool_->press(point, modifiers);

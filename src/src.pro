@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     palettetool.cpp \
     brushtool.cpp \
     brush.cpp \
-    rectangletool.cpp
+    rectangletool.cpp \
+    connectedlinestool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -57,6 +58,7 @@ HEADERS  += mainwindow.h \
     brushtool.h \
     brush.h \
     rectangletool.h \
+    connectedlinestool.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \

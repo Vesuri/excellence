@@ -6,6 +6,7 @@
 #include <QtCore/qmath.h>
 #include "tool.h"
 #include "drawtool.h"
+#include "connectedlinestool.h"
 #include "buffer.h"
 #include "bufferview.h"
 #include "ui_bufferview.h"
@@ -73,6 +74,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
         case QEvent::GraphicsSceneMousePress:
         case QEvent::GraphicsSceneMouseMove:
         case QEvent::GraphicsSceneMouseRelease:
+        case QEvent::GraphicsSceneMouseDoubleClick:
         {
             QGraphicsSceneMouseEvent *mouseEvent = static_cast<QGraphicsSceneMouseEvent *>(event);
             QPointF scenePos = mouseEvent->scenePos();
@@ -86,6 +88,10 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 buffer->move(point);
                 break;
             case QEvent::GraphicsSceneMouseRelease:
+                buffer->release(point);
+                break;
+            case QEvent::GraphicsSceneMouseDoubleClick:
+                buffer->press(point, Qt::RightButton, mouseEvent->modifiers());
                 buffer->release(point);
                 break;
             default:
@@ -124,6 +130,14 @@ void BufferView::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D:
         for (Tool *tool : tools) {
             if (qobject_cast<DrawTool *>(tool)) {
+                tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_W:
+        for (Tool *tool : tools) {
+            if (qobject_cast<ConnectedLinesTool *>(tool)) {
                 tool->click();
                 break;
             }
