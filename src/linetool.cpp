@@ -97,6 +97,9 @@ QRect LineTool::move(const QPoint &point)
         if (mouseButton_ == Qt::NoButton)
             return buffer_->pen()->paint(point, buffer_);
 
+        if (!undoBuffer_)
+            return QRect();
+
         undoBuffer_->apply(buffer_);
         delete undoBuffer_;
 
@@ -140,6 +143,9 @@ QRect LineTool::move(const QPoint &point)
 QRect LineTool::release(const QPoint &point)
 {
     if (mode_ == Line) {
+        if (!undoBuffer_)
+            return QRect();
+
         undoBuffer_->apply(buffer_);
         delete undoBuffer_;
         undoBuffer_ = nullptr;
