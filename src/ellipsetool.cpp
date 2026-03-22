@@ -260,5 +260,5 @@ void EllipseTool::activate()
 
 void EllipseTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 7);
+    layout->addWidget(button_, 0, 6);
 }

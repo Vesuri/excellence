@@ -29,13 +29,13 @@ There are no automated tests; testing is manual UI interaction.
 
 All tools inherit from `Tool` (two subtypes: `Modify` and `Zoom`). The active tool is set on `BufferView` and receives mouse press/move/release events.
 
-Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `ConnectedLinesTool`, `AirTool`, `FillTool`, `TextTool`, `CarveBrushTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`.
+Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`.
 
 When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism: `hover()` returns the rect to save/restore, and `move()` with `mouseButton_ == Qt::NoButton` draws the preview.
 
 #### Tool paradigms
 
-**Mode cycling on repeated activation** — Tools with multiple sub-modes (e.g. outline vs. filled, quadratic vs. Bezier curve, connected lines vs. filled polygon) share a single toolbar button. Clicking the button when the tool is already active cycles to the next mode. Implemented in `activate()` by checking `buffer_->tool() == this`. See `RectangleTool`, `CurveTool`, `ConnectedLinesTool`.
+**Mode cycling on repeated activation** — Tools with multiple sub-modes (e.g. outline vs. filled, quadratic vs. Bezier curve, line vs. connected lines vs. filled polygon) share a single toolbar button. Clicking the button when the tool is already active cycles to the next mode. Implemented in `activate()` by checking `buffer_->tool() == this`. See `RectangleTool`, `CurveTool`, `LineTool`.
 
 **Right mouse button draws with background/erase color** — Most drawing tools treat the right mouse button as "draw with background color" (i.e., erase). The tool records the button at the start of the operation (`mouseButton_` from the base class, or an `erasing_` flag set in `press()`) and uses `pen()->erase()` instead of `pen()->paint()` throughout. Do not re-check the button mid-operation; record the intent at press time to keep all phases consistent. See `LineTool`, `CurveTool`.
 
@@ -59,11 +59,11 @@ Each plugin has its own `.pro` file and a `.json` metadata file. The main app lo
 
 The toolbar is a two-row `QGridLayout` (`ui->toolsLayout`). Each tool declares its own position in `addButtonToGridLayout()`. The layout follows the Brilliance toolbox order — see the memory file `project_brilliance_toolbox_layout.md` for the full reference. Current positions:
 
-**Row 0:** Clear(0), Palette(1), Draw(2), Line(3), ConnectedLines(4), Curve(5), Rectangle(6), Ellipse(7), Airbrush(8), Fill(9), Text(10), Brush(11), Undo(12)
+**Row 0:** Clear(0), Palette(1), Draw(2), Line(3), Curve(4), Rectangle(5), Ellipse(6), Airbrush(7), Fill(8), Text(9), Brush(10), Undo(11)
 
-Note: Brush(11) cycles between Rectangle and Freehand (carve) modes on repeated activation — CarveBrushTool no longer exists as a separate tool.
+Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on repeated activation — ConnectedLinesTool no longer exists as a separate tool. Brush(10) cycles between Rectangle and Freehand (carve) modes on repeated activation — CarveBrushTool no longer exists as a separate tool.
 
-**Row 1:** PenTipTool(10), DrawModeTool(11), Zoom(12) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
+**Row 1:** PenTipTool(9), DrawModeTool(10), Zoom(11) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
 
 ### Brush Handle
 
@@ -73,7 +73,7 @@ Note: Brush(11) cycles between Rectangle and Freehand (carve) modes on repeated 
 
 `Algorithms` (`algorithms.{h,cpp}`) contains:
 - Bresenham-style `line()`, `rectangle()`, `fillRectangle()`, `ellipse()`, `fillEllipse()` — used by multiple tools
-- `floodFill(QImage&, seed, targetColor, fillColor)` — scanline flood fill returning the changed rect; shared by `DrawTool` (FilledShape) and `ConnectedLinesTool` (FilledPolygon)
+- `floodFill(QImage&, seed, targetColor, fillColor)` — scanline flood fill returning the changed rect; shared by `DrawTool` (FilledShape) and `LineTool` (FilledPolygon mode)
 
 ### Palette Quantization
 

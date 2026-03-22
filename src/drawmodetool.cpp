@@ -116,5 +116,5 @@ QWidget *DrawModeTool::createOptionsWidget()
 
 void DrawModeTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 11);
+    layout->addWidget(button_, 1, 10);
 }

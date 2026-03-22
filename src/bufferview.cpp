@@ -6,7 +6,7 @@
 #include <QtCore/qmath.h>
 #include "tool.h"
 #include "drawtool.h"
-#include "connectedlinestool.h"
+#include "linetool.h"
 #include "curvetool.h"
 #include "ellipsetool.h"
 #include "airtool.h"
@@ -151,7 +151,7 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_W:
         for (Tool *tool : tools) {
-            if (qobject_cast<ConnectedLinesTool *>(tool)) {
+            if (qobject_cast<LineTool *>(tool)) {
                 tool->click();
                 break;
             }

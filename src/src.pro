@@ -35,7 +35,6 @@ SOURCES += main.cpp\
     brushtool.cpp \
     brush.cpp \
     rectangletool.cpp \
-    connectedlinestool.cpp \
     curvetool.cpp \
     ellipsetool.cpp \
     airtool.cpp \
@@ -65,7 +64,6 @@ HEADERS  += mainwindow.h \
     brushtool.h \
     brush.h \
     rectangletool.h \
-    connectedlinestool.h \
     curvetool.h \
     ellipsetool.h \
     airtool.h \

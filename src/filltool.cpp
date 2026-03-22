@@ -93,5 +93,5 @@ void FillTool::activate()
 
 void FillTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 9);
+    layout->addWidget(button_, 0, 8);
 }

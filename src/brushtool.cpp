@@ -513,5 +513,5 @@ void BrushTool::registerTool()
 
 void BrushTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 0, 11);
+    layout->addWidget(button_, 0, 10);
 }

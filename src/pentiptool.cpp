@@ -114,5 +114,5 @@ QWidget *PenTipTool::createOptionsWidget()
 
 void PenTipTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 10);
+    layout->addWidget(button_, 1, 9);
 }
