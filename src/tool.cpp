@@ -41,6 +41,8 @@ Tool::Type Tool::type() const
 QString Tool::name() const
 {
     QString tip = button_->toolTip();
+    int nl = tip.indexOf('\n');
+    if (nl >= 0) tip = tip.left(nl);
     int bracket = tip.indexOf(" [");
     return bracket >= 0 ? tip.left(bracket) : tip;
 }
