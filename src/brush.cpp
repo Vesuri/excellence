@@ -1,6 +1,7 @@
 #include <QRect>
 #include <QImage>
 #include <climits>
+#include <cmath>
 #include "buffer.h"
 #include "brush.h"
 
@@ -101,6 +102,202 @@ void Brush::replaceColor(int fromIndex, int toIndex)
             if (image_.pixelIndex(x, y) == fromIndex)
                 image_.setPixel(x, y, static_cast<uint>(toIndex));
 }
+
+// ── Private helper ─────────────────────────────────────────────────────────
+
+QImage Brush::reindex(const QImage &src) const
+{
+    QImage result(src.width(), src.height(), QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    const QVector<QRgb> ct = image_.colorTable();
+    for (int y = 0; y < src.height(); y++) {
+        for (int x = 0; x < src.width(); x++) {
+            QRgb color = src.pixel(x, y);
+            int bestIdx = 0, bestDist = INT_MAX;
+            for (int i = 0; i < ct.size(); i++) {
+                int dr = qRed(color)   - qRed(ct[i]);
+                int dg = qGreen(color) - qGreen(ct[i]);
+                int db = qBlue(color)  - qBlue(ct[i]);
+                int dist = dr*dr + dg*dg + db*db;
+                if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+            }
+            result.setPixel(x, y, static_cast<uint>(bestIdx));
+        }
+    }
+    return result;
+}
+
+// ── Transforms ─────────────────────────────────────────────────────────────
+
+void Brush::flipHorizontal() { image_ = image_.mirrored(true, false); }
+void Brush::flipVertical()   { image_ = image_.mirrored(false, true); }
+
+void Brush::rotate90CW()
+{
+    int w = image_.width(), h = image_.height();
+    QImage result(h, w, QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            result.setPixel(h - 1 - y, x, static_cast<uint>(image_.pixelIndex(x, y)));
+    image_ = result;
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
+void Brush::rotate90CCW()
+{
+    int w = image_.width(), h = image_.height();
+    QImage result(h, w, QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            result.setPixel(y, w - 1 - x, static_cast<uint>(image_.pixelIndex(x, y)));
+    image_ = result;
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
+void Brush::scale(int width, int height)
+{
+    if (width < 1)  width  = 1;
+    if (height < 1) height = 1;
+    QImage rgb = image_.convertToFormat(QImage::Format_ARGB32)
+                       .scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    image_ = reindex(rgb);
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
+void Brush::doubleSize() { scale(image_.width() * 2, image_.height() * 2); }
+void Brush::halveSize()  { scale(qMax(1, image_.width() / 2), qMax(1, image_.height() / 2)); }
+
+void Brush::shearX(double factor)
+{
+    int w = image_.width(), h = image_.height();
+    int maxShift = (int)std::ceil(qAbs(h * factor));
+    int newW = w + maxShift;
+    int bg = qMax(0, transparentIndex_);
+    QImage result(newW, h, QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    result.fill(static_cast<uint>(bg));
+    for (int y = 0; y < h; y++) {
+        int shift = (int)(y * factor);
+        int xOff = (factor >= 0) ? shift : shift + maxShift;
+        for (int x = 0; x < w; x++) {
+            int nx = x + xOff;
+            if (nx >= 0 && nx < newW)
+                result.setPixel(nx, y, static_cast<uint>(image_.pixelIndex(x, y)));
+        }
+    }
+    image_ = result;
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
+void Brush::shearY(double factor)
+{
+    int w = image_.width(), h = image_.height();
+    int maxShift = (int)std::ceil(qAbs(w * factor));
+    int newH = h + maxShift;
+    int bg = qMax(0, transparentIndex_);
+    QImage result(w, newH, QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    result.fill(static_cast<uint>(bg));
+    for (int x = 0; x < w; x++) {
+        int shift = (int)(x * factor);
+        int yOff = (factor >= 0) ? shift : shift + maxShift;
+        for (int y = 0; y < h; y++) {
+            int ny = y + yOff;
+            if (ny >= 0 && ny < newH)
+                result.setPixel(x, ny, static_cast<uint>(image_.pixelIndex(x, y)));
+        }
+    }
+    image_ = result;
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
+void Brush::bendX(double amount)
+{
+    int w = image_.width(), h = image_.height();
+    int maxShift = (int)std::ceil(qAbs(amount));
+    int newW = w + 2 * maxShift;
+    int bg = qMax(0, transparentIndex_);
+    QImage result(newW, h, QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    result.fill(static_cast<uint>(bg));
+    for (int y = 0; y < h; y++) {
+        double t = h > 1 ? (double)y / (h - 1) : 0.0;
+        int shift = (int)std::round(amount * std::sin(t * M_PI));
+        for (int x = 0; x < w; x++) {
+            int nx = x + maxShift + shift;
+            if (nx >= 0 && nx < newW)
+                result.setPixel(nx, y, static_cast<uint>(image_.pixelIndex(x, y)));
+        }
+    }
+    image_ = result;
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
+void Brush::bendY(double amount)
+{
+    int w = image_.width(), h = image_.height();
+    int maxShift = (int)std::ceil(qAbs(amount));
+    int newH = h + 2 * maxShift;
+    int bg = qMax(0, transparentIndex_);
+    QImage result(w, newH, QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    result.fill(static_cast<uint>(bg));
+    for (int x = 0; x < w; x++) {
+        double t = w > 1 ? (double)x / (w - 1) : 0.0;
+        int shift = (int)std::round(amount * std::sin(t * M_PI));
+        for (int y = 0; y < h; y++) {
+            int ny = y + maxShift + shift;
+            if (ny >= 0 && ny < newH)
+                result.setPixel(x, ny, static_cast<uint>(image_.pixelIndex(x, y)));
+        }
+    }
+    image_ = result;
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
+void Brush::outline(int colorIndex)
+{
+    int bg = qMax(0, transparentIndex_);
+    int w = image_.width(), h = image_.height();
+    QImage result = image_.copy();
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            if (image_.pixelIndex(x, y) == bg) {
+                if ((x > 0   && image_.pixelIndex(x-1, y) != bg) ||
+                    (x < w-1 && image_.pixelIndex(x+1, y) != bg) ||
+                    (y > 0   && image_.pixelIndex(x, y-1) != bg) ||
+                    (y < h-1 && image_.pixelIndex(x, y+1) != bg))
+                    result.setPixel(x, y, static_cast<uint>(colorIndex));
+            }
+        }
+    }
+    image_ = result;
+}
+
+void Brush::trim()
+{
+    int bg = qMax(0, transparentIndex_);
+    int w = image_.width(), h = image_.height();
+    QImage result = image_.copy();
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            if (image_.pixelIndex(x, y) != bg) {
+                if ((x == 0  || image_.pixelIndex(x-1, y) == bg) ||
+                    (x == w-1 || image_.pixelIndex(x+1, y) == bg) ||
+                    (y == 0  || image_.pixelIndex(x, y-1) == bg) ||
+                    (y == h-1 || image_.pixelIndex(x, y+1) == bg))
+                    result.setPixel(x, y, static_cast<uint>(bg));
+            }
+        }
+    }
+    image_ = result;
+}
+
+void Brush::storeOriginal()   { originalImage_ = image_; }
+void Brush::restoreOriginal() { if (!originalImage_.isNull()) { image_ = originalImage_; handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2); } }
+bool Brush::hasOriginal() const { return !originalImage_.isNull(); }
 
 void Brush::detectBackground()
 {

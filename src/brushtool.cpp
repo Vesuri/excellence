@@ -326,8 +326,87 @@ QWidget *BrushTool::createOptionsWidget()
 
     vbox->addLayout(handleRow);
 
+    // ── Transform section ──────────────────────────────────────────────────
+    QFrame *sep2 = new QFrame(w);
+    sep2->setFrameShape(QFrame::HLine);
+    vbox->addWidget(sep2);
+
+    QGridLayout *xformGrid = new QGridLayout;
+    xformGrid->setSpacing(2);
+    auto makeXform = [&](const QString &label, const char *slot, int row, int col) {
+        QPushButton *btn = new QPushButton(label, w);
+        btn->setFixedSize(52, 22);
+        connect(btn, SIGNAL(clicked()), this, slot);
+        xformGrid->addWidget(btn, row, col);
+    };
+    makeXform("Flip H",    SLOT(brushFlipH()),       0, 0);
+    makeXform("Flip V",    SLOT(brushFlipV()),       0, 1);
+    makeXform("Rot CW",    SLOT(brushRotate90CW()),  0, 2);
+    makeXform("Rot CCW",   SLOT(brushRotate90CCW()), 0, 3);
+    makeXform("Double",    SLOT(brushDouble()),      1, 0);
+    makeXform("Halve",     SLOT(brushHalve()),       1, 1);
+    makeXform("Shear X+",  SLOT(brushShearXPlus()),  2, 0);
+    makeXform("Shear X-",  SLOT(brushShearXMinus()), 2, 1);
+    makeXform("Shear Y+",  SLOT(brushShearYPlus()),  2, 2);
+    makeXform("Shear Y-",  SLOT(brushShearYMinus()), 2, 3);
+    makeXform("Bend X+",   SLOT(brushBendXPlus()),   3, 0);
+    makeXform("Bend X-",   SLOT(brushBendXMinus()),  3, 1);
+    makeXform("Bend Y+",   SLOT(brushBendYPlus()),   3, 2);
+    makeXform("Bend Y-",   SLOT(brushBendYMinus()),  3, 3);
+    makeXform("Outline",   SLOT(brushOutline()),     4, 0);
+    makeXform("Trim",      SLOT(brushTrim()),        4, 1);
+    makeXform("Restore",   SLOT(brushRestore()),     4, 2);
+    vbox->addLayout(xformGrid);
+
     return w;
 }
+
+// ── Transform helpers ─────────────────────────────────────────────────────
+
+static Brush *currentBrush(Buffer *buf)
+{
+    return qobject_cast<Brush *>(buf ? buf->pen() : nullptr);
+}
+
+#define BRUSH_TRANSFORM(method) \
+    Brush *brush = currentBrush(buffer_); \
+    if (!brush) return; \
+    if (!brush->hasOriginal()) brush->storeOriginal(); \
+    brush->method; \
+    if (handleWidget_) handleWidget_->update();
+
+void BrushTool::brushFlipH()       { BRUSH_TRANSFORM(flipHorizontal()) }
+void BrushTool::brushFlipV()       { BRUSH_TRANSFORM(flipVertical()) }
+void BrushTool::brushRotate90CW()  { BRUSH_TRANSFORM(rotate90CW()) }
+void BrushTool::brushRotate90CCW() { BRUSH_TRANSFORM(rotate90CCW()) }
+void BrushTool::brushDouble()      { BRUSH_TRANSFORM(doubleSize()) }
+void BrushTool::brushHalve()       { BRUSH_TRANSFORM(halveSize()) }
+void BrushTool::brushShearXPlus()  { BRUSH_TRANSFORM(shearX(0.25)) }
+void BrushTool::brushShearXMinus() { BRUSH_TRANSFORM(shearX(-0.25)) }
+void BrushTool::brushShearYPlus()  { BRUSH_TRANSFORM(shearY(0.25)) }
+void BrushTool::brushShearYMinus() { BRUSH_TRANSFORM(shearY(-0.25)) }
+void BrushTool::brushBendXPlus()   { BRUSH_TRANSFORM(bendX(4.0)) }
+void BrushTool::brushBendXMinus()  { BRUSH_TRANSFORM(bendX(-4.0)) }
+void BrushTool::brushBendYPlus()   { BRUSH_TRANSFORM(bendY(4.0)) }
+void BrushTool::brushBendYMinus()  { BRUSH_TRANSFORM(bendY(-4.0)) }
+void BrushTool::brushOutline()
+{
+    Brush *brush = currentBrush(buffer_);
+    if (!brush || !buffer_) return;
+    if (!brush->hasOriginal()) brush->storeOriginal();
+    brush->outline(static_cast<int>(buffer_->paintColor()));
+    if (handleWidget_) handleWidget_->update();
+}
+void BrushTool::brushTrim() { BRUSH_TRANSFORM(trim()) }
+void BrushTool::brushRestore()
+{
+    Brush *brush = currentBrush(buffer_);
+    if (!brush) return;
+    brush->restoreOriginal();
+    if (handleWidget_) handleWidget_->update();
+}
+
+#undef BRUSH_TRANSFORM
 
 void BrushTool::registerTool()
 {

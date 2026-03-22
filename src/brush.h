@@ -22,8 +22,28 @@ public:
     void replaceColor(int fromIndex, int toIndex);
     void detectBackground();
 
+    void flipHorizontal();
+    void flipVertical();
+    void rotate90CW();
+    void rotate90CCW();
+    void scale(int width, int height);
+    void doubleSize();
+    void halveSize();
+    void shearX(double factor);
+    void shearY(double factor);
+    void bendX(double amount);
+    void bendY(double amount);
+    void outline(int colorIndex);
+    void trim();
+    void storeOriginal();
+    void restoreOriginal();
+    bool hasOriginal() const;
+
 private:
+    QImage reindex(const QImage &src) const;
+
     QImage image_;
+    QImage originalImage_;
     int transparentIndex_;
     QPoint handleOffset_;
 };

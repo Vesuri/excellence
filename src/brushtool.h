@@ -75,6 +75,23 @@ private slots:
     void setHandleCenter();
     void setHandleBottomLeft();
     void setHandleBottomRight();
+    void brushFlipH();
+    void brushFlipV();
+    void brushRotate90CW();
+    void brushRotate90CCW();
+    void brushDouble();
+    void brushHalve();
+    void brushShearXPlus();
+    void brushShearXMinus();
+    void brushShearYPlus();
+    void brushShearYMinus();
+    void brushBendXPlus();
+    void brushBendXMinus();
+    void brushBendYPlus();
+    void brushBendYMinus();
+    void brushOutline();
+    void brushTrim();
+    void brushRestore();
 
 private:
     QRect changes(const QPoint &point);
