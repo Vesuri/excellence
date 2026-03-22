@@ -45,11 +45,17 @@ private slots:
     void paletteCopyColor();
     void paletteSwapColors();
     void paletteSwapAndRemapColors();
+    void brushLoad();
+    void brushSave();
+    void brushCopy();
+    void brushPaste();
+    void brushDelete();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap };
 
     void updateWindowTitle(int paletteIndex = -1);
+    QImage convertToIndexed(const QImage &source) const;
 
     Ui::MainWindow *ui;
     QFileDialog *openDialog;

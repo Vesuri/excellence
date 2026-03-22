@@ -3,7 +3,11 @@
 #include <QTimer>
 #include <QFileDialog>
 #include <QImageWriter>
+#include <QImageReader>
 #include <QMessageBox>
+#include <QApplication>
+#include <QClipboard>
+#include "brush.h"
 #include "propertiesdialog.h"
 #include "buffer.h"
 #include "bufferview.h"
@@ -41,6 +45,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(paletteCopyColor()));
     connect(ui->actionPaletteSwapColors, SIGNAL(triggered()), this, SLOT(paletteSwapColors()));
     connect(ui->actionPaletteSwapAndRemapColors, SIGNAL(triggered()), this, SLOT(paletteSwapAndRemapColors()));
+    connect(ui->actionBrushLoad, SIGNAL(triggered()), this, SLOT(brushLoad()));
+    connect(ui->actionBrushSave, SIGNAL(triggered()), this, SLOT(brushSave()));
+    connect(ui->actionBrushCopy, SIGNAL(triggered()), this, SLOT(brushCopy()));
+    connect(ui->actionBrushPaste, SIGNAL(triggered()), this, SLOT(brushPaste()));
+    connect(ui->actionBrushDelete, SIGNAL(triggered()), this, SLOT(brushDelete()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
@@ -295,6 +304,76 @@ void MainWindow::paletteSwapAndRemapColors()
 {
     paletteMode = PaletteSwapAndRemap;
     updateWindowTitle();
+}
+
+QImage MainWindow::convertToIndexed(const QImage &source) const
+{
+    QImage rgb = source.convertToFormat(QImage::Format_RGB32);
+    QImage indexed(rgb.size(), QImage::Format_Indexed8);
+    indexed.setColorTable(buffer->image().colorTable());
+    for (int y = 0; y < rgb.height(); y++) {
+        for (int x = 0; x < rgb.width(); x++) {
+            QRgb pixel = rgb.pixel(x, y);
+            int bestIdx = 0, bestDist = INT_MAX;
+            for (int i = 0; i < buffer->image().colorCount(); i++) {
+                QRgb c = buffer->image().color(i);
+                int dr = qRed(pixel) - qRed(c);
+                int dg = qGreen(pixel) - qGreen(c);
+                int db = qBlue(pixel) - qBlue(c);
+                int dist = dr*dr + dg*dg + db*db;
+                if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+            }
+            indexed.setPixel(x, y, bestIdx);
+        }
+    }
+    return indexed;
+}
+
+void MainWindow::brushLoad()
+{
+    QString path = QFileDialog::getOpenFileName(nullptr, tr("Load Brush"));
+    if (path.isEmpty())
+        return;
+    QImage img(path);
+    if (img.isNull())
+        return;
+    QImage indexed = convertToIndexed(img);
+    buffer->setPen(new Brush(indexed, -1, buffer));
+}
+
+void MainWindow::brushSave()
+{
+    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    if (!brush)
+        return;
+    QString path = QFileDialog::getSaveFileName(nullptr, tr("Save Brush"));
+    if (path.isEmpty())
+        return;
+    QImageWriter writer(path);
+    if (!writer.write(brush->image().convertToFormat(QImage::Format_RGB32))) {
+        QMessageBox::warning(nullptr, tr("Save Brush"), writer.errorString());
+    }
+}
+
+void MainWindow::brushCopy()
+{
+    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    if (brush)
+        QApplication::clipboard()->setImage(brush->image().convertToFormat(QImage::Format_RGB32));
+}
+
+void MainWindow::brushPaste()
+{
+    QImage img = QApplication::clipboard()->image();
+    if (img.isNull())
+        return;
+    QImage indexed = convertToIndexed(img);
+    buffer->setPen(new Brush(indexed, -1, buffer));
+}
+
+void MainWindow::brushDelete()
+{
+    buffer->setPen(penTip);
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)

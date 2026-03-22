@@ -114,9 +114,22 @@
     <addaction name="separator"/>
     <addaction name="actionImageProperties"/>
    </widget>
+   <widget class="QMenu" name="menuBrush">
+    <property name="title">
+     <string>Brush</string>
+    </property>
+    <addaction name="actionBrushLoad"/>
+    <addaction name="actionBrushSave"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushCopy"/>
+    <addaction name="actionBrushPaste"/>
+    <addaction name="separator"/>
+    <addaction name="actionBrushDelete"/>
+   </widget>
    <addaction name="menu_File"/>
    <addaction name="menuImage"/>
    <addaction name="menuPalette"/>
+   <addaction name="menuBrush"/>
    <addaction name="menuWindow"/>
   </widget>
   <action name="actionFileOpen">
@@ -208,6 +221,31 @@
   <action name="actionImageHistogram">
    <property name="text">
     <string>Histogram</string>
+   </property>
+  </action>
+  <action name="actionBrushLoad">
+   <property name="text">
+    <string>Load</string>
+   </property>
+  </action>
+  <action name="actionBrushSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>
+  <action name="actionBrushCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+  </action>
+  <action name="actionBrushPaste">
+   <property name="text">
+    <string>Paste</string>
+   </property>
+  </action>
+  <action name="actionBrushDelete">
+   <property name="text">
+    <string>Delete</string>
    </property>
   </action>
   <action name="actionPaletteLoad">
