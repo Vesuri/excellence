@@ -55,10 +55,15 @@ QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     return draw(point);
 }
 
+QRect RectangleTool::hover(const QPoint &point)
+{
+    return buffer_->pen()->rect(point);
+}
+
 QRect RectangleTool::move(const QPoint &point)
 {
     if (mouseButton_ == Qt::NoButton) {
-        return QRect();
+        return buffer_->pen()->paint(point, buffer_);
     }
 
     undoBuffer->apply(buffer_);

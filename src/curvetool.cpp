@@ -111,6 +111,9 @@ QRect CurveTool::move(const QPoint &point)
             return QRect();
         }
 
+        if (phase_ == 0)
+            return buffer_->pen()->paint(point, buffer_);
+
         if (phase_ == 1) {
             QRect changedRect;
             Algorithms::line(p0_, point, [this, &changedRect](const QPoint &p) {
@@ -147,10 +150,10 @@ QRect CurveTool::move(const QPoint &point)
         return QRect();
     }
 
-    if (phase_ > 0) {
-        return drawBezierPreview(point);
-    }
-    return QRect();
+    if (phase_ == 0)
+        return buffer_->pen()->paint(point, buffer_);
+
+    return drawBezierPreview(point);
 }
 
 // ── release ────────────────────────────────────────────────────────────────
@@ -193,6 +196,9 @@ QRect CurveTool::release(const QPoint &point)
 
 QRect CurveTool::hover(const QPoint &point)
 {
+    if (phase_ == 0)
+        return buffer_->pen()->rect(point);
+
     if (curveMode_ == Quadratic) {
         if (phase_ == 1) {
             return quadraticBoundingRect(p0_, point, point).intersected(buffer_->image().rect());
@@ -203,10 +209,7 @@ QRect CurveTool::hover(const QPoint &point)
         return QRect();
     }
 
-    if (phase_ > 0) {
-        return bezierBoundingRect(point).intersected(buffer_->image().rect());
-    }
-    return QRect();
+    return bezierBoundingRect(point).intersected(buffer_->image().rect());
 }
 
 // ── Quadratic helpers ──────────────────────────────────────────────────────

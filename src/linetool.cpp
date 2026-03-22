@@ -95,7 +95,7 @@ QRect LineTool::move(const QPoint &point)
 {
     if (mode_ == Line) {
         if (mouseButton_ == Qt::NoButton)
-            return QRect();
+            return buffer_->pen()->paint(point, buffer_);
 
         undoBuffer_->apply(buffer_);
         delete undoBuffer_;
@@ -111,7 +111,7 @@ QRect LineTool::move(const QPoint &point)
 
     // Connected lines / filled polygon
     if (!active_)
-        return QRect();
+        return buffer_->pen()->paint(point, buffer_);
 
     if (mouseButton_ != Qt::NoButton) {
         if (dragUndoBuffer_ != nullptr) {
@@ -174,7 +174,7 @@ QRect LineTool::release(const QPoint &point)
 QRect LineTool::hover(const QPoint &point)
 {
     if (mode_ == Line || !active_)
-        return QRect();
+        return buffer_->pen()->rect(point);
     return lineBoundingRect(lastPoint_, point);
 }
 

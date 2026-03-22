@@ -151,7 +151,12 @@ QRect EllipseTool::move(const QPoint &point)
         return drawEllipseShape(rotationAngle_);
     }
 
-    if (mouseButton_ == Qt::NoButton || phase_ != 1)
+    if (mouseButton_ == Qt::NoButton) {
+        if (phase_ == 0)
+            return buffer_->pen()->paint(point, buffer_);
+        return QRect();
+    }
+    if (phase_ != 1)
         return QRect();
 
     undoBuffer_->apply(buffer_);
@@ -196,6 +201,8 @@ QRect EllipseTool::release(const QPoint &point)
 
 QRect EllipseTool::hover(const QPoint &point)
 {
+    if (phase_ == 0)
+        return buffer_->pen()->rect(point);
     if (rotateMode_ && phase_ == 2) {
         double angle = qAtan2((double)(point.y() - cy_), (double)(point.x() - cx_));
         return ellipseBoundingRect(angle);
