@@ -37,6 +37,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    connect(ui->actionImageCopy, SIGNAL(triggered()), this, SLOT(imageCopy()));
+    connect(ui->actionImagePaste, SIGNAL(triggered()), this, SLOT(imagePaste()));
     connect(ui->actionImageCopyColor, SIGNAL(triggered()), this, SLOT(imageCopyColor()));
     connect(ui->actionImageSwapColors, SIGNAL(triggered()), this, SLOT(imageSwapColors()));
     connect(ui->actionImageHistogram, SIGNAL(triggered()), this, SLOT(imageHistogram()));
@@ -274,6 +276,29 @@ void MainWindow::imageHistogram()
     for (int i = 0; i < histogram.count(); i++) {
         qWarning("%d #%06x %d", i, buffer->image().color(i) & 0xffffff, histogram[i]);
     }
+}
+
+void MainWindow::imageCopy()
+{
+    QApplication::clipboard()->setImage(buffer->image().convertToFormat(QImage::Format_RGB32));
+}
+
+void MainWindow::imagePaste()
+{
+    QImage img = QApplication::clipboard()->image();
+    if (img.isNull())
+        return;
+
+    // Scale to canvas size if needed, then quantize to current palette
+    QImage src = img.scaled(buffer->image().size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    QImage indexed = convertToIndexed(src);
+
+    QImage &canvas = buffer->image();
+    for (int y = 0; y < canvas.height(); y++)
+        for (int x = 0; x < canvas.width(); x++)
+            canvas.setPixel(x, y, static_cast<uint>(indexed.pixelIndex(x, y)));
+
+    buffer->notifyModified(canvas.rect());
 }
 
 void MainWindow::imageCopyColor()

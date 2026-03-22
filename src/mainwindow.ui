@@ -107,6 +107,9 @@
     <property name="title">
      <string>Image</string>
     </property>
+    <addaction name="actionImageCopy"/>
+    <addaction name="actionImagePaste"/>
+    <addaction name="separator"/>
     <addaction name="actionImageCopyColor"/>
     <addaction name="actionImageSwapColors"/>
     <addaction name="separator"/>
@@ -251,6 +254,22 @@
   <action name="actionPaletteLoad">
    <property name="text">
     <string>Load</string>
+   </property>
+  </action>
+  <action name="actionImageCopy">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+  </action>
+  <action name="actionImagePaste">
+   <property name="text">
+    <string>Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
    </property>
   </action>
  </widget>
