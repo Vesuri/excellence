@@ -5,6 +5,7 @@
 #include <QKeyEvent>
 #include <QtCore/qmath.h>
 #include "tool.h"
+#include "brush.h"
 #include "drawtool.h"
 #include "linetool.h"
 #include "pickcolortool.h"
@@ -51,6 +52,9 @@ void BufferView::setBuffer(Buffer *buffer)
         disconnect(this->buffer, SIGNAL(pathChanged(QString)));
         disconnect(this->buffer, SIGNAL(modified(QRect)));
         disconnect(this->buffer, SIGNAL(zoomed(QRect)));
+        disconnect(this->buffer, SIGNAL(toolChanged(Tool*)));
+        disconnect(this->buffer, SIGNAL(paintColorChanged(unsigned,QColor)));
+        disconnect(this->buffer, SIGNAL(eraseColorChanged(unsigned,QColor)));
     }
 
     this->buffer = buffer;
@@ -59,6 +63,9 @@ void BufferView::setBuffer(Buffer *buffer)
         connect(buffer, SIGNAL(pathChanged(QString)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
         connect(buffer, SIGNAL(zoomed(QRect)), this, SLOT(setZoom(QRect)));
+        connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateWindowTitle()));
+        connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
+        connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         updateWindowTitle();
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
         ui->graphicsView->resetTransform();
@@ -295,30 +302,66 @@ void BufferView::setZoom(const QRect &area)
     }
 }
 
+static QString paintModeName(Buffer::PaintMode mode)
+{
+    switch (mode) {
+    case Buffer::Normal:       return "Normal";
+    case Buffer::Replace:      return "Replace";
+    case Buffer::Smear:        return "Smear";
+    case Buffer::Smooth:       return "Smooth";
+    case Buffer::Range:        return "Range";
+    case Buffer::AverageSmear: return "Avg Smear";
+    case Buffer::Cycle:        return "Cycle";
+    case Buffer::Random:       return "Random";
+    case Buffer::Tint:         return "Tint";
+    case Buffer::Colorize:     return "Colorize";
+    case Buffer::Brighten:     return "Brighten";
+    case Buffer::Darken:       return "Darken";
+    case Buffer::Mix:          return "Mix";
+    case Buffer::Negative:     return "Negative";
+    case Buffer::Dither1:      return "Dither1";
+    case Buffer::Dither2:      return "Dither2";
+    case Buffer::Transparent:  return "Transparent";
+    }
+    return QString();
+}
+
 void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
 {
     QString path = buffer->path();
     int depth = 1;
-    for (int i = buffer->image().colorCount(); i > 2; i >>= 1) {
+    for (int i = buffer->image().colorCount(); i > 2; i >>= 1)
         depth++;
-    }
     int zoom = qRound(ui->graphicsView->transform().m11() * 100.0);
 
-    if (mouseCoordinates.x() >= 0 && mouseCoordinates.y() >= 0 && mouseCoordinates.x() < buffer->image().width() && mouseCoordinates.y() < buffer->image().height()) {
-        setWindowTitle(QString("%1 (%2x%3x%4) %5% %6,%7")
-                       .arg(path.isEmpty() ? "Untitled" : path)
-                       .arg(buffer->image().width())
-                       .arg(buffer->image().height())
-                       .arg(depth)
-                       .arg(zoom)
-                       .arg(mouseCoordinates.x())
-                       .arg(mouseCoordinates.y()));
-    } else {
-        setWindowTitle(QString("%1 (%2x%3x%4) %5%")
-                       .arg(path.isEmpty() ? "Untitled" : path)
-                       .arg(buffer->image().width())
-                       .arg(buffer->image().height())
-                       .arg(depth)
-                       .arg(zoom));
+    QString title = QString("%1 (%2x%3x%4) %5%")
+        .arg(path.isEmpty() ? "Untitled" : path)
+        .arg(buffer->image().width())
+        .arg(buffer->image().height())
+        .arg(depth)
+        .arg(zoom);
+
+    if (buffer->tool())
+        title += " | " + buffer->tool()->name();
+
+    title += " | " + paintModeName(buffer->paintMode());
+
+    title += QString(" | %1/%2").arg(buffer->paintColor()).arg(buffer->eraseColor());
+
+    if (Brush *brush = qobject_cast<Brush *>(buffer->pen()))
+        title += QString(" | %1x%2").arg(brush->image().width()).arg(brush->image().height());
+
+    bool coordsValid = mouseCoordinates.x() >= 0 && mouseCoordinates.y() >= 0
+                    && mouseCoordinates.x() < buffer->image().width()
+                    && mouseCoordinates.y() < buffer->image().height();
+    if (coordsValid) {
+        title += QString(" | %1,%2").arg(mouseCoordinates.x()).arg(mouseCoordinates.y());
+        if (buffer->tool()) {
+            QString s = buffer->tool()->status();
+            if (!s.isEmpty())
+                title += " " + s;
+        }
     }
+
+    setWindowTitle(title);
 }

@@ -22,6 +22,7 @@ public:
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
     void addButtonToGridLayout(QGridLayout *layout) override;
+    QString status() const override;
 
 protected:
     void registerTool() override;
@@ -39,6 +40,7 @@ private:
 
     // Single-line state
     QPoint startPoint_;
+    QPoint currentPoint_;
     UndoBuffer *undoBuffer_;
 
     // Connected / filled polygon state

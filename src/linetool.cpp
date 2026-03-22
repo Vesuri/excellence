@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <cmath>
 #include <QImage>
 #include <QRect>
 #include <QVector>
 #include <QGridLayout>
+#include <QtMath>
 #include "pen.h"
 #include "buffer.h"
 #include "undobuffer.h"
@@ -100,6 +102,7 @@ QRect LineTool::move(const QPoint &point)
         if (!undoBuffer_)
             return QRect();
 
+        currentPoint_ = point;
         undoBuffer_->apply(buffer_);
         delete undoBuffer_;
 
@@ -182,6 +185,18 @@ QRect LineTool::hover(const QPoint &point)
     if (mode_ == Line || !active_)
         return buffer_->pen()->rect(point);
     return lineBoundingRect(lastPoint_, point);
+}
+
+QString LineTool::status() const
+{
+    if (mode_ != Line || mouseButton_ == Qt::NoButton || !undoBuffer_)
+        return QString();
+    int dx = currentPoint_.x() - startPoint_.x();
+    int dy = currentPoint_.y() - startPoint_.y();
+    double angle = qRadiansToDegrees(std::atan2(static_cast<double>(dy), static_cast<double>(dx)));
+    if (angle < 0) angle += 360.0;
+    double length = std::sqrt(static_cast<double>(dx * dx + dy * dy));
+    return QString("%1° %2px").arg(angle, 0, 'f', 1).arg(qRound(length));
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

@@ -38,6 +38,18 @@ Tool::Type Tool::type() const
     return Modify;
 }
 
+QString Tool::name() const
+{
+    QString tip = button_->toolTip();
+    int bracket = tip.indexOf(" [");
+    return bracket >= 0 ? tip.left(bracket) : tip;
+}
+
+QString Tool::status() const
+{
+    return QString();
+}
+
 void Tool::click()
 {
     button_->click();

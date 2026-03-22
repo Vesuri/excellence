@@ -30,6 +30,8 @@ public:
     virtual QRect hover(const QPoint &point);
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
     virtual Type type() const;
+    virtual QString name() const;
+    virtual QString status() const;
 
 public slots:
     void toggleOptionsWidget();
