@@ -138,18 +138,16 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX, int pixel
             // clang-format on
 
             if (isRandom) {
-                if (ditherAmt == 0)
-                    return colorForIndex(dp.idx1);
-                // Narrow the dither zone at lower amounts
-                float scaled = (dp.blend - 0.5f) * (100.0f / ditherAmt) + 0.5f;
-                scaled = qBound(0.0f, scaled, 1.0f);
-                // Mix x and y with a proper bit-scrambling hash to avoid
-                // the linear correlation that causes visible stripes.
                 uint32_t h = uint32_t(pixelX) * 2246822519u ^ uint32_t(pixelY) * 3266489917u;
                 h = (h ^ (h >> 17)) * 0x45d9f3bu;
                 h ^= h >> 16;
-                float threshold = (h & 0xFFu) / 256.0f;
-                return colorForIndex(scaled > threshold ? dp.idx2 : dp.idx1);
+                // Add a scaled random offset to the blend value.
+                // At ditherAmt=0 the offset is zero (snap to nearest).
+                // At ditherAmt=100 the offset range is ±1.5, making even
+                // purely-nearest-color pixels mix ~33% of the second color.
+                float noise = (h & 0xFFu) / 256.0f - 0.5f;  // -0.5..+0.5
+                float adjusted = dp.blend + noise * 3.0f * (ditherAmt / 100.0f);
+                return colorForIndex(adjusted > 0.5f ? dp.idx2 : dp.idx1);
             } else {
                 // Ordered (Bayer 16x16) dithering — always full strength
                 float threshold = (bayer16[pixelY % 16][pixelX % 16] + 0.5f) / 256.0f;
