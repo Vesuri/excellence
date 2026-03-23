@@ -66,7 +66,7 @@ void GradientTool::refreshPanel()
     }
 
     if (colorsLabel_)
-        colorsLabel_->setText(QString("COLORS: %1").arg(range->colorCount()));
+        colorsLabel_->setText(QString("Colors: %1").arg(range->colorCount()));
 
     if (randomCheck_) {
         randomCheck_->blockSignals(true);
@@ -89,7 +89,7 @@ void GradientTool::onRangeChanged()
 {
     if (colorsLabel_)
         colorsLabel_->setText(
-            QString("COLORS: %1").arg(gradientRanges[activeGradientRange].colorCount()));
+            QString("Colors: %1").arg(gradientRanges[activeGradientRange].colorCount()));
 }
 
 void GradientTool::setBuffer(Buffer *buffer)
@@ -138,12 +138,12 @@ QWidget *GradientTool::createOptionsWidget()
 
     // COLORS label, SPREAD spinbox
     QHBoxLayout *infoRow = new QHBoxLayout;
-    colorsLabel_ = new QLabel(QString("COLORS: %1").arg(range->colorCount()), w);
+    colorsLabel_ = new QLabel(QString("Colors: %1").arg(range->colorCount()), w);
     infoRow->addWidget(colorsLabel_);
 
     infoRow->addStretch();
 
-    infoRow->addWidget(new QLabel("SPREAD:", w));
+    infoRow->addWidget(new QLabel("Spread:", w));
     spreadSpin_ = new QSpinBox(w);
     spreadSpin_->setRange(0, 254);
     spreadSpin_->setValue(range->spread());
@@ -157,7 +157,7 @@ QWidget *GradientTool::createOptionsWidget()
 
     // Dither controls
     QHBoxLayout *ditherRow = new QHBoxLayout;
-    randomCheck_ = new QCheckBox("RANDOM", w);
+    randomCheck_ = new QCheckBox("Random", w);
     randomCheck_->setChecked(range->random());
     connect(randomCheck_, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setRandom(v);
@@ -165,7 +165,7 @@ QWidget *GradientTool::createOptionsWidget()
     });
     ditherRow->addWidget(randomCheck_);
 
-    hardEdgesCheck_ = new QCheckBox("HARD EDGES", w);
+    hardEdgesCheck_ = new QCheckBox("Hard Edges", w);
     hardEdgesCheck_->setChecked(range->hardEdges());
     connect(hardEdgesCheck_, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setHardEdges(v);
@@ -174,7 +174,7 @@ QWidget *GradientTool::createOptionsWidget()
     ditherRow->addWidget(hardEdgesCheck_);
 
     ditherRow->addStretch();
-    ditherRow->addWidget(new QLabel("DITHER:", w));
+    ditherRow->addWidget(new QLabel("Dither:", w));
 
     ditherSlider_ = new QSlider(Qt::Horizontal, w);
     ditherSlider_->setRange(0, 100);
