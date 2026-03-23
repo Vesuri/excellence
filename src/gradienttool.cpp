@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QSlider>
 #include <QSpinBox>
 #include <QToolButton>
 #include <QVBoxLayout>
@@ -66,6 +67,22 @@ void GradientTool::refreshPanel()
 
     if (colorsLabel_)
         colorsLabel_->setText(QString("COLORS: %1").arg(range->colorCount()));
+
+    if (randomCheck_) {
+        randomCheck_->blockSignals(true);
+        randomCheck_->setChecked(range->random());
+        randomCheck_->blockSignals(false);
+    }
+    if (hardEdgesCheck_) {
+        hardEdgesCheck_->blockSignals(true);
+        hardEdgesCheck_->setChecked(range->hardEdges());
+        hardEdgesCheck_->blockSignals(false);
+    }
+    if (ditherSlider_) {
+        ditherSlider_->blockSignals(true);
+        ditherSlider_->setValue(range->ditherAmount());
+        ditherSlider_->blockSignals(false);
+    }
 }
 
 void GradientTool::onRangeChanged()
@@ -142,6 +159,35 @@ QWidget *GradientTool::createOptionsWidget()
     });
     infoRow->addWidget(spreadSpin_);
     vbox->addLayout(infoRow);
+
+    // Dither controls
+    QHBoxLayout *ditherRow = new QHBoxLayout;
+    randomCheck_ = new QCheckBox("RANDOM", w);
+    randomCheck_->setChecked(range->random());
+    connect(randomCheck_, &QCheckBox::toggled, [](bool v) {
+        gradientRanges[activeGradientRange].setRandom(v);
+    });
+    ditherRow->addWidget(randomCheck_);
+
+    hardEdgesCheck_ = new QCheckBox("HARD EDGES", w);
+    hardEdgesCheck_->setChecked(range->hardEdges());
+    connect(hardEdgesCheck_, &QCheckBox::toggled, [](bool v) {
+        gradientRanges[activeGradientRange].setHardEdges(v);
+    });
+    ditherRow->addWidget(hardEdgesCheck_);
+
+    ditherRow->addStretch();
+    ditherRow->addWidget(new QLabel("DITHER:", w));
+
+    ditherSlider_ = new QSlider(Qt::Horizontal, w);
+    ditherSlider_->setRange(0, 100);
+    ditherSlider_->setValue(range->ditherAmount());
+    ditherSlider_->setFixedWidth(80);
+    connect(ditherSlider_, &QSlider::valueChanged, [](int v) {
+        gradientRanges[activeGradientRange].setDitherAmount(v);
+    });
+    ditherRow->addWidget(ditherSlider_);
+    vbox->addLayout(ditherRow);
 
     // Operation buttons
     QHBoxLayout *btnRow = new QHBoxLayout;

@@ -53,23 +53,37 @@ void GradientRange::clear()
 
 void GradientRange::undo()
 {
-    QVector<GradientMarker> current = markers_;
-    markers_ = undoSnapshot_;
+    Snapshot current = currentSnapshot();
+    applySnapshot(undoSnapshot_);
     undoSnapshot_ = current;
 }
 
 void GradientRange::setRestorePoint()
 {
-    restorePoint_ = markers_;
+    restorePoint_ = currentSnapshot();
 }
 
 void GradientRange::restore()
 {
     takeUndoSnapshot();
-    markers_ = restorePoint_;
+    applySnapshot(restorePoint_);
 }
 
 void GradientRange::takeUndoSnapshot()
 {
-    undoSnapshot_ = markers_;
+    undoSnapshot_ = currentSnapshot();
+}
+
+GradientRange::Snapshot GradientRange::currentSnapshot() const
+{
+    return { markers_, spread_, random_, hardEdges_, ditherAmount_ };
+}
+
+void GradientRange::applySnapshot(const Snapshot &s)
+{
+    markers_      = s.markers;
+    spread_       = s.spread;
+    random_       = s.random;
+    hardEdges_    = s.hardEdges;
+    ditherAmount_ = s.ditherAmount;
 }

@@ -1,8 +1,10 @@
 #ifndef GRADIENTTOOL_H
 #define GRADIENTTOOL_H
 
+#include <QCheckBox>
 #include <QLabel>
 #include <QPushButton>
+#include <QSlider>
 #include <QSpinBox>
 #include "tool.h"
 #include "gradientmarkerbox.h"
@@ -37,6 +39,9 @@ private:
     GradientMarkerBox *markerBox_ = nullptr;
     QLabel *colorsLabel_ = nullptr;
     QSpinBox *spreadSpin_ = nullptr;
+    QCheckBox *randomCheck_ = nullptr;
+    QCheckBox *hardEdgesCheck_ = nullptr;
+    QSlider *ditherSlider_ = nullptr;
     QList<QPushButton *> rangeButtons_;
 };
 

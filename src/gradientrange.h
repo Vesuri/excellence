@@ -21,6 +21,13 @@ public:
     void setSpread(int spread) { spread_ = qBound(0, spread, 254); }
     int colorCount() const;
 
+    bool random() const { return random_; }
+    void setRandom(bool v) { random_ = v; }
+    bool hardEdges() const { return hardEdges_; }
+    void setHardEdges(bool v) { hardEdges_ = v; }
+    int ditherAmount() const { return ditherAmount_; }
+    void setDitherAmount(int v) { ditherAmount_ = qBound(0, v, 100); }
+
     void flip();
     void clear();
     void undo();
@@ -28,12 +35,24 @@ public:
     void setRestorePoint();
 
 private:
+    struct Snapshot {
+        QVector<GradientMarker> markers;
+        int spread = 0;
+        bool random = false;
+        bool hardEdges = false;
+        int ditherAmount = 0;
+    };
     void takeUndoSnapshot();
+    Snapshot currentSnapshot() const;
+    void applySnapshot(const Snapshot &s);
 
     QVector<GradientMarker> markers_;
-    QVector<GradientMarker> undoSnapshot_;
-    QVector<GradientMarker> restorePoint_;
     int spread_ = 0;
+    bool random_ = false;
+    bool hardEdges_ = false;
+    int ditherAmount_ = 0;
+    Snapshot undoSnapshot_;
+    Snapshot restorePoint_;
 };
 
 static const int kGradientRangeCount = 8;
