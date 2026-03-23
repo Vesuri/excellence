@@ -421,6 +421,15 @@ void Buffer::move(const QPoint &point)
     if (tool_->mouseButton() == Qt::NoButton) {
         QRect rect = tool_->hover(p);
         if (!rect.isNull()) {
+            // Expand save rect to cover all mirror positions
+            if (mirrorX_ || mirrorY_) {
+                int dx = 2 * (mirrorCenterX_ - p.x());
+                int dy = 2 * (mirrorCenterY_ - p.y());
+                if (mirrorX_)                  rect = rect.united(rect.translated(dx, 0));
+                if (mirrorY_)                  rect = rect.united(rect.translated(0, dy));
+                if (mirrorX_ && mirrorY_)      rect = rect.united(rect.translated(dx, dy));
+            }
+            rect = rect.intersected(image_.rect());
             moveUndoBuffer = new UndoBuffer(rect.topLeft(), image().copy(rect));
         }
     }
