@@ -49,24 +49,32 @@ QColor GradientMarkerBox::colorForIndex(int colorIndex) const
     return QColor(buffer_->image().color(colorIndex));
 }
 
-QColor GradientMarkerBox::nearestPaletteColor(const QColor &ideal) const
+GradientMarkerBox::DitherPair GradientMarkerBox::ditherPair(const QColor &ideal) const
 {
-    if (!buffer_ || buffer_->image().colorCount() == 0)
-        return ideal;
-    const QVector<QRgb> table = buffer_->image().colorTable();
-    int bestIdx = 0;
-    int bestDist = INT_MAX;
+    if (!buffer_ || buffer_->image().colorCount() < 2)
+        return {0, 0, 0.0f};
+
+    const QVector<QRgb> &table = buffer_->image().colorTable();
+    int idx1 = 0, idx2 = 0;
+    int dist1 = INT_MAX, dist2 = INT_MAX;
+
     for (int i = 0; i < table.size(); i++) {
         int dr = ideal.red()   - qRed(table[i]);
         int dg = ideal.green() - qGreen(table[i]);
         int db = ideal.blue()  - qBlue(table[i]);
         int dist = dr*dr + dg*dg + db*db;
-        if (dist < bestDist) {
-            bestDist = dist;
-            bestIdx = i;
+        if (dist < dist1) {
+            idx2 = idx1; dist2 = dist1;
+            idx1 = i;    dist1 = dist;
+        } else if (dist < dist2) {
+            idx2 = i; dist2 = dist;
         }
     }
-    return QColor(table[bestIdx]);
+
+    // blend: 0 = all idx1, 1 = all idx2
+    float total = float(dist1 + dist2);
+    float blend = total > 0.0f ? float(dist1) / total : 0.0f;
+    return {idx1, idx2, blend};
 }
 
 QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
@@ -76,8 +84,8 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
     if (markers.isEmpty()) return Qt::transparent;
 
     const bool hardEdges = range_->hardEdges();
-    const bool random    = range_->random();
-    const float dither   = range_->ditherAmount() / 100.0f;
+    const bool isRandom  = range_->random();
+    const int  ditherAmt = range_->ditherAmount();
 
     if (slotPos <= markers.first().slot)
         return colorForIndex(markers.first().colorIndex);
@@ -91,23 +99,6 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
 
             float t = (slotPos - markers[i].slot) / float(markers[i + 1].slot - markers[i].slot);
 
-            if (dither > 0.0f) {
-                // Scale t so lower dither amounts only affect near-boundary pixels
-                float dt = (t - 0.5f) / dither + 0.5f;
-                dt = qBound(0.0f, dt, 1.0f);
-
-                float threshold;
-                if (random) {
-                    // Pseudo-random pattern based on pixel position
-                    threshold = ((pixelX * 1103515245 + 12345) & 0xFF) / 255.0f;
-                } else {
-                    // Ordered (Bayer) dither — default when RANDOM is off
-                    static const int pattern[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };
-                    threshold = (pattern[pixelX % 8] + 0.5f) / 8.0f;
-                }
-                return colorForIndex(dt >= threshold ? markers[i + 1].colorIndex : markers[i].colorIndex);
-            }
-
             QColor c1 = colorForIndex(markers[i].colorIndex);
             QColor c2 = colorForIndex(markers[i + 1].colorIndex);
             QColor ideal(
@@ -115,7 +106,23 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
                 qRound(c1.green() + t * (c2.green() - c1.green())),
                 qRound(c1.blue()  + t * (c2.blue()  - c1.blue()))
             );
-            return nearestPaletteColor(ideal);
+
+            DitherPair dp = ditherPair(ideal);
+
+            if (isRandom) {
+                if (ditherAmt == 0)
+                    return colorForIndex(dp.idx1);
+                // Narrow the dither zone at lower amounts
+                float scaled = (dp.blend - 0.5f) * (100.0f / ditherAmt) + 0.5f;
+                scaled = qBound(0.0f, scaled, 1.0f);
+                float threshold = ((pixelX * 1103515245 + 12345) & 0xFF) / 255.0f;
+                return colorForIndex(scaled > threshold ? dp.idx2 : dp.idx1);
+            } else {
+                // Ordered (Bayer) dithering — always full strength
+                static const int pattern[8] = {0, 4, 2, 6, 1, 5, 3, 7};
+                float threshold = (pattern[pixelX % 8] + 0.5f) / 8.0f;
+                return colorForIndex(dp.blend > threshold ? dp.idx2 : dp.idx1);
+            }
         }
     }
     return colorForIndex(markers.last().colorIndex);

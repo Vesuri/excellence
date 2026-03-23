@@ -81,6 +81,7 @@ void GradientTool::refreshPanel()
     if (ditherSlider_) {
         ditherSlider_->blockSignals(true);
         ditherSlider_->setValue(range->ditherAmount());
+        ditherSlider_->setEnabled(range->random());
         ditherSlider_->blockSignals(false);
     }
 }
@@ -161,6 +162,7 @@ QWidget *GradientTool::createOptionsWidget()
     randomCheck_->setChecked(range->random());
     connect(randomCheck_, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setRandom(v);
+        if (ditherSlider_) ditherSlider_->setEnabled(v);
         if (markerBox_) markerBox_->update();
     });
     ditherRow->addWidget(randomCheck_);
@@ -180,6 +182,7 @@ QWidget *GradientTool::createOptionsWidget()
     ditherSlider_->setRange(0, 100);
     ditherSlider_->setValue(range->ditherAmount());
     ditherSlider_->setFixedWidth(80);
+    ditherSlider_->setEnabled(range->random());
     connect(ditherSlider_, &QSlider::valueChanged, [this](int v) {
         gradientRanges[activeGradientRange].setDitherAmount(v);
         if (markerBox_) markerBox_->update();
