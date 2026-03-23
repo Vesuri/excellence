@@ -124,5 +124,5 @@ QWidget *GridLockTool::createOptionsWidget()
 
 void GridLockTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 8);
+    layout->addWidget(button_, 1, 4);
 }
