@@ -82,7 +82,7 @@ private slots:
     void paletteRemapPage();
 
 private:
-    enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap };
+    enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };
 
     void updateWindowTitle(int paletteIndex = -1);
     QImage convertToIndexed(const QImage &source) const;

@@ -118,6 +118,25 @@ void MainWindow::runPaletteActionForPaintColor(unsigned paletteIndex)
         buffer->swapImageColors(buffer->paintColor(), paletteIndex);
         buffer->swapPaletteColors(buffer->paintColor(), paletteIndex);
         break;
+    case PaletteSpread: {
+        int from = static_cast<int>(buffer->paintColor());
+        int to   = static_cast<int>(paletteIndex);
+        if (from != to) {
+            if (from > to)
+                qSwap(from, to);
+            paletteUndoSnapshot_ = buffer->image().colorTable();
+            QRgb cFrom = buffer->image().color(from);
+            QRgb cTo   = buffer->image().color(to);
+            int steps  = to - from;
+            for (int i = 1; i < steps; i++) {
+                int r = qRed(cFrom)   + (qRed(cTo)   - qRed(cFrom))   * i / steps;
+                int g = qGreen(cFrom) + (qGreen(cTo) - qGreen(cFrom)) * i / steps;
+                int b = qBlue(cFrom)  + (qBlue(cTo)  - qBlue(cFrom))  * i / steps;
+                buffer->setColor(static_cast<unsigned>(from + i), QColor(r, g, b));
+            }
+        }
+        break;
+    }
     default:
         buffer->setPaintColor(paletteIndex);
         resetPaletteMode = false;
@@ -619,24 +638,8 @@ void MainWindow::paletteSave(const QString &path)
 
 void MainWindow::paletteSpread()
 {
-    int from = static_cast<int>(buffer->eraseColor());
-    int to   = static_cast<int>(buffer->paintColor());
-    if (from == to)
-        return;
-    if (from > to)
-        qSwap(from, to);
-
-    paletteUndoSnapshot_ = buffer->image().colorTable();
-
-    QRgb cFrom = buffer->image().color(from);
-    QRgb cTo   = buffer->image().color(to);
-    int steps  = to - from;
-    for (int i = 1; i < steps; i++) {
-        int r = qRed(cFrom)   + (qRed(cTo)   - qRed(cFrom))   * i / steps;
-        int g = qGreen(cFrom) + (qGreen(cTo) - qGreen(cFrom)) * i / steps;
-        int b = qBlue(cFrom)  + (qBlue(cTo)  - qBlue(cFrom))  * i / steps;
-        buffer->setColor(static_cast<unsigned>(from + i), QColor(r, g, b));
-    }
+    paletteMode = PaletteSpread;
+    updateWindowTitle();
 }
 
 void MainWindow::paletteDefault()
@@ -751,6 +754,9 @@ void MainWindow::updateWindowTitle(int paletteIndex)
         break;
     case PaletteSwapAndRemap:
         windowTitle = "Excellence - Swap palette colors and remap";
+        break;
+    case PaletteSpread:
+        windowTitle = "Excellence - Spread palette colors";
         break;
     default:
         windowTitle = "Excellence";
