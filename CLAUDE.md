@@ -29,7 +29,7 @@ There are no automated tests; testing is manual UI interaction.
 
 All tools inherit from `Tool` (two subtypes: `Modify` and `Zoom`). The active tool is set on `BufferView` and receives mouse press/move/release events.
 
-Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`, `PickColorTool`.
+Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`, `PickColorTool`, `GradientTool`, `GridLockTool`, `MirrorTool`.
 
 When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism: `hover()` returns the rect to save/restore, and `move()` with `mouseButton_ == Qt::NoButton` draws the preview.
 
@@ -41,11 +41,13 @@ When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may
 
 **Tool-managed undo buffer for drag preview** — When a tool needs to show a live preview while a mouse button is held down (the Buffer's built-in hover/move undo only runs with `mouseButton_ == Qt::NoButton`), the tool holds its own `UndoBuffer *undoBuffer_` member. Pattern: save area in `press()`, then in each `move()` call: `undoBuffer_->apply(buffer_)`, `delete undoBuffer_`, recompute the save rect, allocate a new `UndoBuffer`, draw the preview. On `release()`: `undoBuffer_->apply(buffer_)`, `delete undoBuffer_`, draw the permanent result. See `LineTool`, `CurveTool`.
 
+**Tool cancel** — `Tool` has a virtual `cancel()` (no-op default). Multi-step tools override it to restore the canvas from their `undoBuffer_` and reset state. Called on `Escape` key in `BufferView::keyPressEvent`. Tools that implement `cancel()`: `CurveTool`, `LineTool` (both Line and connected-line modes), `EllipseTool`, `BrushTool`.
+
 **UndoBuffer bounds safety** — `UndoBuffer::apply()` uses `pos_` with no bounds check. Any rect saved into an `UndoBuffer` (including `hover()` return values) must be clipped to `buffer_->image().rect()` before use, otherwise `setPixel` will be called with out-of-bounds coordinates.
 
 ### Palette System
 
-Images are indexed-color. The palette is part of `Buffer`. `PaletteButton` shows individual palette entries; `PaletteQuantizer` / `spatial_color_quant.h` handle color reduction. Palette operations (copy, swap, remap) live in `mainwindow.cpp` under the Palette menu.
+Images are indexed-color. The palette is part of `Buffer`. `PaletteButton` shows individual palette entries; `PaletteQuantizer` / `spatial_color_quant.h` handle color reduction. Palette operations (copy, swap, remap) live in `mainwindow.cpp` under the Palette menu. The default buffer is 320×256 with 32 colors (bit depth 5). `buffer.cpp` contains Brilliance-style default palettes for each bit depth (1–8); `defaultPaletteForColors(n)` selects the right one.
 
 ### File Format Plugins
 
@@ -63,9 +65,13 @@ The toolbar is a two-row `QGridLayout` (`ui->toolsLayout`). Each tool declares i
 
 Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on repeated activation — ConnectedLinesTool no longer exists as a separate tool. Brush(10) cycles between Rectangle and Freehand (carve) modes on repeated activation — CarveBrushTool no longer exists as a separate tool.
 
-**Row 1:** PenTipTool(9), DrawModeTool(10), Zoom(11) — Zoom is under Undo. PenTipTool and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, Grid Lock, etc.).
+**Row 1:** GradientTool(1), GridLockTool(4), MirrorTool(5), PenTipTool(9), DrawModeTool(10), Zoom(11) — Zoom is under Undo. GradientTool, GridLockTool, MirrorTool, PenTipTool, and DrawModeTool do not replace the active drawing tool when clicked. DrawModeTool is a checkable toggle: unchecked = Normal (Color) mode, checked = uses the selected mode. Right-click opens the options panel. MirrorTool is a toggle: activates X-mirror if none active; deactivates if any active. `/` keyboard shortcut. GridLockTool (`G` key) snaps draw points to a configurable grid. Remaining row-1 slots are reserved for unimplemented Brilliance tools (Animation, Anim-Brush, etc.).
 
 **PickColorTool** has no toolbar button. It is activated by clicking the foreground (top half) or background (bottom half) color rectangles in the palette area (`CurrentColorsButton`). Clicking foreground forces the next pick to set the foreground color; clicking background forces it to set the background color. After picking, the previous tool is automatically restored (one-shot mode). The `,` keyboard shortcut and Alt temporary-activation still work as persistent activation.
+
+### Mirror Draw
+
+`Buffer` stores `mirrorX_`, `mirrorY_` (bool) and `mirrorCenterX_/Y_` (int, defaults to image center). When either mirror flag is set, `PenTip::paint/erase()` and `Brush::paint/erase()` stamp at the reflected point(s) in addition to the primary point. Reflected X: `(2*cx - px, py)`; reflected Y: `(px, 2*cy - py)`; both: `(2*cx - px, 2*cy - py)`. Only the draw *point* is reflected — the brush/pen stamp is not flipped. `Buffer::move()` expands the hover save rect to cover all mirror positions before creating `moveUndoBuffer`, preventing preview artifacts.
 
 ### Brush Handle
 
@@ -80,6 +86,10 @@ Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on 
 ### Palette Quantization
 
 `MainWindow::convertToIndexed(QImage)` converts any RGB image to the current buffer palette using nearest-color (squared RGB distance) matching. Use this whenever an external image (clipboard, file) needs to be mapped to the indexed canvas. The higher-quality `PaletteQuantizer` / `spatial_color_quant.h` path is used when reducing a full image to a new palette (e.g. on file open).
+
+### Dirty Tracking
+
+`Buffer::dirty_` is set when the canvas has unsaved changes (`release()` after a non-null modified area, or `notifyModified()`). `clearDirty()` clears it (called in `MainWindow::saveFile()` after a successful write). `dirtyChanged(bool)` signal is emitted on transitions. `MainWindow` connects to this signal to update the window title (`*Excellence` when dirty) and shows a Save/Discard/Cancel dialog in `closeEvent()` if dirty.
 
 ### Undo
 
