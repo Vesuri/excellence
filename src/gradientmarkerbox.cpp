@@ -55,11 +55,15 @@ QColor GradientMarkerBox::colorForIndex(int colorIndex) const
     return QColor(buffer_->image().color(colorIndex));
 }
 
-QColor GradientMarkerBox::interpolatedColor(float slotPos) const
+QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
 {
     if (!range_) return Qt::transparent;
     const auto &markers = range_->markers();
     if (markers.isEmpty()) return Qt::transparent;
+
+    const bool hardEdges = range_->hardEdges();
+    const bool random    = range_->random();
+    const float dither   = range_->ditherAmount() / 100.0f;
 
     if (slotPos <= markers.first().slot)
         return colorForIndex(markers.first().colorIndex);
@@ -68,9 +72,22 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos) const
 
     for (int i = 0; i < markers.size() - 1; i++) {
         if (slotPos >= markers[i].slot && slotPos < markers[i + 1].slot) {
-            if (markers[i].abrupt)
+            if (markers[i].abrupt || hardEdges)
                 return colorForIndex(markers[i].colorIndex);
+
             float t = (slotPos - markers[i].slot) / float(markers[i + 1].slot - markers[i].slot);
+
+            if (random && dither > 0.0f) {
+                // Ordered dither: use a repeating 8-level threshold pattern
+                // so the preview is deterministic and visually clear.
+                static const int pattern[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };
+                float threshold = (pattern[pixelX % 8] + 0.5f) / 8.0f;
+                // Scale t by dither so at dither=0 we get smooth, at 1.0 fully dithered
+                float dt = (t - 0.5f) / dither + 0.5f;
+                dt = qBound(0.0f, dt, 1.0f);
+                return colorForIndex(dt >= threshold ? markers[i + 1].colorIndex : markers[i].colorIndex);
+            }
+
             QColor c1 = colorForIndex(markers[i].colorIndex);
             QColor c2 = colorForIndex(markers[i + 1].colorIndex);
             return QColor(
@@ -117,7 +134,7 @@ void GradientMarkerBox::paintEvent(QPaintEvent *)
         if (range_ && !range_->markers().isEmpty()) {
             for (int x = 0; x < W; x++) {
                 float slotPos = float(x) / W * (kSlotCount - 1);
-                p.fillRect(x, previewY, 1, kPreviewHeight, interpolatedColor(slotPos));
+                p.fillRect(x, previewY, 1, kPreviewHeight, interpolatedColor(slotPos, x));
             }
         } else {
             p.fillRect(0, previewY, W, kPreviewHeight, QColor(30, 30, 30));

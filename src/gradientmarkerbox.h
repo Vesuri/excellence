@@ -38,7 +38,7 @@ private:
     int slotAt(int x) const;
     int slotX(int slot) const;
     QColor colorForIndex(int colorIndex) const;
-    QColor interpolatedColor(float slotPos) const;
+    QColor interpolatedColor(float slotPos, int pixelX) const;
 
     GradientRange *range_ = nullptr;
     Buffer *buffer_ = nullptr;

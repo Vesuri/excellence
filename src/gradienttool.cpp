@@ -164,15 +164,17 @@ QWidget *GradientTool::createOptionsWidget()
     QHBoxLayout *ditherRow = new QHBoxLayout;
     randomCheck_ = new QCheckBox("RANDOM", w);
     randomCheck_->setChecked(range->random());
-    connect(randomCheck_, &QCheckBox::toggled, [](bool v) {
+    connect(randomCheck_, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setRandom(v);
+        if (markerBox_) markerBox_->update();
     });
     ditherRow->addWidget(randomCheck_);
 
     hardEdgesCheck_ = new QCheckBox("HARD EDGES", w);
     hardEdgesCheck_->setChecked(range->hardEdges());
-    connect(hardEdgesCheck_, &QCheckBox::toggled, [](bool v) {
+    connect(hardEdgesCheck_, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setHardEdges(v);
+        if (markerBox_) markerBox_->update();
     });
     ditherRow->addWidget(hardEdgesCheck_);
 
@@ -183,8 +185,9 @@ QWidget *GradientTool::createOptionsWidget()
     ditherSlider_->setRange(0, 100);
     ditherSlider_->setValue(range->ditherAmount());
     ditherSlider_->setFixedWidth(80);
-    connect(ditherSlider_, &QSlider::valueChanged, [](int v) {
+    connect(ditherSlider_, &QSlider::valueChanged, [this](int v) {
         gradientRanges[activeGradientRange].setDitherAmount(v);
+        if (markerBox_) markerBox_->update();
     });
     ditherRow->addWidget(ditherSlider_);
     vbox->addLayout(ditherRow);
