@@ -153,6 +153,8 @@ void MainWindow::initialize()
     toolPenTip->setPaintColor(1);
 
     newWindow();
+    activateWindow();
+    raise();
 
     for (int i = 0; i < tools.count(); i++) {
         tools.at(i)->addButtonToGridLayout(ui->toolsLayout);
