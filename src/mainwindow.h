@@ -83,6 +83,7 @@ private slots:
     void paletteRemapPage();
     void about();
     void onDirtyChanged(bool dirty);
+    void openMagnifiedView(int zoomLevel);
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };

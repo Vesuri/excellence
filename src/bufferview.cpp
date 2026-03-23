@@ -4,6 +4,7 @@
 #include <QPixmap>
 #include <QGraphicsSceneMouseEvent>
 #include <QKeyEvent>
+#include <QScrollBar>
 #include <QtCore/qmath.h>
 #include "tool.h"
 #include "brush.h"
@@ -26,8 +27,32 @@
 class CanvasScene : public QGraphicsScene
 {
 public:
-    explicit CanvasScene(QObject *parent = nullptr) : QGraphicsScene(parent) {}
+    explicit CanvasScene(QObject *parent = nullptr) : QGraphicsScene(parent), pixelGrid_(false), zoomLevel_(1) {}
     void setBuffer(Buffer *) {}
+    void setPixelGrid(bool enabled) { pixelGrid_ = enabled; update(); }
+    bool pixelGrid() const { return pixelGrid_; }
+    void setZoomLevel(int level) { zoomLevel_ = level; update(); }
+
+protected:
+    void drawForeground(QPainter *painter, const QRectF &rect) override
+    {
+        if (!pixelGrid_ || zoomLevel_ < 4) return;
+        painter->save();
+        painter->setPen(QPen(QColor(0, 0, 0, 80), 0));
+        int left = qFloor(rect.left());
+        int top  = qFloor(rect.top());
+        int right  = qCeil(rect.right());
+        int bottom = qCeil(rect.bottom());
+        for (int x = left + 1; x <= right; x++)
+            painter->drawLine(QLineF(x, rect.top(), x, rect.bottom()));
+        for (int y = top + 1; y <= bottom; y++)
+            painter->drawLine(QLineF(rect.left(), y, rect.right(), y));
+        painter->restore();
+    }
+
+private:
+    bool pixelGrid_;
+    int zoomLevel_;
 };
 
 BufferView::BufferView(QWidget *parent) :
@@ -38,7 +63,11 @@ BufferView::BufferView(QWidget *parent) :
     buffer(nullptr),
     lastMousePoint(),
     altPreviousTool_(nullptr),
-    cursorHidden_(false)
+    cursorHidden_(false),
+    zoomLevel_(1),
+    pixelGrid_(false),
+    aspectX_(1.0),
+    aspectY_(1.0)
 {
     ui->setupUi(this);
 
@@ -80,18 +109,20 @@ void BufferView::setBuffer(Buffer *buffer)
         connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         updateWindowTitle();
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
-        ui->graphicsView->resetTransform();
         ui->graphicsView->setSceneRect(scene->itemsBoundingRect());
 
         if (buffer->image().dotsPerMeterX() != buffer->image().dotsPerMeterY()) {
             qreal aspectRatio = buffer->image().dotsPerMeterX() / static_cast<qreal>(buffer->image().dotsPerMeterY());
-            qreal xAspect = aspectRatio > 1.0 ? 1.0 : (1.0 / aspectRatio);
-            qreal yAspect = aspectRatio > 1.0 ? aspectRatio : 1.0;
-            ui->graphicsView->scale(xAspect, yAspect);
-            setGeometry(geometry().x(), geometry().y(), qCeil(buffer->image().width() * xAspect), qCeil(buffer->image().height() * yAspect));
+            aspectX_ = aspectRatio > 1.0 ? 1.0 : (1.0 / aspectRatio);
+            aspectY_ = aspectRatio > 1.0 ? aspectRatio : 1.0;
+            setGeometry(geometry().x(), geometry().y(), qCeil(buffer->image().width() * aspectX_), qCeil(buffer->image().height() * aspectY_));
         } else {
+            aspectX_ = 1.0;
+            aspectY_ = 1.0;
             setGeometry(geometry().x(), geometry().y(), buffer->image().width(), buffer->image().height());
         }
+        zoomLevel_ = 1;
+        applyTransform();
     }
 }
 
@@ -152,10 +183,35 @@ void BufferView::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {
     case '+':
-        setZoom(QRect(lastMousePoint, QSize(2, 2)));
+    case '>':
+        setZoomLevel(zoomLevel_ + 1);
         break;
     case '-':
-        setZoom(QRect(lastMousePoint, QSize(-2, -2)));
+    case '<':
+        setZoomLevel(zoomLevel_ - 1);
+        break;
+    case Qt::Key_M:
+        emit magnifyRequested(event->modifiers() & Qt::ShiftModifier ? 8 : 4);
+        break;
+    case Qt::Key_P:
+        pixelGrid_ = !pixelGrid_;
+        scene->setPixelGrid(pixelGrid_);
+        break;
+    case Qt::Key_Left:
+        ui->graphicsView->horizontalScrollBar()->setValue(
+            ui->graphicsView->horizontalScrollBar()->value() - zoomLevel_);
+        break;
+    case Qt::Key_Right:
+        ui->graphicsView->horizontalScrollBar()->setValue(
+            ui->graphicsView->horizontalScrollBar()->value() + zoomLevel_);
+        break;
+    case Qt::Key_Up:
+        ui->graphicsView->verticalScrollBar()->setValue(
+            ui->graphicsView->verticalScrollBar()->value() - zoomLevel_);
+        break;
+    case Qt::Key_Down:
+        ui->graphicsView->verticalScrollBar()->setValue(
+            ui->graphicsView->verticalScrollBar()->value() + zoomLevel_);
         break;
     case Qt::Key_D:
         for (Tool *tool : tools) {
@@ -331,20 +387,22 @@ void BufferView::setPixmap(const QRect &area)
 
 void BufferView::setZoom(const QRect &area)
 {
-    if (!area.isNull()) {
-        qreal sx = area.width();
-        qreal sy = area.height();
+    if (!area.isNull())
+        setZoomLevel(area.width() > 0 ? zoomLevel_ + 1 : zoomLevel_ - 1);
+}
 
-        if (sx < 0) {
-            sx = 1.0 / -sx;
-        }
-        if (sy < 0) {
-            sy = 1.0 / -sy;
-        }
+void BufferView::setZoomLevel(int level)
+{
+    zoomLevel_ = qBound(1, level, 32);
+    applyTransform();
+}
 
-        ui->graphicsView->scale(sx, sy);
-        updateWindowTitle();
-    }
+void BufferView::applyTransform()
+{
+    ui->graphicsView->setTransform(
+        QTransform::fromScale(zoomLevel_ * aspectX_, zoomLevel_ * aspectY_));
+    scene->setZoomLevel(zoomLevel_);
+    updateWindowTitle();
 }
 
 static QString paintModeName(Buffer::PaintMode mode)

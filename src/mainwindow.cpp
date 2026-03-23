@@ -304,6 +304,18 @@ void MainWindow::newWindow()
     BufferView *bufferView = new BufferView();
     bufferView->installEventFilter(this);
     bufferView->setBuffer(buffer);
+    connect(bufferView, &BufferView::magnifyRequested, this, &MainWindow::openMagnifiedView);
+    bufferView->show();
+    bufferViews.append(bufferView);
+}
+
+void MainWindow::openMagnifiedView(int zoomLevel)
+{
+    BufferView *bufferView = new BufferView();
+    bufferView->installEventFilter(this);
+    bufferView->setBuffer(buffer);
+    bufferView->setZoomLevel(zoomLevel);
+    connect(bufferView, &BufferView::magnifyRequested, this, &MainWindow::openMagnifiedView);
     bufferView->show();
     bufferViews.append(bufferView);
 }

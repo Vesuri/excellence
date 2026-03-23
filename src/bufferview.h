@@ -22,7 +22,11 @@ public:
     ~BufferView();
 
     void setBuffer(Buffer *buffer);
+    void setZoomLevel(int level);
     bool eventFilter(QObject *watched, QEvent *event) override;
+
+signals:
+    void magnifyRequested(int zoomLevel);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -34,6 +38,8 @@ private slots:
     void updateWindowTitle(const QPoint &mouseCoordinates = QPoint(-1, -1));
 
 private:
+    void applyTransform();
+
     Ui::BufferView *ui;
     CanvasScene *scene;
     QGraphicsPixmapItem *pixmapItem;
@@ -41,6 +47,10 @@ private:
     QPoint lastMousePoint;
     Tool *altPreviousTool_;
     bool cursorHidden_;
+    int zoomLevel_;
+    bool pixelGrid_;
+    qreal aspectX_;
+    qreal aspectY_;
 };
 
 #endif // BUFFERVIEW_H
