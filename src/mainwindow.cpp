@@ -162,7 +162,9 @@ void MainWindow::initialize()
     connect(ui->currentColorsButton, SIGNAL(foregroundClicked()), this, SLOT(pickForegroundColor()));
     connect(ui->currentColorsButton, SIGNAL(backgroundClicked()), this, SLOT(pickBackgroundColor()));
 
-    buffer->setTool(tools.at(0));
+    for (Tool *tool : tools) {
+        if (qobject_cast<DrawTool *>(tool)) { buffer->setTool(tool); break; }
+    }
 }
 
 void MainWindow::setBuffer(Buffer *newBuffer)
@@ -175,7 +177,9 @@ void MainWindow::setBuffer(Buffer *newBuffer)
 
     buffer->setPen(penTip);
     buffer->setToolPen(toolPenTip);
-    buffer->setTool(tools.at(0));
+    for (Tool *tool : tools) {
+        if (qobject_cast<DrawTool *>(tool)) { buffer->setTool(tool); break; }
+    }
 
     foreach (BufferView *bufferView, bufferViews) {
         bufferView->setBuffer(buffer);
