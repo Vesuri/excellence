@@ -71,9 +71,16 @@ GradientMarkerBox::DitherPair GradientMarkerBox::ditherPair(const QColor &ideal)
         }
     }
 
-    // blend: 0 = all idx1, 1 = all idx2
-    float total = float(dist1 + dist2);
-    float blend = total > 0.0f ? float(dist1) / total : 0.0f;
+    // Project ideal onto the c1→c2 axis to get the true linear blend needed.
+    // blend = 0 means use all idx1, blend = 1 means use all idx2.
+    int dr = qRed(table[idx2])   - qRed(table[idx1]);
+    int dg = qGreen(table[idx2]) - qGreen(table[idx1]);
+    int db = qBlue(table[idx2])  - qBlue(table[idx1]);
+    int er = ideal.red()   - qRed(table[idx1]);
+    int eg = ideal.green() - qGreen(table[idx1]);
+    int eb = ideal.blue()  - qBlue(table[idx1]);
+    float denom = float(dr*dr + dg*dg + db*db);
+    float blend = denom > 0.0f ? qBound(0.0f, float(er*dr + eg*dg + eb*db) / denom, 1.0f) : 0.0f;
     return {idx1, idx2, blend};
 }
 
