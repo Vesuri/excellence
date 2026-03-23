@@ -1,7 +1,5 @@
-#include <cmath>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
-#include <QPen>
 #include <QPixmap>
 #include <QGraphicsSceneMouseEvent>
 #include <QKeyEvent>
@@ -25,33 +23,8 @@
 class CanvasScene : public QGraphicsScene
 {
 public:
-    explicit CanvasScene(QObject *parent = nullptr) : QGraphicsScene(parent), buffer_(nullptr) {}
-    void setBuffer(Buffer *b) { buffer_ = b; }
-
-protected:
-    void drawForeground(QPainter *painter, const QRectF &rect) override
-    {
-        if (!buffer_ || !buffer_->gridEnabled())
-            return;
-        int gw = buffer_->gridW(), gh = buffer_->gridH();
-        int ox = buffer_->gridOffsetX(), oy = buffer_->gridOffsetY();
-
-        painter->save();
-        painter->setPen(QPen(QColor(128, 128, 128, 160), 0));
-
-        int x0 = ox + static_cast<int>(std::floor((rect.left() - ox) / gw)) * gw;
-        for (int x = x0; x <= rect.right(); x += gw)
-            painter->drawLine(QLineF(x, rect.top(), x, rect.bottom()));
-
-        int y0 = oy + static_cast<int>(std::floor((rect.top() - oy) / gh)) * gh;
-        for (int y = y0; y <= rect.bottom(); y += gh)
-            painter->drawLine(QLineF(rect.left(), y, rect.right(), y));
-
-        painter->restore();
-    }
-
-private:
-    Buffer *buffer_;
+    explicit CanvasScene(QObject *parent = nullptr) : QGraphicsScene(parent) {}
+    void setBuffer(Buffer *) {}
 };
 
 BufferView::BufferView(QWidget *parent) :
@@ -90,7 +63,6 @@ void BufferView::setBuffer(Buffer *buffer)
         disconnect(this->buffer, SIGNAL(toolChanged(Tool*)));
         disconnect(this->buffer, SIGNAL(paintColorChanged(unsigned,QColor)));
         disconnect(this->buffer, SIGNAL(eraseColorChanged(unsigned,QColor)));
-        disconnect(this->buffer, SIGNAL(gridChanged()));
     }
 
     this->buffer = buffer;
@@ -102,8 +74,6 @@ void BufferView::setBuffer(Buffer *buffer)
         connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
-        connect(buffer, SIGNAL(gridChanged()), scene, SLOT(update()));
-        scene->setBuffer(buffer);
         updateWindowTitle();
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
         ui->graphicsView->resetTransform();
