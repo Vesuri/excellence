@@ -15,7 +15,6 @@ public:
 
     void setRange(GradientRange *range);
     void setBuffer(Buffer *buffer);
-    void setShowPreview(bool show);
 
     QSize sizeHint() const override;
 
@@ -43,7 +42,6 @@ private:
 
     GradientRange *range_ = nullptr;
     Buffer *buffer_ = nullptr;
-    bool showPreview_ = true;
 };
 
 #endif // GRADIENTMARKERBOX_H

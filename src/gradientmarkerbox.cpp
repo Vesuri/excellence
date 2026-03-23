@@ -26,12 +26,6 @@ void GradientMarkerBox::setBuffer(Buffer *buffer)
     update();
 }
 
-void GradientMarkerBox::setShowPreview(bool show)
-{
-    showPreview_ = show;
-    setFixedHeight(kMarkerRowHeight + (show ? 2 + kPreviewHeight : 0));
-    update();
-}
 
 QSize GradientMarkerBox::sizeHint() const
 {
@@ -156,16 +150,14 @@ void GradientMarkerBox::paintEvent(QPaintEvent *)
     }
 
     // Preview bar
-    if (showPreview_) {
-        int previewY = kMarkerRowHeight + 2;
-        if (range_ && !range_->markers().isEmpty()) {
-            for (int x = 0; x < W; x++) {
-                float slotPos = float(x) / W * (kSlotCount - 1);
-                p.fillRect(x, previewY, 1, kPreviewHeight, interpolatedColor(slotPos, x));
-            }
-        } else {
-            p.fillRect(0, previewY, W, kPreviewHeight, QColor(30, 30, 30));
+    int previewY = kMarkerRowHeight + 2;
+    if (range_ && !range_->markers().isEmpty()) {
+        for (int x = 0; x < W; x++) {
+            float slotPos = float(x) / W * (kSlotCount - 1);
+            p.fillRect(x, previewY, 1, kPreviewHeight, interpolatedColor(slotPos, x));
         }
+    } else {
+        p.fillRect(0, previewY, W, kPreviewHeight, QColor(30, 30, 30));
     }
 }
 

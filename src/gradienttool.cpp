@@ -136,13 +136,8 @@ QWidget *GradientTool::createOptionsWidget()
     connect(markerBox_, &GradientMarkerBox::rangeChanged, this, &GradientTool::onRangeChanged);
     vbox->addWidget(markerBox_);
 
-    // SHOW checkbox, COLORS label, SPREAD spinbox
+    // COLORS label, SPREAD spinbox
     QHBoxLayout *infoRow = new QHBoxLayout;
-    QCheckBox *showCheck = new QCheckBox("SHOW", w);
-    showCheck->setChecked(true);
-    connect(showCheck, &QCheckBox::toggled, markerBox_, &GradientMarkerBox::setShowPreview);
-    infoRow->addWidget(showCheck);
-
     colorsLabel_ = new QLabel(QString("COLORS: %1").arg(range->colorCount()), w);
     infoRow->addWidget(colorsLabel_);
 
