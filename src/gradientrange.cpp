@@ -6,8 +6,8 @@ int activeGradientRange = 0;
 
 int GradientRange::colorCount() const
 {
-    int n = markers_.size();
-    if (n == 0) return 0;
+    if (markers_.size() < 2) return markers_.size();
+    int n = markers_.last().slot - markers_.first().slot + 1;
     return n + (n - 1) * spread_;
 }
 

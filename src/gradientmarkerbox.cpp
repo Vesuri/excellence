@@ -77,14 +77,20 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
 
             float t = (slotPos - markers[i].slot) / float(markers[i + 1].slot - markers[i].slot);
 
-            if (random && dither > 0.0f) {
-                // Ordered dither: use a repeating 8-level threshold pattern
-                // so the preview is deterministic and visually clear.
-                static const int pattern[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };
-                float threshold = (pattern[pixelX % 8] + 0.5f) / 8.0f;
-                // Scale t by dither so at dither=0 we get smooth, at 1.0 fully dithered
+            if (dither > 0.0f) {
+                // Scale t so lower dither amounts only affect near-boundary pixels
                 float dt = (t - 0.5f) / dither + 0.5f;
                 dt = qBound(0.0f, dt, 1.0f);
+
+                float threshold;
+                if (random) {
+                    // Pseudo-random pattern based on pixel position
+                    threshold = ((pixelX * 1103515245 + 12345) & 0xFF) / 255.0f;
+                } else {
+                    // Ordered (Bayer) dither — default when RANDOM is off
+                    static const int pattern[8] = { 0, 4, 2, 6, 1, 5, 3, 7 };
+                    threshold = (pattern[pixelX % 8] + 0.5f) / 8.0f;
+                }
                 return colorForIndex(dt >= threshold ? markers[i + 1].colorIndex : markers[i].colorIndex);
             }
 
