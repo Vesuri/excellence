@@ -28,6 +28,7 @@ public:
     virtual QRect move(const QPoint &point) = 0;
     virtual QRect release(const QPoint &point) = 0;
     virtual QRect hover(const QPoint &point);
+    virtual void cancel() {}
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
     virtual Type type() const;
     virtual QString name() const;

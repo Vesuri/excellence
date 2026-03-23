@@ -27,6 +27,7 @@ public:
 
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void initialize();
@@ -80,6 +81,8 @@ private slots:
     void paletteRestore();
     void paletteUndo();
     void paletteRemapPage();
+    void about();
+    void onDirtyChanged(bool dirty);
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };

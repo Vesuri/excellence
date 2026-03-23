@@ -1,3 +1,4 @@
+#include <QApplication>
 #include <QGraphicsPixmapItem>
 #include <QGraphicsScene>
 #include <QPixmap>
@@ -36,7 +37,8 @@ BufferView::BufferView(QWidget *parent) :
     pixmapItem(new QGraphicsPixmapItem),
     buffer(nullptr),
     lastMousePoint(),
-    altPreviousTool_(nullptr)
+    altPreviousTool_(nullptr),
+    cursorHidden_(false)
 {
     ui->setupUi(this);
 
@@ -244,6 +246,19 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_Slash:
         MirrorTool::instance.toggle();
+        break;
+    case Qt::Key_Escape:
+        if (buffer && buffer->tool())
+            buffer->tool()->cancel();
+        break;
+    case Qt::Key_Delete:
+        if (cursorHidden_) {
+            QApplication::restoreOverrideCursor();
+            cursorHidden_ = false;
+        } else {
+            QApplication::setOverrideCursor(Qt::BlankCursor);
+            cursorHidden_ = true;
+        }
         break;
     case Qt::Key_K:
         if (event->modifiers() & Qt::ShiftModifier)

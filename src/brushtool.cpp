@@ -146,6 +146,16 @@ BrushTool::BrushTool(QObject *parent) : Tool(parent),
         wellButtons_[i] = nullptr;
 }
 
+void BrushTool::cancel()
+{
+    if (!undoBuffer_) return;
+    undoBuffer_->apply(buffer_);
+    buffer_->notifyModified(buffer_->image().rect());
+    delete undoBuffer_;
+    undoBuffer_ = nullptr;
+    polygon_.clear();
+}
+
 void BrushTool::setBuffer(Buffer *buffer)
 {
     if (buffer_ != nullptr) {

@@ -51,6 +51,8 @@ public:
     QPoint smearDirection() const;
     void setDrawModeAmount(int amount);
     int drawModeAmount() const;
+    bool isDirty() const;
+    void clearDirty();
     void setGridEnabled(bool enabled);
     bool gridEnabled() const;
     void setGridSpacing(int w, int h);
@@ -93,6 +95,7 @@ signals:
     void eraseColorChanged(unsigned colorIndex, QColor color);
     void gridChanged();
     void mirrorChanged();
+    void dirtyChanged(bool dirty);
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 32);
@@ -118,6 +121,7 @@ private:
     int gridOffsetX_, gridOffsetY_;
     bool mirrorX_, mirrorY_;
     int mirrorCenterX_, mirrorCenterY_;
+    bool dirty_;
 };
 
 #endif // BUFFER_H

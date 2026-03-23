@@ -40,6 +40,7 @@ private:
     Buffer *buffer;
     QPoint lastMousePoint;
     Tool *altPreviousTool_;
+    bool cursorHidden_;
 };
 
 #endif // BUFFERVIEW_H

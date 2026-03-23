@@ -21,6 +21,16 @@ void CurveTool::resetState()
     undoBuffer_ = nullptr;
 }
 
+void CurveTool::cancel()
+{
+    if (phase_ == 0) return;
+    if (undoBuffer_) {
+        undoBuffer_->apply(buffer_);
+        buffer_->notifyModified(buffer_->image().rect());
+    }
+    resetState();
+}
+
 void CurveTool::setBuffer(Buffer *buffer)
 {
     if (buffer_ != nullptr) {

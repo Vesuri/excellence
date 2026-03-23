@@ -43,6 +43,23 @@ void LineTool::resetConnectedState()
     dragUndoBuffer_ = nullptr;
 }
 
+void LineTool::cancel()
+{
+    if (mode_ == Line) {
+        if (!undoBuffer_) return;
+        undoBuffer_->apply(buffer_);
+        buffer_->notifyModified(buffer_->image().rect());
+        delete undoBuffer_;
+        undoBuffer_ = nullptr;
+    } else {
+        if (dragUndoBuffer_) {
+            dragUndoBuffer_->apply(buffer_);
+            buffer_->notifyModified(buffer_->image().rect());
+        }
+        resetConnectedState();
+    }
+}
+
 // ── Single line ────────────────────────────────────────────────────────────
 
 QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)

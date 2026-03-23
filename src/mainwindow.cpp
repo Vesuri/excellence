@@ -1,4 +1,5 @@
 #include "palettebutton.h"
+#include <QCloseEvent>
 #include <QInputDialog>
 #include <QSizePolicy>
 #include <QTimer>
@@ -38,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(loadPaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(loadPalette(QString)));
     savePaletteDialog->setAcceptMode(QFileDialog::AcceptSave);
     connect(savePaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(paletteSave(QString)));
-    connect(ui->actionFileQuit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(ui->actionFileQuit, &QAction::triggered, this, &QWidget::close);
     connect(ui->actionFileNew, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
@@ -87,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushRestore, SIGNAL(triggered()), this, SLOT(brushRestore()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
+    connect(ui->actionHelpAbout, &QAction::triggered, this, &MainWindow::about);
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
 
     setAttribute(Qt::WA_Hover);
@@ -240,6 +242,7 @@ void MainWindow::setBuffer(Buffer *newBuffer)
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), penTip, SLOT(setEraseColor(unsigned)));
     connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setPaintColor(unsigned, QColor)));
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setEraseColor(unsigned, QColor)));
+    connect(buffer, &Buffer::dirtyChanged, this, &MainWindow::onDirtyChanged);
 
     delete oldBuffer;
 }
@@ -281,6 +284,8 @@ void MainWindow::saveFile(const QString &savePath)
             QMessageBox msgBox;
             msgBox.setText(imageWriter.errorString());
             msgBox.exec();
+        } else {
+            buffer->clearDirty();
         }
     }
 }
@@ -768,7 +773,7 @@ void MainWindow::updateWindowTitle(int paletteIndex)
         windowTitle = "Excellence - Spread palette colors";
         break;
     default:
-        windowTitle = "Excellence";
+        windowTitle = buffer && buffer->isDirty() ? "*Excellence" : "Excellence";
         break;
     }
 
@@ -777,4 +782,40 @@ void MainWindow::updateWindowTitle(int paletteIndex)
     }
 
     setWindowTitle(windowTitle);
+}
+
+void MainWindow::onDirtyChanged(bool)
+{
+    updateWindowTitle();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (buffer && buffer->isDirty()) {
+        QMessageBox::StandardButton result = QMessageBox::question(
+            this, tr("Unsaved changes"),
+            tr("Save changes before quitting?"),
+            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
+            QMessageBox::Save);
+        if (result == QMessageBox::Save) {
+            saveFile();
+            if (buffer->isDirty()) {
+                event->ignore();
+                return;
+            }
+        } else if (result == QMessageBox::Cancel) {
+            event->ignore();
+            return;
+        }
+    }
+    event->accept();
+}
+
+void MainWindow::about()
+{
+    QMessageBox::about(this, tr("About Excellence"),
+        tr("<b>Excellence</b><br>"
+           "Version 1.0<br><br>"
+           "A pixel art editor inspired by Brilliance on the Commodore Amiga.<br><br>"
+           "Copyright &copy; 2024 Vesa Halttunen"));
 }

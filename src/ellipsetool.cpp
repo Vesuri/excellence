@@ -33,6 +33,16 @@ void EllipseTool::resetState()
     undoBuffer_ = nullptr;
 }
 
+void EllipseTool::cancel()
+{
+    if (phase_ == 0) return;
+    if (undoBuffer_) {
+        undoBuffer_->apply(buffer_);
+        buffer_->notifyModified(buffer_->image().rect());
+    }
+    resetState();
+}
+
 void EllipseTool::setDrawMode(DrawMode mode)
 {
     drawMode_ = mode;

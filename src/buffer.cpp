@@ -176,7 +176,8 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     gridW_(8), gridH_(8),
     gridOffsetX_(0), gridOffsetY_(0),
     mirrorX_(false), mirrorY_(false),
-    mirrorCenterX_(0), mirrorCenterY_(0)
+    mirrorCenterX_(0), mirrorCenterY_(0),
+    dirty_(false)
 {
     initialize(width, height, colors);
     mirrorCenterX_ = image_.width() / 2;
@@ -353,6 +354,7 @@ void Buffer::release(const QPoint &point)
             undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
             qDeleteAll(redoStack);
             redoStack.clear();
+            if (!dirty_) { dirty_ = true; emit dirtyChanged(true); }
         }
 
         modifiedArea = QRect();
@@ -366,7 +368,21 @@ void Buffer::release(const QPoint &point)
 void Buffer::notifyModified(const QRect &rect)
 {
     modifiedArea = modifiedArea.united(rect);
+    if (!dirty_) {
+        dirty_ = true;
+        emit dirtyChanged(true);
+    }
     emit modified(rect);
+}
+
+bool Buffer::isDirty() const { return dirty_; }
+
+void Buffer::clearDirty()
+{
+    if (dirty_) {
+        dirty_ = false;
+        emit dirtyChanged(false);
+    }
 }
 
 void Buffer::undo()
