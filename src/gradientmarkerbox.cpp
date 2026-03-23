@@ -146,7 +146,7 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX, int pixel
                 // At ditherAmt=100 the offset range is ±1.5, making even
                 // purely-nearest-color pixels mix ~33% of the second color.
                 float noise = (h & 0xFFu) / 256.0f - 0.5f;  // -0.5..+0.5
-                float adjusted = dp.blend + noise * 3.0f * (ditherAmt / 100.0f);
+                float adjusted = dp.blend + noise * 20.0f * (ditherAmt / 100.0f);
                 return colorForIndex(adjusted > 0.5f ? dp.idx2 : dp.idx1);
             } else {
                 // Ordered (Bayer 16x16) dithering — always full strength
