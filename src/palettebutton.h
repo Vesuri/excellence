@@ -2,6 +2,7 @@
 #define PALETTEBUTTON_H
 
 #include <QAbstractButton>
+#include <QPoint>
 
 class PaletteButton : public QAbstractButton
 {
@@ -16,6 +17,7 @@ public:
 
     void paintEvent(QPaintEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *e) override;
 
 signals:
@@ -27,6 +29,7 @@ private:
     QColor color;
     bool paintButtonDown;
     bool eraseButtonDown;
+    QPoint dragStartPos_;
 };
 
 #endif // PALETTEBUTTON_H

@@ -4,6 +4,13 @@
 GradientRange gradientRanges[kGradientRangeCount];
 int activeGradientRange = 0;
 
+int GradientRange::colorCount() const
+{
+    int n = markers_.size();
+    if (n == 0) return 0;
+    return n + (n - 1) * spread_;
+}
+
 void GradientRange::addMarker(int slot, int colorIndex, bool abrupt)
 {
     removeMarker(slot);

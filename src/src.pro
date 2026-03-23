@@ -44,7 +44,9 @@ SOURCES += main.cpp\
     drawmodetool.cpp \
     pickcolortool.cpp \
     gridlocktool.cpp \
-    gradientrange.cpp
+    gradientrange.cpp \
+    gradientmarkerbox.cpp \
+    gradienttool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -77,6 +79,8 @@ HEADERS  += mainwindow.h \
     pickcolortool.h \
     gridlocktool.h \
     gradientrange.h \
+    gradientmarkerbox.h \
+    gradienttool.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \

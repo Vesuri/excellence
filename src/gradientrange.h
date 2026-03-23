@@ -17,6 +17,10 @@ public:
     void addMarker(int slot, int colorIndex, bool abrupt = false);
     void removeMarker(int slot);
 
+    int spread() const { return spread_; }
+    void setSpread(int spread) { spread_ = qBound(0, spread, 254); }
+    int colorCount() const;
+
     void flip();
     void clear();
     void undo();
@@ -29,6 +33,7 @@ private:
     QVector<GradientMarker> markers_;
     QVector<GradientMarker> undoSnapshot_;
     QVector<GradientMarker> restorePoint_;
+    int spread_ = 0;
 };
 
 static const int kGradientRangeCount = 8;
