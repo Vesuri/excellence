@@ -39,7 +39,7 @@ private:
     QColor colorForIndex(int colorIndex) const;
     struct DitherPair { int idx1; int idx2; float blend; };
     DitherPair ditherPair(const QColor &ideal) const;
-    QColor interpolatedColor(float slotPos, int pixelX) const;
+    QColor interpolatedColor(float slotPos, int pixelX, int pixelY) const;
 
     GradientRange *range_ = nullptr;
     Buffer *buffer_ = nullptr;
