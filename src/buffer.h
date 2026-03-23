@@ -20,7 +20,7 @@ public:
                      Tint, Colorize, Brighten, Darken, Mix, Negative,
                      Dither1, Dither2, Transparent };
 
-    explicit Buffer(int width = 320, int height = 256, int colors = 8, QObject *parent = nullptr);
+    explicit Buffer(int width = 320, int height = 256, int colors = 32, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);
 
     void setPath(const QString &path);
@@ -95,7 +95,7 @@ signals:
     void mirrorChanged();
 
 private:
-    void initialize(int width = 320, int height = 256, int colors = 8);
+    void initialize(int width = 320, int height = 256, int colors = 32);
 
     QString path_;
     QImage image_;
