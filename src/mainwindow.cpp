@@ -808,6 +808,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
             return;
         }
     }
+    for (BufferView *view : bufferViews)
+        view->close();
     event->accept();
 }
 
