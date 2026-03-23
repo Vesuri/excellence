@@ -8,6 +8,8 @@
 #include "buffer.h"
 #include "algorithms.h"
 #include "ellipsetool.h"
+#include "gradientrange.h"
+#include "gradientrenderer.h"
 
 EllipseTool EllipseTool::instance;
 const char *EllipseTool::icons[] = {
@@ -88,16 +90,31 @@ void EllipseTool::computeEllipseParams(const QPoint &p0, const QPoint &p1)
     ry_ = r.height() / 2;
 }
 
-QRect EllipseTool::drawEllipseShape(double angle)
+QRect EllipseTool::drawEllipseShape(double angle, bool applyGradient)
 {
     QRect changedRect;
-    auto fn = [this, &changedRect](const QPoint &p) {
-        changedRect = changedRect.united(draw(p));
-    };
-    if (drawMode_ == Ellipse) {
-        Algorithms::ellipse(cx_, cy_, rx_, ry_, angle, fn);
-    } else {
+    if (drawMode_ == FilledEllipse && applyGradient && !erasing_
+        && gradientFillActive()) {
+        QImage &image = buffer_->image();
+        const GradientRange *range = &gradientRanges[activeGradientRange];
+        QPoint releasePoint(cx_ + rx_, cy_);  // Use bounding edge as gradient end
+        auto fn = [&](const QPoint &p) {
+            float t = GradientRenderer::computeT(p.x(), p.y(), image.width(), image.height(),
+                                                  activeGradientFillMode, startPoint_, releasePoint);
+            int ci = GradientRenderer::colorIndex(t, p.x(), p.y(), range, image);
+            image.setPixel(p.x(), p.y(), static_cast<uint>(ci));
+            changedRect = changedRect.united(QRect(p, p));
+        };
         Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, fn);
+    } else {
+        auto fn = [this, &changedRect](const QPoint &p) {
+            changedRect = changedRect.united(draw(p));
+        };
+        if (drawMode_ == Ellipse) {
+            Algorithms::ellipse(cx_, cy_, rx_, ry_, angle, fn);
+        } else {
+            Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, fn);
+        }
     }
     return changedRect;
 }
@@ -128,7 +145,7 @@ QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
             resetState();
             return QRect();
         }
-        QRect r = drawEllipseShape(rotationAngle_);
+        QRect r = drawEllipseShape(rotationAngle_, true);
         resetState();
         return r;
     }
@@ -197,7 +214,7 @@ QRect EllipseTool::release(const QPoint &point)
         return QRect();
     }
 
-    QRect r = drawEllipseShape(0.0);
+    QRect r = drawEllipseShape(0.0, true);
     resetState();
     return r;
 }

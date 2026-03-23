@@ -17,6 +17,7 @@ public:
 
     void setDrawMode(DrawMode mode);
     void setBuffer(Buffer *buffer) override;
+    bool hasFill() const override { return drawMode_ == FilledEllipse; }
     QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
@@ -36,7 +37,7 @@ private:
     void resetState();
     void cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const;
     void computeEllipseParams(const QPoint &p0, const QPoint &p1);
-    QRect drawEllipseShape(double angle);
+    QRect drawEllipseShape(double angle, bool applyGradient = false);
     QRect ellipseBoundingRect(double angle) const;
     QRect draw(const QPoint &point);
 

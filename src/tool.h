@@ -32,6 +32,7 @@ public:
     virtual Type type() const;
     virtual QString name() const;
     virtual QString status() const;
+    virtual bool hasFill() const { return false; }
 
 public slots:
     void toggleOptionsWidget();

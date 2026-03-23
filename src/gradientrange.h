@@ -59,4 +59,24 @@ static const int kGradientRangeCount = 8;
 extern GradientRange gradientRanges[kGradientRangeCount];
 extern int activeGradientRange;
 
+enum GradientFillMode {
+    FillFlat = 0,
+    FillHorizontal,
+    FillVertical,
+    FillLinear,
+    FillRadial,
+    FillSpherical
+};
+extern GradientFillMode activeGradientFillMode;
+extern bool drawModeActive;
+
+// Returns true when draw mode is on, a gradient fill mode is selected, and the
+// active range has markers.
+inline bool gradientFillActive()
+{
+    return drawModeActive
+        && activeGradientFillMode != FillFlat
+        && !gradientRanges[activeGradientRange].markers().isEmpty();
+}
+
 #endif // GRADIENTRANGE_H

@@ -1,6 +1,7 @@
 #ifndef DRAWMODETOOL_H
 #define DRAWMODETOOL_H
 
+#include <QWidget>
 #include "buffer.h"
 #include "tool.h"
 
@@ -22,10 +23,14 @@ protected:
     void activate() override;
     QWidget *createOptionsWidget() override;
 
+private slots:
+    void onToolChanged(Tool *tool);
+
 private:
     void applyMode();
 
     Buffer::PaintMode selectedMode_;
+    QWidget *fillGroupWidget_ = nullptr;
     static DrawModeTool instance;
 };
 

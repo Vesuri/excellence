@@ -10,6 +10,8 @@
 #include "undobuffer.h"
 #include "algorithms.h"
 #include "linetool.h"
+#include "gradientrange.h"
+#include "gradientrenderer.h"
 
 LineTool LineTool::instance;
 
@@ -239,6 +241,9 @@ QRect LineTool::polygonFill()
     minY = qMax(minY, imageRect.top());
     maxY = qMin(maxY, imageRect.bottom());
 
+    const bool useGradient = gradientFillActive();
+    const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
+
     QRect changedRect;
     for (int y = minY; y <= maxY; y++) {
         QVector<int> xs;
@@ -254,8 +259,16 @@ QRect LineTool::polygonFill()
         for (int i = 0; i + 1 < xs.size(); i += 2) {
             int x1 = qMax(xs[i], imageRect.left());
             int x2 = qMin(xs[i + 1], imageRect.right());
-            for (int x = x1; x <= x2; x++)
-                image.setPixel(x, y, static_cast<uint>(fillColor));
+            for (int x = x1; x <= x2; x++) {
+                if (useGradient) {
+                    float t = GradientRenderer::computeT(x, y, image.width(), image.height(),
+                                                          activeGradientFillMode, firstPoint_, lastPoint_);
+                    int ci = GradientRenderer::colorIndex(t, x, y, range, image);
+                    image.setPixel(x, y, static_cast<uint>(ci));
+                } else {
+                    image.setPixel(x, y, static_cast<uint>(fillColor));
+                }
+            }
             if (x1 <= x2)
                 changedRect = changedRect.united(QRect(x1, y, x2 - x1 + 1, 1));
         }

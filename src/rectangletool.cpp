@@ -8,6 +8,8 @@
 #include "undobuffer.h"
 #include "algorithms.h"
 #include "rectangletool.h"
+#include "gradientrange.h"
+#include "gradientrenderer.h"
 
 RectangleTool RectangleTool::instance;
 const char *RectangleTool::icons[] = {
@@ -102,9 +104,23 @@ QRect RectangleTool::release(const QPoint &point)
     cornerPoints(point, p0, p1);
     QRect changedRect;
     if (drawMode == Rectangle) {
-        Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &pt) { changedRect = changedRect.united(this->draw(pt)); });
+    } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
+               && gradientFillActive()) {
+        QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
+        QImage &image = buffer_->image();
+        const GradientRange *range = &gradientRanges[activeGradientRange];
+        for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
+            for (int x = fillRect.left(); x <= fillRect.right(); x++) {
+                float t = GradientRenderer::computeT(x, y, image.width(), image.height(),
+                                                      activeGradientFillMode, startPoint, point);
+                int ci = GradientRenderer::colorIndex(t, x, y, range, image);
+                image.setPixel(x, y, static_cast<uint>(ci));
+            }
+        }
+        changedRect = fillRect;
     } else {
-        Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &pt) { changedRect = changedRect.united(this->draw(pt)); });
     }
     return changedRect;
 }

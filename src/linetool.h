@@ -17,6 +17,7 @@ public:
     explicit LineTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
+    bool hasFill() const override { return mode_ == FilledPolygon; }
     QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
