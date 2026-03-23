@@ -18,6 +18,7 @@
 #include "buffer.h"
 #include "bufferview.h"
 #include "gridlocktool.h"
+#include "gradientrange.h"
 #include "ui_bufferview.h"
 
 class CanvasScene : public QGraphicsScene
@@ -262,6 +263,18 @@ void BufferView::keyPressEvent(QKeyEvent *event)
             buffer->setPaintColor((buffer->paintColor() + 1) % n);
         break;
     }
+    case Qt::Key_R:
+        if (event->modifiers() & Qt::AltModifier)
+            gradientRanges[activeGradientRange].flip();
+        break;
+    case Qt::Key_J:
+        if (event->modifiers() & Qt::AltModifier) {
+            if (event->modifiers() & Qt::ShiftModifier)
+                activeGradientRange = (activeGradientRange + kGradientRangeCount - 1) % kGradientRangeCount;
+            else
+                activeGradientRange = (activeGradientRange + 1) % kGradientRangeCount;
+        }
+        break;
     case Qt::Key_U:
         if (event->modifiers() & Qt::ControlModifier)
             buffer->clearUndoBuffer();
