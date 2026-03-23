@@ -55,6 +55,26 @@ QColor GradientMarkerBox::colorForIndex(int colorIndex) const
     return QColor(buffer_->image().color(colorIndex));
 }
 
+QColor GradientMarkerBox::nearestPaletteColor(const QColor &ideal) const
+{
+    if (!buffer_ || buffer_->image().colorCount() == 0)
+        return ideal;
+    const QVector<QRgb> table = buffer_->image().colorTable();
+    int bestIdx = 0;
+    int bestDist = INT_MAX;
+    for (int i = 0; i < table.size(); i++) {
+        int dr = ideal.red()   - qRed(table[i]);
+        int dg = ideal.green() - qGreen(table[i]);
+        int db = ideal.blue()  - qBlue(table[i]);
+        int dist = dr*dr + dg*dg + db*db;
+        if (dist < bestDist) {
+            bestDist = dist;
+            bestIdx = i;
+        }
+    }
+    return QColor(table[bestIdx]);
+}
+
 QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
 {
     if (!range_) return Qt::transparent;
@@ -96,11 +116,12 @@ QColor GradientMarkerBox::interpolatedColor(float slotPos, int pixelX) const
 
             QColor c1 = colorForIndex(markers[i].colorIndex);
             QColor c2 = colorForIndex(markers[i + 1].colorIndex);
-            return QColor(
+            QColor ideal(
                 qRound(c1.red()   + t * (c2.red()   - c1.red())),
                 qRound(c1.green() + t * (c2.green() - c1.green())),
                 qRound(c1.blue()  + t * (c2.blue()  - c1.blue()))
             );
+            return nearestPaletteColor(ideal);
         }
     }
     return colorForIndex(markers.last().colorIndex);
