@@ -96,7 +96,7 @@ private:
     QList<UndoBuffer *> undoBuffers;
     QList<UndoBuffer *> redoStack;
     UndoBuffer *moveUndoBuffer;
-    Tool *tool_;
+    Tool *tool_ = nullptr;
     Pen *pen_;
     Pen *toolPen_;
     unsigned paintColor_;

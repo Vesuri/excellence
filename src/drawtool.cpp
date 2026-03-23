@@ -43,6 +43,7 @@ void DrawTool::setBuffer(Buffer *buffer)
 
     if (buffer_ != nullptr) {
         connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+        setCheckedIfEqual(buffer_->tool());
     }
 }
 
@@ -164,7 +165,7 @@ void DrawTool::registerTool()
 {
     Tool::registerTool();
 
-    setDrawMode(Dotted);
+    setDrawMode(ConnectedDraw);
     button_->setCheckable(true);
 
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
