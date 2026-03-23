@@ -22,40 +22,83 @@ void Brush::setHandleOffset(const QPoint &offset)
     handleOffset_ = offset;
 }
 
+static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer *buffer,
+                         const QPoint &origin, bool isErase, bool replace)
+{
+    QRect imageRect = buffer->image().rect();
+    for (int y = 0; y < brushImage.height(); y++) {
+        for (int x = 0; x < brushImage.width(); x++) {
+            int idx = brushImage.pixelIndex(x, y);
+            if (!isErase && !replace && idx == transparentIndex)
+                continue;
+            if (isErase && idx == transparentIndex)
+                continue;
+            QPoint p(origin.x() + x, origin.y() + y);
+            if (!imageRect.contains(p))
+                continue;
+            buffer->image().setPixel(p, isErase ? 0u : static_cast<uint>(idx));
+        }
+    }
+}
+
 QRect Brush::paint(const QPoint &point, Buffer *buffer) const
 {
     bool replace = (buffer->paintMode() == Buffer::Replace);
-    QPoint origin = point - handleOffset_;
     QRect imageRect = buffer->image().rect();
-    for (int y = 0; y < image_.height(); y++) {
-        for (int x = 0; x < image_.width(); x++) {
-            int idx = image_.pixelIndex(x, y);
-            if (!replace && idx == transparentIndex_)
-                continue;
-            QPoint p(origin.x() + x, origin.y() + y);
-            if (imageRect.contains(p))
-                buffer->image().setPixel(p, static_cast<uint>(idx));
-        }
-    }
+    QPoint origin = point - handleOffset_;
+    brushStampAt(image_, transparentIndex_, buffer, origin, false, replace);
+    QRect changed = image_.rect().translated(origin);
 
-    return image_.rect().translated(origin).intersected(imageRect);
+    int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
+    if (buffer->mirrorX()) {
+        // Flip origin: mirror the anchor point, then account for brush width
+        QPoint mxOrigin(2 * cx - origin.x() - image_.width(), origin.y());
+        QImage flipped = image_.mirrored(true, false);
+        brushStampAt(flipped, transparentIndex_, buffer, mxOrigin, false, replace);
+        changed = changed.united(image_.rect().translated(mxOrigin));
+    }
+    if (buffer->mirrorY()) {
+        QPoint myOrigin(origin.x(), 2 * cy - origin.y() - image_.height());
+        QImage flipped = image_.mirrored(false, true);
+        brushStampAt(flipped, transparentIndex_, buffer, myOrigin, false, replace);
+        changed = changed.united(image_.rect().translated(myOrigin));
+    }
+    if (buffer->mirrorX() && buffer->mirrorY()) {
+        QPoint mxyOrigin(2 * cx - origin.x() - image_.width(), 2 * cy - origin.y() - image_.height());
+        QImage flipped = image_.mirrored(true, true);
+        brushStampAt(flipped, transparentIndex_, buffer, mxyOrigin, false, replace);
+        changed = changed.united(image_.rect().translated(mxyOrigin));
+    }
+    return changed.intersected(imageRect);
 }
 
 QRect Brush::erase(const QPoint &point, Buffer *buffer) const
 {
-    QPoint origin = point - handleOffset_;
     QRect imageRect = buffer->image().rect();
-    for (int y = 0; y < image_.height(); y++) {
-        for (int x = 0; x < image_.width(); x++) {
-            if (image_.pixelIndex(x, y) == transparentIndex_)
-                continue;
-            QPoint p(origin.x() + x, origin.y() + y);
-            if (imageRect.contains(p))
-                buffer->image().setPixel(p, 0);
-        }
-    }
+    QPoint origin = point - handleOffset_;
+    brushStampAt(image_, transparentIndex_, buffer, origin, true, false);
+    QRect changed = image_.rect().translated(origin);
 
-    return image_.rect().translated(origin).intersected(imageRect);
+    int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
+    if (buffer->mirrorX()) {
+        QPoint mxOrigin(2 * cx - origin.x() - image_.width(), origin.y());
+        QImage flipped = image_.mirrored(true, false);
+        brushStampAt(flipped, transparentIndex_, buffer, mxOrigin, true, false);
+        changed = changed.united(image_.rect().translated(mxOrigin));
+    }
+    if (buffer->mirrorY()) {
+        QPoint myOrigin(origin.x(), 2 * cy - origin.y() - image_.height());
+        QImage flipped = image_.mirrored(false, true);
+        brushStampAt(flipped, transparentIndex_, buffer, myOrigin, true, false);
+        changed = changed.united(image_.rect().translated(myOrigin));
+    }
+    if (buffer->mirrorX() && buffer->mirrorY()) {
+        QPoint mxyOrigin(2 * cx - origin.x() - image_.width(), 2 * cy - origin.y() - image_.height());
+        QImage flipped = image_.mirrored(true, true);
+        brushStampAt(flipped, transparentIndex_, buffer, mxyOrigin, true, false);
+        changed = changed.united(image_.rect().translated(mxyOrigin));
+    }
+    return changed.intersected(imageRect);
 }
 
 QRect Brush::rect(const QPoint &point) const

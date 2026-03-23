@@ -32,7 +32,7 @@ void GradientTool::activate()
 
 void GradientTool::addButtonToGridLayout(QGridLayout *layout)
 {
-    layout->addWidget(button_, 1, 0);
+    layout->addWidget(button_, 1, 1);
 }
 
 void GradientTool::setActiveRange(int index)

@@ -27,6 +27,7 @@ public slots:
 
 private:
     bool inTip(int dx, int dy, int r) const;
+    void applyPrimary(const QPoint &point, Buffer *buffer, bool isErase) const;
     void applyColor(const QPoint &point, Buffer *buffer, unsigned color) const;
     void applySmear(const QPoint &point, Buffer *buffer, unsigned fallbackColor) const;
     void applySmooth(const QPoint &point, Buffer *buffer) const;

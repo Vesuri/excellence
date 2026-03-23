@@ -60,6 +60,13 @@ public:
     int gridOffsetX() const;
     int gridOffsetY() const;
     QPoint snapToGrid(const QPoint &p) const;
+    void setMirrorX(bool enabled);
+    bool mirrorX() const;
+    void setMirrorY(bool enabled);
+    bool mirrorY() const;
+    void setMirrorCenter(int x, int y);
+    int mirrorCenterX() const;
+    int mirrorCenterY() const;
     QVector<int> gradientColors() const;
     int nextCycleColor(bool reverse = false);
     void resetCycle();
@@ -85,6 +92,7 @@ signals:
     void paintColorChanged(unsigned colorIndex, QColor color);
     void eraseColorChanged(unsigned colorIndex, QColor color);
     void gridChanged();
+    void mirrorChanged();
 
 private:
     void initialize(int width = 320, int height = 256, int colors = 8);
@@ -108,6 +116,8 @@ private:
     bool gridEnabled_;
     int gridW_, gridH_;
     int gridOffsetX_, gridOffsetY_;
+    bool mirrorX_, mirrorY_;
+    int mirrorCenterX_, mirrorCenterY_;
 };
 
 #endif // BUFFER_H

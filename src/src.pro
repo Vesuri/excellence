@@ -47,7 +47,8 @@ SOURCES += main.cpp\
     gradientrange.cpp \
     gradientmarkerbox.cpp \
     gradienttool.cpp \
-    gradientrenderer.cpp
+    gradientrenderer.cpp \
+    mirrortool.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -83,6 +84,7 @@ HEADERS  += mainwindow.h \
     gradientmarkerbox.h \
     gradienttool.h \
     gradientrenderer.h \
+    mirrortool.h \
     spatial_color_quant.h
 
 FORMS    += mainwindow.ui \

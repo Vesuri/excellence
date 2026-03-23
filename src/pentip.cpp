@@ -310,50 +310,74 @@ void PenTip::applyTransparent(const QPoint &point, Buffer *buffer, unsigned pain
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
-QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
+void PenTip::applyPrimary(const QPoint &point, Buffer *buffer, bool isErase) const
 {
+    unsigned paintC = isErase ? eraseColor_ : paintColor_;
+    unsigned eraseC = isErase ? paintColor_ : eraseColor_;
     switch (buffer->paintMode()) {
-    case Buffer::Smear:        applySmear(point, buffer, paintColor_); break;
+    case Buffer::Smear:        applySmear(point, buffer, paintC); break;
     case Buffer::Smooth:       applySmooth(point, buffer); break;
-    case Buffer::Range:        applyRange(point, buffer, false); break;
+    case Buffer::Range:        applyRange(point, buffer, isErase); break;
     case Buffer::AverageSmear: applyAverageSmear(point, buffer); break;
-    case Buffer::Cycle:        applyCycleRandom(point, buffer, false, false); break;
-    case Buffer::Random:       applyCycleRandom(point, buffer, false, true); break;
+    case Buffer::Cycle:        applyCycleRandom(point, buffer, isErase, false); break;
+    case Buffer::Random:       applyCycleRandom(point, buffer, isErase, true); break;
     case Buffer::Tint:
     case Buffer::Colorize:
     case Buffer::Brighten:
     case Buffer::Darken:
     case Buffer::Mix:
-    case Buffer::Negative:     applyColorEffect(point, buffer, paintColor_, buffer->paintMode()); break;
-    case Buffer::Dither1:      applyDither(point, buffer, paintColor_, eraseColor_, false); break;
-    case Buffer::Dither2:      applyDither(point, buffer, paintColor_, eraseColor_, true); break;
-    case Buffer::Transparent:  applyTransparent(point, buffer, paintColor_); break;
-    default:                   applyColor(point, buffer, paintColor_); break;
+    case Buffer::Negative:     applyColorEffect(point, buffer, paintC, buffer->paintMode()); break;
+    case Buffer::Dither1:      applyDither(point, buffer, paintC, eraseC, false); break;
+    case Buffer::Dither2:      applyDither(point, buffer, paintC, eraseC, true); break;
+    case Buffer::Transparent:  applyTransparent(point, buffer, paintC); break;
+    default:                   applyColor(point, buffer, paintC); break;
     }
-    return rect(point).intersected(buffer->image().rect());
+}
+
+QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
+{
+    applyPrimary(point, buffer, false);
+    QRect changed = rect(point);
+    int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
+    if (buffer->mirrorX()) {
+        QPoint mx(2 * cx - point.x(), point.y());
+        applyPrimary(mx, buffer, false);
+        changed = changed.united(rect(mx));
+    }
+    if (buffer->mirrorY()) {
+        QPoint my(point.x(), 2 * cy - point.y());
+        applyPrimary(my, buffer, false);
+        changed = changed.united(rect(my));
+    }
+    if (buffer->mirrorX() && buffer->mirrorY()) {
+        QPoint mxy(2 * cx - point.x(), 2 * cy - point.y());
+        applyPrimary(mxy, buffer, false);
+        changed = changed.united(rect(mxy));
+    }
+    return changed.intersected(buffer->image().rect());
 }
 
 QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 {
-    switch (buffer->paintMode()) {
-    case Buffer::Smear:        applySmear(point, buffer, eraseColor_); break;
-    case Buffer::Smooth:       applySmooth(point, buffer); break;
-    case Buffer::Range:        applyRange(point, buffer, true); break;
-    case Buffer::AverageSmear: applyAverageSmear(point, buffer); break;
-    case Buffer::Cycle:        applyCycleRandom(point, buffer, true, false); break;
-    case Buffer::Random:       applyCycleRandom(point, buffer, true, true); break;
-    case Buffer::Tint:
-    case Buffer::Colorize:
-    case Buffer::Brighten:
-    case Buffer::Darken:
-    case Buffer::Mix:
-    case Buffer::Negative:     applyColorEffect(point, buffer, eraseColor_, buffer->paintMode()); break;
-    case Buffer::Dither1:      applyDither(point, buffer, eraseColor_, paintColor_, false); break;
-    case Buffer::Dither2:      applyDither(point, buffer, eraseColor_, paintColor_, true); break;
-    case Buffer::Transparent:  applyTransparent(point, buffer, eraseColor_); break;
-    default:                   applyColor(point, buffer, eraseColor_); break;
+    applyPrimary(point, buffer, true);
+    QRect changed = rect(point);
+    int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
+    if (buffer->mirrorX()) {
+        QPoint mx(2 * cx - point.x(), point.y());
+        applyPrimary(mx, buffer, true);
+        changed = changed.united(rect(mx));
     }
-    return rect(point).intersected(buffer->image().rect());
+    if (buffer->mirrorY()) {
+        QPoint my(point.x(), 2 * cy - point.y());
+        applyPrimary(my, buffer, true);
+        changed = changed.united(rect(my));
+    }
+    if (buffer->mirrorX() && buffer->mirrorY()) {
+        QPoint mxy(2 * cx - point.x(), 2 * cy - point.y());
+        applyPrimary(mxy, buffer, true);
+        changed = changed.united(rect(mxy));
+    }
+    return changed.intersected(buffer->image().rect());
 }
 
 QRect PenTip::rect(const QPoint &point) const

@@ -19,6 +19,7 @@
 #include "bufferview.h"
 #include "gridlocktool.h"
 #include "gradienttool.h"
+#include "mirrortool.h"
 #include "ui_bufferview.h"
 
 class CanvasScene : public QGraphicsScene
@@ -240,6 +241,9 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         break;
     case Qt::Key_G:
         buffer->setGridEnabled(!buffer->gridEnabled());
+        break;
+    case Qt::Key_Slash:
+        MirrorTool::instance.toggle();
         break;
     case Qt::Key_K:
         if (event->modifiers() & Qt::ShiftModifier)

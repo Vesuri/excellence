@@ -287,9 +287,13 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     drawModeAmount_(50),
     gridEnabled_(false),
     gridW_(8), gridH_(8),
-    gridOffsetX_(0), gridOffsetY_(0)
+    gridOffsetX_(0), gridOffsetY_(0),
+    mirrorX_(false), mirrorY_(false),
+    mirrorCenterX_(0), mirrorCenterY_(0)
 {
     initialize(width, height, colors);
+    mirrorCenterX_ = image_.width() / 2;
+    mirrorCenterY_ = image_.height() / 2;
 }
 
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
@@ -306,7 +310,9 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     drawModeAmount_(50),
     gridEnabled_(false),
     gridW_(8), gridH_(8),
-    gridOffsetX_(0), gridOffsetY_(0)
+    gridOffsetX_(0), gridOffsetY_(0),
+    mirrorX_(false), mirrorY_(false),
+    mirrorCenterX_(0), mirrorCenterY_(0)
 {
     if (!path.isEmpty()) {
         image_.load(path);
@@ -319,6 +325,8 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
         }
         initialize();
     }
+    mirrorCenterX_ = image_.width() / 2;
+    mirrorCenterY_ = image_.height() / 2;
 }
 
 void Buffer::initialize(int width, int height, int colors)
@@ -693,6 +701,14 @@ QPoint Buffer::snapToGrid(const QPoint &p) const
     int y = qRound(static_cast<double>(p.y() - gridOffsetY_) / gridH_) * gridH_ + gridOffsetY_;
     return QPoint(x, y);
 }
+
+void Buffer::setMirrorX(bool enabled) { mirrorX_ = enabled; emit mirrorChanged(); }
+bool Buffer::mirrorX() const { return mirrorX_; }
+void Buffer::setMirrorY(bool enabled) { mirrorY_ = enabled; emit mirrorChanged(); }
+bool Buffer::mirrorY() const { return mirrorY_; }
+void Buffer::setMirrorCenter(int x, int y) { mirrorCenterX_ = x; mirrorCenterY_ = y; emit mirrorChanged(); }
+int Buffer::mirrorCenterX() const { return mirrorCenterX_; }
+int Buffer::mirrorCenterY() const { return mirrorCenterY_; }
 
 void Buffer::resetToDefaultPalette()
 {
