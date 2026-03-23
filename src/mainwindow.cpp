@@ -43,6 +43,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    connect(ui->actionFileSaveWithTransparency, &QAction::toggled, [this](bool checked) {
+        saveWithTransparency_ = checked;
+    });
     connect(ui->actionImageCopy, SIGNAL(triggered()), this, SLOT(imageCopy()));
     connect(ui->actionImagePaste, SIGNAL(triggered()), this, SLOT(imagePaste()));
     connect(ui->actionImageCopyColor, SIGNAL(triggered()), this, SLOT(imageCopyColor()));
@@ -267,8 +270,14 @@ void MainWindow::saveFile(const QString &savePath)
     if (path.isEmpty()) {
         saveAs();
     } else {
+        QImage saveImage = buffer->image();
+        if (saveWithTransparency_ && path.toLower().endsWith(".png")) {
+            int eraseIdx = static_cast<int>(buffer->eraseColor());
+            QRgb c = saveImage.color(eraseIdx);
+            saveImage.setColor(eraseIdx, qRgba(qRed(c), qGreen(c), qBlue(c), 0));
+        }
         QImageWriter imageWriter(path);
-        if (!imageWriter.write(buffer->image())) {
+        if (!imageWriter.write(saveImage)) {
             QMessageBox msgBox;
             msgBox.setText(imageWriter.errorString());
             msgBox.exec();

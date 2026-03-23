@@ -100,6 +100,7 @@ private:
     PaletteMode paletteMode;
     QVector<QRgb> paletteUndoSnapshot_;
     QVector<QRgb> paletteRestorePoint_;
+    bool saveWithTransparency_ = false;
 };
 
 #endif // MAINWINDOW_H

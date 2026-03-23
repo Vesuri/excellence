@@ -84,6 +84,8 @@
     <addaction name="actionFileSave"/>
     <addaction name="actionFileSaveAs"/>
     <addaction name="separator"/>
+    <addaction name="actionFileSaveWithTransparency"/>
+    <addaction name="separator"/>
     <addaction name="actionFileQuit"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
@@ -192,6 +194,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionFileSaveWithTransparency">
+   <property name="text">
+    <string>Save with transparency</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
    </property>
   </action>
   <action name="actionFileQuit">
