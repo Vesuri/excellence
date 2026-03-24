@@ -150,6 +150,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 buffer->release(point);
                 break;
             case QEvent::GraphicsSceneMouseDoubleClick:
+                buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
                 buffer->doubleClick(point);
                 break;
             default:
