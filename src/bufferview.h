@@ -50,6 +50,7 @@ private:
     QPoint lastMousePoint;
     Tool *altPreviousTool_;
     bool cursorHidden_;
+    bool pendingZoom_;
     int zoomLevel_;
     bool pixelGrid_;
     qreal aspectX_;

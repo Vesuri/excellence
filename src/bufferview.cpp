@@ -3,6 +3,7 @@
 #include <QGraphicsScene>
 #include <QPixmap>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsSceneWheelEvent>
 #include <QKeyEvent>
 #include <QScrollBar>
 #include <QtCore/qmath.h>
@@ -64,6 +65,7 @@ BufferView::BufferView(QWidget *parent) :
     lastMousePoint(),
     altPreviousTool_(nullptr),
     cursorHidden_(false),
+    pendingZoom_(false),
     zoomLevel_(1),
     pixelGrid_(false),
     aspectX_(1.0),
@@ -130,6 +132,16 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
 {
     if (watched == ui->graphicsView->scene()) {
         switch (event->type()) {
+        case QEvent::GraphicsSceneWheel:
+        {
+            QGraphicsSceneWheelEvent *wheelEvent = static_cast<QGraphicsSceneWheelEvent *>(event);
+            QPointF scenePos = wheelEvent->scenePos();
+            QPoint point(qFloor(scenePos.x()), qFloor(scenePos.y()));
+            setZoomLevel(zoomLevel_ + (wheelEvent->delta() > 0 ? 1 : -1));
+            ui->graphicsView->centerOn(point);
+            updateWindowTitle(point);
+            return true;
+        }
         case QEvent::GraphicsSceneMousePress:
         case QEvent::GraphicsSceneMouseMove:
         case QEvent::GraphicsSceneMouseRelease:
@@ -141,7 +153,9 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
 
             switch (event->type()) {
             case QEvent::GraphicsSceneMousePress:
+                pendingZoom_ = buffer->tool() && buffer->tool()->type() == Tool::Zoom;
                 buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
+                pendingZoom_ = false;
                 break;
             case QEvent::GraphicsSceneMouseMove:
                 buffer->move(point);
@@ -387,7 +401,7 @@ void BufferView::setPixmap(const QRect &area)
 
 void BufferView::setZoom(const QRect &area)
 {
-    if (area.isNull()) return;
+    if (!pendingZoom_ || area.isNull()) return;
     if (area.height() == 0) {
         emit magnifyAtPointRequested(area.width(), area.topLeft());
     } else {
