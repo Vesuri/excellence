@@ -67,7 +67,6 @@ BufferView::BufferView(QWidget *parent) :
     cursorHidden_(false),
     pendingZoom_(false),
     zoomLevel_(1),
-    pixelGrid_(false),
     aspectX_(1.0),
     aspectY_(1.0)
 {
@@ -98,6 +97,7 @@ void BufferView::setBuffer(Buffer *buffer)
         disconnect(this->buffer, SIGNAL(toolChanged(Tool*)));
         disconnect(this->buffer, SIGNAL(paintColorChanged(unsigned,QColor)));
         disconnect(this->buffer, SIGNAL(eraseColorChanged(unsigned,QColor)));
+        disconnect(this->buffer, &Buffer::pixelGridChanged, scene, &CanvasScene::setPixelGrid);
     }
 
     this->buffer = buffer;
@@ -109,6 +109,8 @@ void BufferView::setBuffer(Buffer *buffer)
         connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
+        connect(buffer, &Buffer::pixelGridChanged, scene, &CanvasScene::setPixelGrid);
+        scene->setPixelGrid(buffer->pixelGrid());
         updateWindowTitle();
         pixmapItem->setPixmap(QPixmap::fromImage(buffer->image()));
         ui->graphicsView->setSceneRect(scene->itemsBoundingRect());
@@ -208,8 +210,7 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         emit magnifyRequested(event->modifiers() & Qt::ShiftModifier ? 8 : 4);
         break;
     case Qt::Key_P:
-        pixelGrid_ = !pixelGrid_;
-        scene->setPixelGrid(pixelGrid_);
+        if (buffer) buffer->setPixelGrid(!buffer->pixelGrid());
         break;
     case Qt::Key_Left:
         ui->graphicsView->horizontalScrollBar()->setValue(

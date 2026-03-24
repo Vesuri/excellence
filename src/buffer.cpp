@@ -173,6 +173,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     cycleIndex_(0),
     drawModeAmount_(50),
     gridEnabled_(false),
+    pixelGrid_(false),
     gridW_(8), gridH_(8),
     gridOffsetX_(0), gridOffsetY_(0),
     mirrorX_(false), mirrorY_(false),
@@ -197,6 +198,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     cycleIndex_(0),
     drawModeAmount_(50),
     gridEnabled_(false),
+    pixelGrid_(false),
     gridW_(8), gridH_(8),
     gridOffsetX_(0), gridOffsetY_(0),
     mirrorX_(false), mirrorY_(false),
@@ -595,6 +597,13 @@ void Buffer::setGridEnabled(bool enabled)
     emit gridChanged();
 }
 bool Buffer::gridEnabled() const { return gridEnabled_; }
+
+void Buffer::setPixelGrid(bool enabled)
+{
+    pixelGrid_ = enabled;
+    emit pixelGridChanged(enabled);
+}
+bool Buffer::pixelGrid() const { return pixelGrid_; }
 
 void Buffer::setGridSpacing(int w, int h)
 {

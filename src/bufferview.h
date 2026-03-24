@@ -52,7 +52,6 @@ private:
     bool cursorHidden_;
     bool pendingZoom_;
     int zoomLevel_;
-    bool pixelGrid_;
     qreal aspectX_;
     qreal aspectY_;
 };

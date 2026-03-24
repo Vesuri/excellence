@@ -57,15 +57,15 @@ QWidget *ZoomTool::createOptionsWidget()
     vbox->setSpacing(4);
     vbox->setContentsMargins(6, 6, 6, 6);
 
-    QCheckBox *gridCheck = new QCheckBox("Show Grid", w);
-    gridCheck->setChecked(buffer_ && buffer_->gridEnabled());
+    QCheckBox *gridCheck = new QCheckBox("Show Pixel Grid [P]", w);
+    gridCheck->setChecked(buffer_ && buffer_->pixelGrid());
     connect(gridCheck, &QCheckBox::toggled, [this](bool checked) {
-        if (buffer_) buffer_->setGridEnabled(checked);
+        if (buffer_) buffer_->setPixelGrid(checked);
     });
     if (buffer_) {
-        connect(buffer_, &Buffer::gridChanged, w, [this, gridCheck]() {
+        connect(buffer_, &Buffer::pixelGridChanged, gridCheck, [gridCheck](bool enabled) {
             bool blocked = gridCheck->blockSignals(true);
-            gridCheck->setChecked(buffer_->gridEnabled());
+            gridCheck->setChecked(enabled);
             gridCheck->blockSignals(blocked);
         });
     }
