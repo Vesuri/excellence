@@ -83,7 +83,8 @@ QWidget *ZoomTool::createOptionsWidget()
     vbox->addLayout(form);
 
     QPushButton *placeBtn = new QPushButton("Place Magnifier", w);
-    connect(placeBtn, &QPushButton::clicked, [this]() {
+    connect(placeBtn, &QPushButton::clicked, [this, zoomSpin]() {
+        magnifierZoom_ = zoomSpin->value();
         placeMagnifierMode_ = true;
         if (optionsWidget_) optionsWidget_->hide();
     });
