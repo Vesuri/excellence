@@ -37,7 +37,7 @@ public:
 protected:
     void drawForeground(QPainter *painter, const QRectF &rect) override
     {
-        if (!pixelGrid_ || zoomLevel_ < 4) return;
+        if (!pixelGrid_ || zoomLevel_ < 3) return;
         painter->save();
         painter->setPen(QPen(QColor(0, 0, 0, 80), 0));
         int left = qFloor(rect.left());
