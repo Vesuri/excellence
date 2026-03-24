@@ -86,6 +86,7 @@ QWidget *ZoomTool::createOptionsWidget()
     connect(placeBtn, &QPushButton::clicked, [this, zoomSpin]() {
         magnifierZoom_ = zoomSpin->value();
         placeMagnifierMode_ = true;
+        activate();
         if (optionsWidget_) optionsWidget_->hide();
     });
     vbox->addWidget(placeBtn);
