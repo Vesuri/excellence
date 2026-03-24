@@ -125,3 +125,8 @@ Tool::Type ZoomTool::type() const
 {
     return Zoom;
 }
+
+QString ZoomTool::name() const
+{
+    return placeMagnifierMode_ ? "Place Magnifier" : Tool::name();
+}

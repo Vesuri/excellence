@@ -16,6 +16,7 @@ public:
     QRect release(const QPoint &point) override;
     void addButtonToGridLayout(QGridLayout *layout) override;
     Type type() const override;
+    QString name() const override;
 
 protected:
     void registerTool() override;
