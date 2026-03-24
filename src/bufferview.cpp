@@ -150,8 +150,10 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 buffer->release(point);
                 break;
             case QEvent::GraphicsSceneMouseDoubleClick:
-                buffer->press(point, Qt::RightButton, mouseEvent->modifiers());
-                buffer->release(point);
+                if (buffer->tool() && buffer->tool()->type() != Tool::Zoom) {
+                    buffer->press(point, Qt::RightButton, mouseEvent->modifiers());
+                    buffer->release(point);
+                }
                 break;
             default:
                 break;
