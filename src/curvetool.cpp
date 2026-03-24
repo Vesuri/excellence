@@ -31,6 +31,17 @@ void CurveTool::cancel()
     resetState();
 }
 
+QRect CurveTool::doubleClick(const QPoint &point)
+{
+    Q_UNUSED(point)
+    if (curveMode_ == Bezier && phase_ == 4) {
+        QPoint savedP0 = p0_, savedP1 = p1_, savedP2 = p2_, savedP3 = p3_;
+        resetState();
+        return drawCubicBezier(savedP0, savedP1, savedP2, savedP3);
+    }
+    return QRect();
+}
+
 void CurveTool::setBuffer(Buffer *buffer)
 {
     if (buffer_ != nullptr) {

@@ -30,6 +30,7 @@ public:
     void press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers);
     void move(const QPoint &point);
     void release(const QPoint &point);
+    void doubleClick(const QPoint &point);
     void setTool(Tool *tool_);
     Tool *tool() const;
     void setPen(Pen *pen);

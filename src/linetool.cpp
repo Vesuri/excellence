@@ -60,6 +60,36 @@ void LineTool::cancel()
     }
 }
 
+QRect LineTool::doubleClick(const QPoint &point)
+{
+    Q_UNUSED(point)
+    if (mode_ == Line || !active_)
+        return QRect();
+
+    delete dragUndoBuffer_;
+    dragUndoBuffer_ = nullptr;
+
+    if (mode_ == FilledPolygon) {
+        active_ = false;
+        if (lastPoint_ == firstPoint_) {
+            vertices_.clear();
+            return QRect();
+        }
+        QRect changedRect;
+        Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
+            changedRect = changedRect.united(paintPixel(p));
+        });
+        changedRect = changedRect.united(polygonFill());
+        vertices_.clear();
+        return changedRect;
+    }
+
+    // ConnectedLines
+    active_ = false;
+    vertices_.clear();
+    return QRect();
+}
+
 // ── Single line ────────────────────────────────────────────────────────────
 
 QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)

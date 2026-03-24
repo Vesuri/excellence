@@ -19,6 +19,7 @@ public:
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
+    QRect doubleClick(const QPoint &point) override;
     void cancel() override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 

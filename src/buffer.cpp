@@ -365,6 +365,14 @@ void Buffer::release(const QPoint &point)
     tool_->setMouseButton(Qt::NoButton);
 }
 
+void Buffer::doubleClick(const QPoint &point)
+{
+    if (!tool_) return;
+    QRect area = tool_->doubleClick(snapToGrid(point));
+    modifiedArea = modifiedArea.united(area);
+    emit modified(area);
+}
+
 void Buffer::notifyModified(const QRect &rect)
 {
     modifiedArea = modifiedArea.united(rect);
