@@ -17,6 +17,7 @@ public:
     void addButtonToGridLayout(QGridLayout *layout) override;
     Type type() const override;
     QString name() const override;
+    void enterPlaceMagnifierMode(int zoom);
 
 protected:
     void registerTool() override;

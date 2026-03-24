@@ -126,6 +126,13 @@ Tool::Type ZoomTool::type() const
     return Zoom;
 }
 
+void ZoomTool::enterPlaceMagnifierMode(int zoom)
+{
+    magnifierZoom_ = zoom;
+    placeMagnifierMode_ = true;
+    activate();
+}
+
 QString ZoomTool::name() const
 {
     return placeMagnifierMode_ ? "Place Magnifier" : Tool::name();

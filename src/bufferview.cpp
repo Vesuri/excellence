@@ -23,6 +23,7 @@
 #include "gridlocktool.h"
 #include "gradienttool.h"
 #include "mirrortool.h"
+#include "zoomtool.h"
 #include "ui_bufferview.h"
 
 class CanvasScene : public QGraphicsScene
@@ -207,7 +208,12 @@ void BufferView::keyPressEvent(QKeyEvent *event)
         setZoomLevel(zoomLevel_ - 1);
         break;
     case Qt::Key_M:
-        emit magnifyRequested(event->modifiers() & Qt::ShiftModifier ? 8 : 4);
+        for (Tool *tool : tools) {
+            if (auto *zt = qobject_cast<ZoomTool *>(tool)) {
+                zt->enterPlaceMagnifierMode(event->modifiers() & Qt::ShiftModifier ? 8 : 4);
+                break;
+            }
+        }
         break;
     case Qt::Key_P:
         if (buffer) buffer->setPixelGrid(!buffer->pixelGrid());
