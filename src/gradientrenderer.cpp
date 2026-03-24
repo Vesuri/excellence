@@ -151,7 +151,8 @@ float computeT(int px, int py, int imageW, int imageH,
         float ry = float(py - from.y());
         return qBound(0.0f, sqrtf(rx * rx + ry * ry) / radius, 1.0f);
     }
-    case FillSpherical: {
+    case FillSpherical:
+    case FillHighlight: {
         float dx = float(to.x() - from.x());
         float dy = float(to.y() - from.y());
         float radius = sqrtf(dx * dx + dy * dy);

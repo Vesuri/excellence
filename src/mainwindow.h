@@ -83,7 +83,6 @@ private slots:
     void paletteRemapPage();
     void about();
     void onDirtyChanged(bool dirty);
-    void openMagnifiedView(int zoomLevel);
     void openMagnifiedViewAt(int zoomLevel, QPoint point);
 
 private:

@@ -28,7 +28,6 @@ public:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 signals:
-    void magnifyRequested(int zoomLevel);
     void magnifyAtPointRequested(int zoomLevel, QPoint point);
 
 protected:

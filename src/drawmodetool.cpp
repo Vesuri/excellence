@@ -30,6 +30,12 @@ void DrawModeTool::setBuffer(Buffer *buffer)
     applyMode();
 }
 
+void DrawModeTool::onToolChanged(Tool *tool)
+{
+    if (fillGroupWidget_)
+        fillGroupWidget_->setEnabled(tool && tool->hasFill());
+}
+
 void DrawModeTool::applyMode()
 {
     if (!buffer_)
@@ -39,11 +45,6 @@ void DrawModeTool::applyMode()
     drawModeActive = active;
 }
 
-void DrawModeTool::onToolChanged(Tool *tool)
-{
-    if (fillGroupWidget_)
-        fillGroupWidget_->setEnabled(tool && tool->hasFill());
-}
 
 void DrawModeTool::registerTool()
 {
@@ -117,8 +118,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     // Gradient fill section
     QGroupBox *fillGroup = new QGroupBox("Gradient Fill", w);
     fillGroupWidget_ = fillGroup;
-    bool hasFill = buffer_ && buffer_->tool() && buffer_->tool()->hasFill();
-    fillGroup->setEnabled(hasFill);
+    fillGroup->setEnabled(buffer_ && buffer_->tool() && buffer_->tool()->hasFill());
 
     static const struct { const char *label; GradientFillMode mode; } kFillModes[] = {
         {"Horizontal", FillHorizontal},
@@ -126,13 +126,14 @@ QWidget *DrawModeTool::createOptionsWidget()
         {"Linear",     FillLinear},
         {"Radial",     FillRadial},
         {"Spherical",  FillSpherical},
+        {"Highlight",  FillHighlight},
     };
 
     QButtonGroup *fillModeGroup = new QButtonGroup(w);
     fillModeGroup->setExclusive(true);
     QVBoxLayout *fillVbox = new QVBoxLayout(fillGroup);
     fillVbox->setSpacing(2);
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
         QPushButton *btn = new QPushButton(kFillModes[i].label, fillGroup);
         btn->setFixedSize(80, 24);
         btn->setCheckable(true);

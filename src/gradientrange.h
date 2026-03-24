@@ -65,7 +65,8 @@ enum GradientFillMode {
     FillVertical,
     FillLinear,
     FillRadial,
-    FillSpherical
+    FillSpherical,
+    FillHighlight
 };
 extern GradientFillMode activeGradientFillMode;
 extern bool drawModeActive;
