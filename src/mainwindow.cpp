@@ -8,6 +8,8 @@
 #include <QImageReader>
 #include <QMessageBox>
 #include <QApplication>
+#include <QGuiApplication>
+#include <QScreen>
 #include <QClipboard>
 #include "brush.h"
 #include "propertiesdialog.h"
@@ -321,8 +323,21 @@ void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
     bufferView->installEventFilter(this);
     bufferView->setBuffer(buffer);
     bufferView->setZoomLevel(zoomLevel);
+
+    QSize ideal = bufferView->idealSize(zoomLevel);
+    if (ideal.isValid()) {
+        QRect screen = QGuiApplication::primaryScreen()->availableGeometry();
+        bufferView->resize(ideal.boundedTo(screen.size()));
+    }
+
+    if (activeBufferView) {
+        QRect srcFrame = activeBufferView->frameGeometry();
+        bufferView->move(srcFrame.right() + 1, srcFrame.top());
+    }
+
     if (point.x() >= 0 && point.y() >= 0)
         bufferView->centerOn(point);
+
     connect(bufferView, &BufferView::magnifyRequested, this, &MainWindow::openMagnifiedView);
     connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
     bufferView->show();

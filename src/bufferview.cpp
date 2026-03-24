@@ -401,6 +401,13 @@ void BufferView::centerOn(const QPoint &point)
     ui->graphicsView->centerOn(point);
 }
 
+QSize BufferView::idealSize(int zoomLevel) const
+{
+    if (!buffer) return QSize();
+    return QSize(qCeil(buffer->image().width()  * aspectX_ * zoomLevel),
+                 qCeil(buffer->image().height() * aspectY_ * zoomLevel));
+}
+
 void BufferView::setZoomLevel(int level)
 {
     zoomLevel_ = qBound(1, level, 32);

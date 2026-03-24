@@ -24,6 +24,7 @@ public:
     void setBuffer(Buffer *buffer);
     void setZoomLevel(int level);
     void centerOn(const QPoint &point);
+    QSize idealSize(int zoomLevel) const;
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 signals:
