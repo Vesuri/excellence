@@ -387,8 +387,10 @@ void BufferView::setPixmap(const QRect &area)
 
 void BufferView::setZoom(const QRect &area)
 {
-    if (!area.isNull())
+    if (!area.isNull()) {
         setZoomLevel(area.width() > 0 ? zoomLevel_ + 1 : zoomLevel_ - 1);
+        ui->graphicsView->centerOn(area.topLeft());
+    }
 }
 
 void BufferView::setZoomLevel(int level)
