@@ -305,17 +305,26 @@ void MainWindow::newWindow()
     bufferView->installEventFilter(this);
     bufferView->setBuffer(buffer);
     connect(bufferView, &BufferView::magnifyRequested, this, &MainWindow::openMagnifiedView);
+    connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
     bufferView->show();
     bufferViews.append(bufferView);
 }
 
 void MainWindow::openMagnifiedView(int zoomLevel)
 {
+    openMagnifiedViewAt(zoomLevel, QPoint(-1, -1));
+}
+
+void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
+{
     BufferView *bufferView = new BufferView();
     bufferView->installEventFilter(this);
     bufferView->setBuffer(buffer);
     bufferView->setZoomLevel(zoomLevel);
+    if (point.x() >= 0 && point.y() >= 0)
+        bufferView->centerOn(point);
     connect(bufferView, &BufferView::magnifyRequested, this, &MainWindow::openMagnifiedView);
+    connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
     bufferView->show();
     bufferViews.append(bufferView);
 }

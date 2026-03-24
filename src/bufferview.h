@@ -23,10 +23,12 @@ public:
 
     void setBuffer(Buffer *buffer);
     void setZoomLevel(int level);
+    void centerOn(const QPoint &point);
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 signals:
     void magnifyRequested(int zoomLevel);
+    void magnifyAtPointRequested(int zoomLevel, QPoint point);
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

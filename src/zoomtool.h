@@ -20,8 +20,12 @@ public:
 protected:
     void registerTool() override;
     void activate() override;
+    QWidget *createOptionsWidget() override;
 
 private:
+    bool placeMagnifierMode_;
+    int magnifierZoom_;
+
     static ZoomTool instance;
 };
 

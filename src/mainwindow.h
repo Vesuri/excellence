@@ -84,6 +84,7 @@ private slots:
     void about();
     void onDirtyChanged(bool dirty);
     void openMagnifiedView(int zoomLevel);
+    void openMagnifiedViewAt(int zoomLevel, QPoint point);
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };
