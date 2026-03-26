@@ -29,7 +29,7 @@ protected:
 
 private:
     QRect draw(const QPoint &point);
-    QRect polygonFill(int fillColor);
+    QRect polygonFill(int fillColor, const QPoint &to);
 
     DrawMode drawMode;
     QPoint startingPoint;

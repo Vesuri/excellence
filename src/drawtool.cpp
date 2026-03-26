@@ -7,6 +7,8 @@
 #include "buffer.h"
 #include "algorithms.h"
 #include "drawtool.h"
+#include "gradientrange.h"
+#include "gradientrenderer.h"
 
 DrawTool DrawTool::instance;
 const char *DrawTool::icons[] = {
@@ -106,7 +108,7 @@ QRect DrawTool::release(const QPoint &point)
         int fillColor = static_cast<int>(mouseButton_ == Qt::RightButton
                                          ? buffer_->eraseColor()
                                          : buffer_->paintColor());
-        changedRect = changedRect.united(polygonFill(fillColor));
+        changedRect = changedRect.united(polygonFill(fillColor, point));
         return changedRect;
     }
 }
@@ -120,7 +122,7 @@ QRect DrawTool::draw(const QPoint &point)
     }
 }
 
-QRect DrawTool::polygonFill(int fillColor)
+QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
 {
     if (pathPoints_.size() < 3)
         return QRect();
@@ -137,6 +139,9 @@ QRect DrawTool::polygonFill(int fillColor)
     minY = qMax(minY, imageRect.top());
     maxY = qMin(maxY, imageRect.bottom());
 
+    const bool useGradient = gradientFillActive();
+    const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
+
     QRect changedRect;
     for (int y = minY; y <= maxY; y++) {
         QVector<int> xs;
@@ -152,8 +157,16 @@ QRect DrawTool::polygonFill(int fillColor)
         for (int i = 0; i + 1 < xs.size(); i += 2) {
             int x1 = qMax(xs[i], imageRect.left());
             int x2 = qMin(xs[i + 1], imageRect.right());
-            for (int x = x1; x <= x2; x++)
-                image.setPixel(x, y, static_cast<uint>(fillColor));
+            for (int x = x1; x <= x2; x++) {
+                if (useGradient) {
+                    float t = GradientRenderer::computeT(x, y, image.width(), image.height(),
+                                                          activeGradientFillMode, startingPoint, to);
+                    int ci = GradientRenderer::colorIndex(t, x, y, range, image);
+                    image.setPixel(x, y, static_cast<uint>(ci));
+                } else {
+                    image.setPixel(x, y, static_cast<uint>(fillColor));
+                }
+            }
             if (x1 <= x2)
                 changedRect = changedRect.united(QRect(x1, y, x2 - x1 + 1, 1));
         }
