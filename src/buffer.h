@@ -20,7 +20,7 @@ public:
                      Tint, Colorize, Brighten, Darken, Mix, Negative,
                      Dither1, Dither2, Transparent, BrushMode };
 
-    explicit Buffer(int width = 320, int height = 256, int colors = 32, QObject *parent = nullptr);
+    explicit Buffer(int width = 640, int height = 512, int colors = 32, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);
 
     void setPath(const QString &path);
@@ -104,7 +104,7 @@ signals:
     void dirtyChanged(bool dirty);
 
 private:
-    void initialize(int width = 320, int height = 256, int colors = 32);
+    void initialize(int width = 640, int height = 512, int colors = 32);
 
     QString path_;
     QImage image_;
