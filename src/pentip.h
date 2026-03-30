@@ -17,16 +17,18 @@ public:
     QRect rect(const QPoint &point) const override;
 
     int size() const;
+    int width() const;
+    int height() const;
     Shape shape() const;
 
 public slots:
     void setPaintColor(unsigned paintColor);
     void setEraseColor(unsigned eraseColor);
-    void setSize(int size);
+    void setSize(int w, int h);
     void setShape(Shape shape);
 
 private:
-    bool inTip(int dx, int dy, int r) const;
+    bool inTip(int dx, int dy, int hw, int hh) const;
     void applyPrimary(const QPoint &point, Buffer *buffer, bool isErase) const;
     void applyColor(const QPoint &point, Buffer *buffer, unsigned color) const;
     void applySmear(const QPoint &point, Buffer *buffer, unsigned fallbackColor) const;
@@ -40,7 +42,8 @@ private:
 
     unsigned paintColor_;
     unsigned eraseColor_;
-    int size_;
+    int width_;
+    int height_;
     Shape shape_;
 };
 

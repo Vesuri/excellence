@@ -9,7 +9,8 @@
 PenTip::PenTip(QObject *parent) : Pen(parent),
     paintColor_(1),
     eraseColor_(0),
-    size_(1),
+    width_(1),
+    height_(1),
     shape_(Circle)
 {
 }
@@ -17,40 +18,40 @@ PenTip::PenTip(QObject *parent) : Pen(parent),
 void PenTip::setPaintColor(unsigned paintColor) { paintColor_ = paintColor; }
 void PenTip::setEraseColor(unsigned eraseColor) { eraseColor_ = eraseColor; }
 
-int PenTip::size() const { return size_; }
+int PenTip::size() const { return width_; }
+int PenTip::width() const { return width_; }
+int PenTip::height() const { return height_; }
 PenTip::Shape PenTip::shape() const { return shape_; }
 
-void PenTip::setSize(int size)
+void PenTip::setSize(int w, int h)
 {
-    // Clamp to supported sizes: 1, 3, 5, 7
-    if (size <= 1)      size_ = 1;
-    else if (size <= 3) size_ = 3;
-    else if (size <= 5) size_ = 5;
-    else                size_ = 7;
+    width_ = qMax(1, w);
+    height_ = qMax(1, h);
 }
 
 void PenTip::setShape(Shape shape) { shape_ = shape; }
 
-bool PenTip::inTip(int dx, int dy, int r) const
+bool PenTip::inTip(int dx, int dy, int hw, int hh) const
 {
+    Q_UNUSED(hh);
     switch (shape_) {
     case Square: return true;
-    default:     return dx * dx + dy * dy <= r * r + r / 2;
+    default:     return dx * dx + dy * dy <= hw * hw + hw / 2;
     }
 }
 
 void PenTip::applyColor(const QPoint &point, Buffer *buffer, unsigned color) const
 {
-    if (size_ == 1) {
+    if (width_ == 1 && height_ == 1) {
         if (buffer->image().rect().contains(point))
             buffer->image().setPixel(point, color);
         return;
     }
-    int r = size_ / 2;
+    int hw = width_ / 2, hh = height_ / 2;
     QRect imageRect = buffer->image().rect();
-    for (int dy = -r; dy <= r; dy++) {
-        for (int dx = -r; dx <= r; dx++) {
-            if (inTip(dx, dy, r)) {
+    for (int dy = -hh; dy <= hh; dy++) {
+        for (int dx = -hw; dx <= hw; dx++) {
+            if (inTip(dx, dy, hw, hh)) {
                 QPoint p(point.x() + dx, point.y() + dy);
                 if (imageRect.contains(p))
                     buffer->image().setPixel(p, color);
@@ -71,11 +72,11 @@ void PenTip::applySmear(const QPoint &point, Buffer *buffer, unsigned fallbackCo
         else
             buffer->image().setPixel(p, static_cast<uint>(buffer->image().pixelIndex(src)));
     };
-    if (size_ == 1) { doPixel(point); return; }
-    int r = size_ / 2;
-    for (int dy = -r; dy <= r; dy++)
-        for (int dx = -r; dx <= r; dx++)
-            if (inTip(dx, dy, r))
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
@@ -111,11 +112,11 @@ void PenTip::applySmooth(const QPoint &point, Buffer *buffer) const
             buffer->image().setPixel(p, static_cast<uint>(findNearest(avg)));
         }
     };
-    if (size_ == 1) { doPixel(point); return; }
-    int r = size_ / 2;
-    for (int dy = -r; dy <= r; dy++)
-        for (int dx = -r; dx <= r; dx++)
-            if (inTip(dx, dy, r))
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
@@ -134,11 +135,11 @@ void PenTip::applyRange(const QPoint &point, Buffer *buffer, bool isErase) const
         else if (isErase && pos > 0)
             buffer->image().setPixel(p, static_cast<uint>(grad[pos - 1]));
     };
-    if (size_ == 1) { doPixel(point); return; }
-    int r = size_ / 2;
-    for (int dy = -r; dy <= r; dy++)
-        for (int dx = -r; dx <= r; dx++)
-            if (inTip(dx, dy, r))
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
@@ -173,11 +174,11 @@ void PenTip::applyAverageSmear(const QPoint &point, Buffer *buffer) const
                         (qBlue(srcColor)  + qBlue(dstColor))  / 2);
         buffer->image().setPixel(p, static_cast<uint>(findNearest(avg)));
     };
-    if (size_ == 1) { doPixel(point); return; }
-    int r = size_ / 2;
-    for (int dy = -r; dy <= r; dy++)
-        for (int dx = -r; dx <= r; dx++)
-            if (inTip(dx, dy, r))
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
@@ -259,11 +260,11 @@ void PenTip::applyColorEffect(const QPoint &point, Buffer *buffer, unsigned base
         buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, target)));
     };
 
-    if (size_ == 1) { doPixel(point); return; }
-    int r = size_ / 2;
-    for (int dy = -r; dy <= r; dy++)
-        for (int dx = -r; dx <= r; dx++)
-            if (inTip(dx, dy, r))
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
@@ -279,11 +280,11 @@ void PenTip::applyDither(const QPoint &point, Buffer *buffer, unsigned fgColor, 
         else if (useBg)
             buffer->image().setPixel(p, bgColor);
     };
-    if (size_ == 1) { doPixel(point); return; }
-    int r = size_ / 2;
-    for (int dy = -r; dy <= r; dy++)
-        for (int dx = -r; dx <= r; dx++)
-            if (inTip(dx, dy, r))
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
@@ -302,11 +303,11 @@ void PenTip::applyTransparent(const QPoint &point, Buffer *buffer, unsigned pain
             (qBlue(paintRgb)  * opacity + qBlue(canvasRgb)  * (100 - opacity)) / 100);
         buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, blended)));
     };
-    if (size_ == 1) { doPixel(point); return; }
-    int r = size_ / 2;
-    for (int dy = -r; dy <= r; dy++)
-        for (int dx = -r; dx <= r; dx++)
-            if (inTip(dx, dy, r))
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
@@ -382,8 +383,8 @@ QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 
 QRect PenTip::rect(const QPoint &point) const
 {
-    if (size_ == 1)
+    if (width_ == 1 && height_ == 1)
         return QRect(point, point);
-    int r = size_ / 2;
-    return QRect(point.x() - r, point.y() - r, size_, size_);
+    int hw = width_ / 2, hh = height_ / 2;
+    return QRect(point.x() - hw, point.y() - hh, width_, height_);
 }

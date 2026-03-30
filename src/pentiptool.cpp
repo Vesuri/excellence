@@ -1,5 +1,4 @@
 #include <QGridLayout>
-#include <QHBoxLayout>
 #include <QPainter>
 #include <QPixmap>
 #include <QPushButton>
@@ -15,7 +14,7 @@ PenTipTool::PenTipTool(QObject *parent) : Tool(parent)
 {
 }
 
-static QPixmap renderTip(PenTip::Shape shape, int size)
+static QPixmap renderTip(PenTip::Shape shape, int w, int h)
 {
     const int W = 24, H = 24;
     QPixmap pm(W, H);
@@ -23,15 +22,15 @@ static QPixmap renderTip(PenTip::Shape shape, int size)
     QPainter p(&pm);
     const int scale = 2;
     const int cx = W / 2, cy = H / 2;
-    if (size == 1) {
+    if (w == 1 && h == 1) {
         p.fillRect(cx - 1, cy - 1, scale, scale, Qt::black);
     } else {
-        int r = size / 2;
-        for (int dy = -r; dy <= r; dy++) {
-            for (int dx = -r; dx <= r; dx++) {
+        int hw = w / 2, hh = h / 2;
+        for (int dy = -hh; dy <= hh; dy++) {
+            for (int dx = -hw; dx <= hw; dx++) {
                 bool inside = (shape == PenTip::Square)
                               ? true
-                              : (dx * dx + dy * dy <= r * r + r / 2);
+                              : (dx * dx + dy * dy <= hw * hw + hw / 2);
                 if (inside)
                     p.fillRect(cx + dx * scale - scale / 2,
                                cy + dy * scale - scale / 2,
@@ -46,7 +45,7 @@ void PenTipTool::updateButtonIcon()
 {
     PenTip *tip = buffer_ ? qobject_cast<PenTip *>(buffer_->pen()) : nullptr;
     if (tip)
-        button_->setIcon(QIcon(renderTip(tip->shape(), tip->size())));
+        button_->setIcon(QIcon(renderTip(tip->shape(), tip->width(), tip->height())));
     else
         button_->setIcon(QIcon(":/pentip.png"));
 }
@@ -76,39 +75,46 @@ QWidget *PenTipTool::createOptionsWidget()
     QWidget *w = new QWidget;
     w->setWindowTitle("Pen Tip");
 
-    QHBoxLayout *hbox = new QHBoxLayout(w);
-    hbox->setSpacing(4);
-    hbox->setContentsMargins(4, 4, 4, 4);
+    QGridLayout *grid = new QGridLayout(w);
+    grid->setSpacing(2);
+    grid->setContentsMargins(4, 4, 4, 4);
 
-    struct Preset { PenTip::Shape shape; int size; };
+    struct Preset { PenTip::Shape shape; int w; int h; };
     const Preset presets[] = {
-        { PenTip::Circle, 1 },
-        { PenTip::Circle, 3 },
-        { PenTip::Circle, 5 },
-        { PenTip::Circle, 7 },
-        { PenTip::Square, 1 },
-        { PenTip::Square, 3 },
-        { PenTip::Square, 5 },
-        { PenTip::Square, 7 },
+        // Row 0: circles (1×1, 5×5, 9×9, 13×13, 17×17), vertical line (1×13)
+        { PenTip::Circle, 1,  1  },
+        { PenTip::Circle, 5,  5  },
+        { PenTip::Circle, 9,  9  },
+        { PenTip::Circle, 13, 13 },
+        { PenTip::Circle, 17, 17 },
+        { PenTip::Square, 1,  13 },
+        // Row 1: squares (4×4, 6×6, 8×8, 10×10, 12×12), horizontal line (18×1)
+        { PenTip::Square, 4,  4  },
+        { PenTip::Square, 6,  6  },
+        { PenTip::Square, 8,  8  },
+        { PenTip::Square, 10, 10 },
+        { PenTip::Square, 12, 12 },
+        { PenTip::Square, 18, 1  },
     };
 
-    for (const auto &preset : presets) {
+    for (int i = 0; i < 12; i++) {
+        const auto &preset = presets[i];
         QPushButton *btn = new QPushButton(w);
-        btn->setIcon(QIcon(renderTip(preset.shape, preset.size)));
+        btn->setFixedSize(28, 28);
+        btn->setIcon(QIcon(renderTip(preset.shape, preset.w, preset.h)));
         PenTip::Shape shape = preset.shape;
-        int size = preset.size;
-        connect(btn, &QPushButton::clicked, [this, shape, size]() {
+        int pw = preset.w, ph = preset.h;
+        connect(btn, &QPushButton::clicked, [this, shape, pw, ph]() {
             PenTip *tip = qobject_cast<PenTip *>(buffer_->pen());
             if (tip) {
-                tip->setSize(size);
+                tip->setSize(pw, ph);
                 tip->setShape(shape);
                 updateButtonIcon();
             }
         });
-        hbox->addWidget(btn);
+        grid->addWidget(btn, i / 6, i % 6);
     }
 
-    hbox->addStretch();
     return w;
 }
 

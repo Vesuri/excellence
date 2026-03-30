@@ -102,16 +102,16 @@ QRect AirTool::paintDot(const QPoint &point)
         }
 
         if (PenTip *tip = qobject_cast<PenTip *>(buffer_->pen())) {
-            if (tip->size() == 1) {
+            if (tip->width() == 1 && tip->height() == 1) {
                 if (!img.rect().contains(point)) return QRect();
                 img.setPixel(point, color);
                 return QRect(point, point);
             }
-            const int r = tip->size() / 2;
+            const int hw = tip->width() / 2, hh = tip->height() / 2;
             for (int attempt = 0; attempt < 16; attempt++) {
-                int dx = static_cast<int>(QRandomGenerator::global()->bounded(2 * r + 1)) - r;
-                int dy = static_cast<int>(QRandomGenerator::global()->bounded(2 * r + 1)) - r;
-                if (tip->shape() == PenTip::Circle && dx * dx + dy * dy > r * r + r / 2)
+                int dx = static_cast<int>(QRandomGenerator::global()->bounded(2 * hw + 1)) - hw;
+                int dy = static_cast<int>(QRandomGenerator::global()->bounded(2 * hh + 1)) - hh;
+                if (tip->shape() == PenTip::Circle && dx * dx + dy * dy > hw * hw + hw / 2)
                     continue;
                 QPoint cp(point.x() + dx, point.y() + dy);
                 if (img.rect().contains(cp)) {
