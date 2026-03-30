@@ -23,46 +23,60 @@ void Brush::setHandleOffset(const QPoint &offset)
 }
 
 static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer *buffer,
-                         const QPoint &origin, bool isErase, bool replace)
+                         const QPoint &origin, bool isErase)
 {
+    Buffer::PaintMode mode = buffer->paintMode();
     QRect imageRect = buffer->image().rect();
+    unsigned paintC = buffer->paintColor();
+    unsigned eraseC = buffer->eraseColor();
+    bool effectiveErase = isErase;
+    paintC = Pen::resolveDrawColor(buffer, mode, effectiveErase, paintC, eraseC);
+    // mode is now Normal if it was Cycle/Random; effectiveErase is false in that case.
+
     for (int y = 0; y < brushImage.height(); y++) {
         for (int x = 0; x < brushImage.width(); x++) {
             int idx = brushImage.pixelIndex(x, y);
-            if (!isErase && !replace && idx == transparentIndex)
-                continue;
-            if (isErase && idx == transparentIndex)
+            if (idx == transparentIndex)
                 continue;
             QPoint p(origin.x() + x, origin.y() + y);
             if (!imageRect.contains(p))
                 continue;
-            buffer->image().setPixel(p, isErase ? 0u : static_cast<uint>(idx));
+
+            if (isErase) {
+                // Erase: BrushMode treated as Normal (use eraseColor, not brush pixel)
+                Buffer::PaintMode eraseMode = (mode == Buffer::BrushMode) ? Buffer::Normal : mode;
+                Pen::applyPixelMode(p, buffer, eraseMode, effectiveErase, paintC, eraseC);
+            } else if (mode == Buffer::Replace || mode == Buffer::BrushMode) {
+                // Stamp the brush's own pixel colors
+                buffer->image().setPixel(p, static_cast<uint>(idx));
+            } else {
+                Pen::applyPixelMode(p, buffer, mode, effectiveErase, paintC, eraseC);
+            }
         }
     }
 }
 
 QRect Brush::paint(const QPoint &point, Buffer *buffer) const
 {
-    bool replace = (buffer->paintMode() == Buffer::Replace);
     QRect imageRect = buffer->image().rect();
     QPoint origin = point - handleOffset_;
-    brushStampAt(image_, transparentIndex_, buffer, origin, false, replace);
+    brushStampAt(image_, transparentIndex_, buffer, origin, false);
     QRect changed = image_.rect().translated(origin);
 
     int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
     if (buffer->mirrorX()) {
         QPoint mxOrigin = QPoint(2 * cx - point.x(), point.y()) - handleOffset_;
-        brushStampAt(image_, transparentIndex_, buffer, mxOrigin, false, replace);
+        brushStampAt(image_, transparentIndex_, buffer, mxOrigin, false);
         changed = changed.united(image_.rect().translated(mxOrigin));
     }
     if (buffer->mirrorY()) {
         QPoint myOrigin = QPoint(point.x(), 2 * cy - point.y()) - handleOffset_;
-        brushStampAt(image_, transparentIndex_, buffer, myOrigin, false, replace);
+        brushStampAt(image_, transparentIndex_, buffer, myOrigin, false);
         changed = changed.united(image_.rect().translated(myOrigin));
     }
     if (buffer->mirrorX() && buffer->mirrorY()) {
         QPoint mxyOrigin = QPoint(2 * cx - point.x(), 2 * cy - point.y()) - handleOffset_;
-        brushStampAt(image_, transparentIndex_, buffer, mxyOrigin, false, replace);
+        brushStampAt(image_, transparentIndex_, buffer, mxyOrigin, false);
         changed = changed.united(image_.rect().translated(mxyOrigin));
     }
     return changed.intersected(imageRect);
@@ -72,23 +86,23 @@ QRect Brush::erase(const QPoint &point, Buffer *buffer) const
 {
     QRect imageRect = buffer->image().rect();
     QPoint origin = point - handleOffset_;
-    brushStampAt(image_, transparentIndex_, buffer, origin, true, false);
+    brushStampAt(image_, transparentIndex_, buffer, origin, true);
     QRect changed = image_.rect().translated(origin);
 
     int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
     if (buffer->mirrorX()) {
         QPoint mxOrigin = QPoint(2 * cx - point.x(), point.y()) - handleOffset_;
-        brushStampAt(image_, transparentIndex_, buffer, mxOrigin, true, false);
+        brushStampAt(image_, transparentIndex_, buffer, mxOrigin, true);
         changed = changed.united(image_.rect().translated(mxOrigin));
     }
     if (buffer->mirrorY()) {
         QPoint myOrigin = QPoint(point.x(), 2 * cy - point.y()) - handleOffset_;
-        brushStampAt(image_, transparentIndex_, buffer, myOrigin, true, false);
+        brushStampAt(image_, transparentIndex_, buffer, myOrigin, true);
         changed = changed.united(image_.rect().translated(myOrigin));
     }
     if (buffer->mirrorX() && buffer->mirrorY()) {
         QPoint mxyOrigin = QPoint(2 * cx - point.x(), 2 * cy - point.y()) - handleOffset_;
-        brushStampAt(image_, transparentIndex_, buffer, mxyOrigin, true, false);
+        brushStampAt(image_, transparentIndex_, buffer, mxyOrigin, true);
         changed = changed.united(image_.rect().translated(mxyOrigin));
     }
     return changed.intersected(imageRect);

@@ -110,6 +110,7 @@ QWidget *DrawModeTool::createOptionsWidget()
         Buffer::PaintMode m = kModes[i].mode;
         connect(btn, &QPushButton::clicked, [this, m]() {
             selectedMode_ = m;
+            button_->setChecked(m != Buffer::Normal);
             applyMode();
         });
         modeGrid->addWidget(btn, i / 4, i % 4);

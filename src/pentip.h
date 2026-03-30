@@ -29,16 +29,10 @@ public slots:
 
 private:
     bool inTip(int dx, int dy, int hw, int hh) const;
-    void applyPrimary(const QPoint &point, Buffer *buffer, bool isErase) const;
+    void applyTipAt(const QPoint &point, Buffer *buffer,
+                    Buffer::PaintMode mode, bool isErase,
+                    unsigned paintColor, unsigned eraseColor) const;
     void applyColor(const QPoint &point, Buffer *buffer, unsigned color) const;
-    void applySmear(const QPoint &point, Buffer *buffer, unsigned fallbackColor) const;
-    void applySmooth(const QPoint &point, Buffer *buffer) const;
-    void applyRange(const QPoint &point, Buffer *buffer, bool isErase) const;
-    void applyAverageSmear(const QPoint &point, Buffer *buffer) const;
-    void applyCycleRandom(const QPoint &point, Buffer *buffer, bool isErase, bool isRandom) const;
-    void applyColorEffect(const QPoint &point, Buffer *buffer, unsigned baseColor, Buffer::PaintMode mode) const;
-    void applyDither(const QPoint &point, Buffer *buffer, unsigned paintColor, unsigned bgColor, bool useBg) const;
-    void applyTransparent(const QPoint &point, Buffer *buffer, unsigned paintColor) const;
     void applyBrushMode(const QPoint &point, Buffer *buffer) const;
 
     unsigned paintColor_;

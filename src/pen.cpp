@@ -1,5 +1,232 @@
+#include <climits>
+#include <cstdlib>
+#include <QColor>
+#include <QRect>
+#include <QVector>
 #include "pen.h"
 
 Pen::Pen(QObject *parent) : QObject(parent)
 {
+}
+
+// ── Shared per-pixel helpers ──────────────────────────────────────────────────
+
+static int findNearestPalette(const QVector<QRgb> &palette, QRgb color)
+{
+    int bestIdx = 0, bestDist = INT_MAX;
+    for (int i = 0; i < palette.size(); i++) {
+        int dr = qRed(color)   - qRed(palette[i]);
+        int dg = qGreen(color) - qGreen(palette[i]);
+        int db = qBlue(color)  - qBlue(palette[i]);
+        int dist = dr*dr + dg*dg + db*db;
+        if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+    return bestIdx;
+}
+
+static const int kBayer4x4[4][4] = {
+    { 0,  8,  2, 10},
+    {12,  4, 14,  6},
+    { 3, 11,  1,  9},
+    {15,  7, 13,  5}
+};
+
+static void smearPixel(const QPoint &p, Buffer *buffer, unsigned fallbackColor)
+{
+    QRect imageRect = buffer->image().rect();
+    if (!imageRect.contains(p)) return;
+    QPoint dir = buffer->smearDirection();
+    QPoint src = p - dir;
+    if (dir.isNull() || !imageRect.contains(src))
+        buffer->image().setPixel(p, fallbackColor);
+    else
+        buffer->image().setPixel(p, static_cast<uint>(buffer->image().pixelIndex(src)));
+}
+
+static void smoothPixel(const QPoint &p, Buffer *buffer)
+{
+    QRect imageRect = buffer->image().rect();
+    if (!imageRect.contains(p)) return;
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    int rSum = 0, gSum = 0, bSum = 0, count = 0;
+    const int nx[] = {0, 0, -1, 1};
+    const int ny[] = {-1, 1, 0, 0};
+    for (int i = 0; i < 4; i++) {
+        QPoint n(p.x() + nx[i], p.y() + ny[i]);
+        if (imageRect.contains(n)) {
+            QRgb c = buffer->image().color(buffer->image().pixelIndex(n));
+            rSum += qRed(c); gSum += qGreen(c); bSum += qBlue(c); count++;
+        }
+    }
+    if (count > 0) {
+        QRgb avg = qRgb(rSum/count, gSum/count, bSum/count);
+        buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, avg)));
+    }
+}
+
+static void rangePixel(const QPoint &p, Buffer *buffer, bool isErase)
+{
+    QRect imageRect = buffer->image().rect();
+    if (!imageRect.contains(p)) return;
+    QVector<int> grad = buffer->gradientColors();
+    if (grad.size() < 2) return;
+    int curIdx = buffer->image().pixelIndex(p);
+    int pos = grad.indexOf(curIdx);
+    if (pos < 0) return;
+    if (!isErase && pos < grad.size() - 1)
+        buffer->image().setPixel(p, static_cast<uint>(grad[pos + 1]));
+    else if (isErase && pos > 0)
+        buffer->image().setPixel(p, static_cast<uint>(grad[pos - 1]));
+}
+
+static void averageSmearPixel(const QPoint &p, Buffer *buffer)
+{
+    QRect imageRect = buffer->image().rect();
+    if (!imageRect.contains(p)) return;
+    QPoint dir = buffer->smearDirection();
+    QVector<int> grad = buffer->gradientColors();
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    auto findNearest = [&](QRgb color) -> int {
+        if (grad.isEmpty()) return findNearestPalette(palette, color);
+        int bestIdx = grad[0], bestDist = INT_MAX;
+        for (int gi : grad) {
+            if (gi >= palette.size()) continue;
+            int dr = qRed(color)   - qRed(palette[gi]);
+            int dg = qGreen(color) - qGreen(palette[gi]);
+            int db = qBlue(color)  - qBlue(palette[gi]);
+            int dist = dr*dr + dg*dg + db*db;
+            if (dist < bestDist) { bestDist = dist; bestIdx = gi; }
+        }
+        return bestIdx;
+    };
+    QPoint src = p - dir;
+    QRgb srcColor = (imageRect.contains(src) && !dir.isNull())
+                    ? buffer->image().color(buffer->image().pixelIndex(src))
+                    : buffer->image().color(buffer->image().pixelIndex(p));
+    QRgb dstColor = buffer->image().color(buffer->image().pixelIndex(p));
+    QRgb avg = qRgb((qRed(srcColor)   + qRed(dstColor))   / 2,
+                    (qGreen(srcColor) + qGreen(dstColor)) / 2,
+                    (qBlue(srcColor)  + qBlue(dstColor))  / 2);
+    buffer->image().setPixel(p, static_cast<uint>(findNearest(avg)));
+}
+
+static void colorEffectPixel(const QPoint &p, Buffer *buffer, unsigned baseColor, Buffer::PaintMode mode)
+{
+    QRect imageRect = buffer->image().rect();
+    if (!imageRect.contains(p)) return;
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    QRgb paintRgb = (baseColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(baseColor)] : 0;
+    QColor paintHSV = QColor(paintRgb).toHsv();
+    const int kStep = qMax(1, buffer->drawModeAmount() * 255 / 100);
+    QRgb canvasRgb = buffer->image().color(buffer->image().pixelIndex(p));
+    QColor canvasHSV = QColor(canvasRgb).toHsv();
+    QRgb target = canvasRgb;
+    switch (mode) {
+    case Buffer::Tint:
+        target = QColor::fromHsv(paintHSV.hsvHue(), paintHSV.hsvSaturation(),
+                                 canvasHSV.value()).rgb();
+        break;
+    case Buffer::Colorize:
+        if (canvasHSV.hsvSaturation() < 32) return;
+        target = QColor::fromHsv(paintHSV.hsvHue(), paintHSV.hsvSaturation(),
+                                 canvasHSV.value()).rgb();
+        break;
+    case Buffer::Brighten:
+        target = QColor::fromHsv(canvasHSV.hsvHue(), canvasHSV.hsvSaturation(),
+                                 qMin(255, canvasHSV.value() + kStep)).rgb();
+        break;
+    case Buffer::Darken:
+        target = QColor::fromHsv(canvasHSV.hsvHue(), canvasHSV.hsvSaturation(),
+                                 qMax(0, canvasHSV.value() - kStep)).rgb();
+        break;
+    case Buffer::Mix:
+        target = qRgb((qRed(canvasRgb)   + qRed(paintRgb))   / 2,
+                      (qGreen(canvasRgb) + qGreen(paintRgb)) / 2,
+                      (qBlue(canvasRgb)  + qBlue(paintRgb))  / 2);
+        break;
+    case Buffer::Negative:
+        target = qRgb(255 - qRed(canvasRgb), 255 - qGreen(canvasRgb), 255 - qBlue(canvasRgb));
+        break;
+    default: return;
+    }
+    buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, target)));
+}
+
+static void ditherPixel(const QPoint &p, Buffer *buffer, unsigned fgColor, unsigned bgColor, bool useBg)
+{
+    QRect imageRect = buffer->image().rect();
+    if (!imageRect.contains(p)) return;
+    int amount = buffer->drawModeAmount();
+    int threshold = kBayer4x4[p.y() % 4][p.x() % 4] * 100 / 15;
+    if (amount > threshold)
+        buffer->image().setPixel(p, fgColor);
+    else if (useBg)
+        buffer->image().setPixel(p, bgColor);
+}
+
+static void transparentPixel(const QPoint &p, Buffer *buffer, unsigned paintColor)
+{
+    QRect imageRect = buffer->image().rect();
+    if (!imageRect.contains(p)) return;
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    QRgb paintRgb = (paintColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(paintColor)] : 0;
+    int opacity = buffer->drawModeAmount();
+    QRgb canvasRgb = buffer->image().color(buffer->image().pixelIndex(p));
+    QRgb blended = qRgb(
+        (qRed(paintRgb)   * opacity + qRed(canvasRgb)   * (100 - opacity)) / 100,
+        (qGreen(paintRgb) * opacity + qGreen(canvasRgb) * (100 - opacity)) / 100,
+        (qBlue(paintRgb)  * opacity + qBlue(canvasRgb)  * (100 - opacity)) / 100);
+    buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, blended)));
+}
+
+// ── Public methods ────────────────────────────────────────────────────────────
+
+unsigned Pen::resolveDrawColor(Buffer *buffer, Buffer::PaintMode &mode,
+                                bool &isErase, unsigned paintColor, unsigned eraseColor)
+{
+    if (mode == Buffer::Cycle) {
+        mode = Buffer::Normal;
+        unsigned color = static_cast<unsigned>(buffer->nextCycleColor(isErase));
+        isErase = false;
+        return color;
+    }
+    if (mode == Buffer::Random) {
+        mode = Buffer::Normal;
+        QVector<int> grad = buffer->gradientColors();
+        unsigned base = isErase ? eraseColor : paintColor;
+        isErase = false;
+        return grad.isEmpty() ? base : static_cast<unsigned>(grad[rand() % grad.size()]);
+    }
+    return paintColor;
+}
+
+// ── Public dispatcher ─────────────────────────────────────────────────────────
+
+void Pen::applyPixelMode(const QPoint &p, Buffer *buffer,
+                         Buffer::PaintMode mode, bool isErase,
+                         unsigned paintColor, unsigned eraseColor)
+{
+    unsigned paintC = isErase ? eraseColor : paintColor;
+    unsigned eraseC = isErase ? paintColor : eraseColor;
+    switch (mode) {
+    case Buffer::Normal:
+    case Buffer::Replace:
+        if (buffer->image().rect().contains(p))
+            buffer->image().setPixel(p, paintC);
+        break;
+    case Buffer::Smear:        smearPixel(p, buffer, paintC); break;
+    case Buffer::Smooth:       smoothPixel(p, buffer); break;
+    case Buffer::Range:        rangePixel(p, buffer, isErase); break;
+    case Buffer::AverageSmear: averageSmearPixel(p, buffer); break;
+    case Buffer::Tint:
+    case Buffer::Colorize:
+    case Buffer::Brighten:
+    case Buffer::Darken:
+    case Buffer::Mix:
+    case Buffer::Negative:     colorEffectPixel(p, buffer, paintC, mode); break;
+    case Buffer::Dither1:      ditherPixel(p, buffer, paintC, eraseC, false); break;
+    case Buffer::Dither2:      ditherPixel(p, buffer, paintC, eraseC, true); break;
+    case Buffer::Transparent:  transparentPixel(p, buffer, paintC); break;
+    default: break; // BrushMode, Cycle, Random: callers handle these before calling applyPixelMode
+    }
 }
