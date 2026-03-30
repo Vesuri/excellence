@@ -1,4 +1,5 @@
 #include <QGridLayout>
+#include <QHBoxLayout>
 #include <QPainter>
 #include <QPixmap>
 #include <QPushButton>
@@ -16,7 +17,7 @@ PenTipTool::PenTipTool(QObject *parent) : Tool(parent)
 
 static QPixmap renderTip(PenTip::Shape shape, int w, int h)
 {
-    const int W = 24, H = 24;
+    const int W = 40, H = 40;
     QPixmap pm(W, H);
     pm.fill(Qt::transparent);
     QPainter p(&pm);
@@ -75,32 +76,30 @@ QWidget *PenTipTool::createOptionsWidget()
     QWidget *w = new QWidget;
     w->setWindowTitle("Pen Tip");
 
-    QGridLayout *grid = new QGridLayout(w);
-    grid->setSpacing(2);
-    grid->setContentsMargins(4, 4, 4, 4);
+    QHBoxLayout *hbox = new QHBoxLayout(w);
+    hbox->setSpacing(2);
+    hbox->setContentsMargins(4, 4, 4, 4);
 
     struct Preset { PenTip::Shape shape; int w; int h; };
     const Preset presets[] = {
-        // Row 0: circles (1×1, 5×5, 9×9, 13×13, 17×17), vertical line (1×13)
         { PenTip::Circle, 1,  1  },
         { PenTip::Circle, 5,  5  },
         { PenTip::Circle, 9,  9  },
         { PenTip::Circle, 13, 13 },
         { PenTip::Circle, 17, 17 },
-        { PenTip::Square, 1,  13 },
-        // Row 1: squares (4×4, 6×6, 8×8, 10×10, 12×12), horizontal line (18×1)
         { PenTip::Square, 4,  4  },
         { PenTip::Square, 6,  6  },
         { PenTip::Square, 8,  8  },
         { PenTip::Square, 10, 10 },
         { PenTip::Square, 12, 12 },
+        { PenTip::Square, 1,  13 },
         { PenTip::Square, 18, 1  },
     };
 
-    for (int i = 0; i < 12; i++) {
-        const auto &preset = presets[i];
+    for (const auto &preset : presets) {
         QPushButton *btn = new QPushButton(w);
-        btn->setFixedSize(28, 28);
+        btn->setFixedSize(44, 44);
+        btn->setIconSize(QSize(40, 40));
         btn->setIcon(QIcon(renderTip(preset.shape, preset.w, preset.h)));
         PenTip::Shape shape = preset.shape;
         int pw = preset.w, ph = preset.h;
@@ -112,9 +111,10 @@ QWidget *PenTipTool::createOptionsWidget()
                 updateButtonIcon();
             }
         });
-        grid->addWidget(btn, i / 6, i % 6);
+        hbox->addWidget(btn);
     }
 
+    hbox->addStretch();
     return w;
 }
 
