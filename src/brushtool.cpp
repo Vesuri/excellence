@@ -247,6 +247,7 @@ QRect BrushTool::release(const QPoint &point)
                     areaImage.setPixel(x, y, static_cast<uint>(eraseIdx));
 
         buffer_->setPen(new Brush(areaImage, eraseIdx, buffer_));
+        buffer_->setPaintMode(Buffer::BrushMode);
         buffer_->setTool(tools.at(0));
         return buffer_->image().rect();
     }
@@ -261,6 +262,7 @@ QRect BrushTool::release(const QPoint &point)
 
     QImage image = buffer_->image().copy(QRect(startPoint_, point));
     buffer_->setPen(new Brush(image, static_cast<int>(buffer_->eraseColor())));
+    buffer_->setPaintMode(Buffer::BrushMode);
     buffer_->setTool(tools.at(0));
 
     if (mouseButton_ == Qt::RightButton)
