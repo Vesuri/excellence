@@ -260,7 +260,7 @@ QRect BrushTool::release(const QPoint &point)
     undoBuffer_ = nullptr;
 
     QImage image = buffer_->image().copy(QRect(startPoint_, point));
-    buffer_->setPen(new Brush(image));
+    buffer_->setPen(new Brush(image, static_cast<int>(buffer_->eraseColor())));
     buffer_->setTool(tools.at(0));
 
     if (mouseButton_ == Qt::RightButton)
