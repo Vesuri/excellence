@@ -135,11 +135,11 @@ QRect PenTipTool::move(const QPoint &point)
         size = qMax(1, 2 * r + 1);
         previewCenter = startPoint_;
     } else {
-        QPoint d = startPoint_ - point;
+        QPoint d = point - startPoint_;
         size = qMax(1, qMax(qAbs(d.x()), qAbs(d.y())));
-        // Rect anchored at startPoint_ (bottom-right corner); compute its centre.
+        // Rect anchored at startPoint_ (top-left corner); compute its centre.
         int r = size / 2;
-        previewCenter = QPoint(startPoint_.x() - r, startPoint_.y() - r);
+        previewCenter = QPoint(startPoint_.x() + r, startPoint_.y() + r);
     }
 
     QRect saveRect = centeredPreviewRect(previewCenter, size).intersected(buffer_->image().rect());
@@ -164,7 +164,7 @@ QRect PenTipTool::release(const QPoint &point)
         size = qMax(1, 2 * r + 1);
         lastCircleSize_ = size;
     } else {
-        QPoint d = startPoint_ - point;
+        QPoint d = point - startPoint_;
         size = qMax(1, qMax(qAbs(d.x()), qAbs(d.y())));
         lastRectSize_ = size;
     }
