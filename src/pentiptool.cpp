@@ -21,22 +21,15 @@ static QPixmap renderTip(PenTip::Shape shape, int w, int h)
     QPixmap pm(W, H);
     pm.fill(Qt::transparent);
     QPainter p(&pm);
-    const int scale = 2;
     const int cx = W / 2, cy = H / 2;
-    if (w == 1 && h == 1) {
-        p.fillRect(cx - 1, cy - 1, scale, scale, Qt::black);
-    } else {
-        int hw = w / 2, hh = h / 2;
-        for (int dy = -hh; dy <= hh; dy++) {
-            for (int dx = -hw; dx <= hw; dx++) {
-                bool inside = (shape == PenTip::Square)
-                              ? true
-                              : (dx * dx + dy * dy <= hw * hw + hw / 2);
-                if (inside)
-                    p.fillRect(cx + dx * scale - scale / 2,
-                               cy + dy * scale - scale / 2,
-                               scale, scale, Qt::black);
-            }
+    int hw = w / 2, hh = h / 2;
+    for (int dy = -hh; dy <= hh; dy++) {
+        for (int dx = -hw; dx <= hw; dx++) {
+            bool inside = (shape == PenTip::Square)
+                          ? true
+                          : (dx * dx + dy * dy <= hw * hw + hw / 2);
+            if (inside)
+                p.fillRect(cx + dx, cy + dy, 1, 1, Qt::black);
         }
     }
     return pm;
