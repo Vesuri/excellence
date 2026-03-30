@@ -2,7 +2,6 @@
 #include <QHBoxLayout>
 #include <QPainter>
 #include <QPixmap>
-#include <QPushButton>
 #include <QToolButton>
 #include <QWidget>
 #include "buffer.h"
@@ -17,7 +16,7 @@ PenTipTool::PenTipTool(QObject *parent) : Tool(parent)
 
 static QPixmap renderTip(PenTip::Shape shape, int w, int h)
 {
-    const int W = 40, H = 40;
+    const int W = 14, H = 13;
     QPixmap pm(W, H);
     pm.fill(Qt::transparent);
     QPainter p(&pm);
@@ -90,13 +89,11 @@ QWidget *PenTipTool::createOptionsWidget()
     };
 
     for (const auto &preset : presets) {
-        QPushButton *btn = new QPushButton(w);
-        btn->setFixedSize(44, 44);
-        btn->setIconSize(QSize(40, 40));
+        QToolButton *btn = new QToolButton(w);
         btn->setIcon(QIcon(renderTip(preset.shape, preset.w, preset.h)));
         PenTip::Shape shape = preset.shape;
         int pw = preset.w, ph = preset.h;
-        connect(btn, &QPushButton::clicked, [this, shape, pw, ph]() {
+        connect(btn, &QToolButton::clicked, [this, shape, pw, ph]() {
             PenTip *tip = qobject_cast<PenTip *>(buffer_->pen());
             if (tip) {
                 tip->setSize(pw, ph);
