@@ -463,6 +463,7 @@ static QString paintModeName(Buffer::PaintMode mode)
     case Buffer::Dither1:      return "Dither1";
     case Buffer::Dither2:      return "Dither2";
     case Buffer::Transparent:  return "Transparent";
+    case Buffer::BrushMode:    return "Brush";
     }
     return QString();
 }

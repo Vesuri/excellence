@@ -77,6 +77,7 @@ QWidget *DrawModeTool::createOptionsWidget()
 
     // Draw mode buttons
     static const struct { const char *label; Buffer::PaintMode mode; } kModes[] = {
+        {"Brush",      Buffer::BrushMode},
         {"Color",      Buffer::Normal},
         {"Replace",    Buffer::Replace},
         {"Smear",      Buffer::Smear},
@@ -100,7 +101,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     modeGroup->setExclusive(true);
     QGridLayout *modeGrid = new QGridLayout;
     modeGrid->setSpacing(2);
-    for (int i = 0; i < 17; i++) {
+    for (int i = 0; i < 18; i++) {
         QPushButton *btn = new QPushButton(kModes[i].label, w);
         btn->setFixedSize(72, 24);
         btn->setCheckable(true);

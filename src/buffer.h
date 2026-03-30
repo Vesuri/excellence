@@ -18,7 +18,7 @@ class Buffer : public QObject
 public:
     enum PaintMode { Normal, Replace, Smear, Smooth, Range, AverageSmear, Cycle, Random,
                      Tint, Colorize, Brighten, Darken, Mix, Negative,
-                     Dither1, Dither2, Transparent };
+                     Dither1, Dither2, Transparent, BrushMode };
 
     explicit Buffer(int width = 320, int height = 256, int colors = 32, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);
@@ -48,6 +48,8 @@ public:
     void setColor(unsigned colorIndex, const QColor &color);
     void setPaintMode(PaintMode mode);
     PaintMode paintMode() const;
+    const QImage &brushStamp() const;
+    int brushTransparentIndex() const;
     void setSmearDirection(const QPoint &dir);
     QPoint smearDirection() const;
     void setDrawModeAmount(int amount);
@@ -127,6 +129,8 @@ private:
     bool mirrorX_, mirrorY_;
     int mirrorCenterX_, mirrorCenterY_;
     bool dirty_;
+    QImage brushStamp_;
+    int brushTransparentIndex_;
 };
 
 #endif // BUFFER_H

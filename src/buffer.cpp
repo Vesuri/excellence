@@ -1,5 +1,6 @@
 #include <QImage>
 #include <QMessageBox>
+#include "brush.h"
 #include "undobuffer.h"
 #include "tool.h"
 #include "buffer.h"
@@ -178,7 +179,8 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     gridOffsetX_(0), gridOffsetY_(0),
     mirrorX_(false), mirrorY_(false),
     mirrorCenterX_(0), mirrorCenterY_(0),
-    dirty_(false)
+    dirty_(false),
+    brushTransparentIndex_(-1)
 {
     initialize(width, height, colors);
     mirrorCenterX_ = image_.width() / 2;
@@ -202,7 +204,8 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     gridW_(8), gridH_(8),
     gridOffsetX_(0), gridOffsetY_(0),
     mirrorX_(false), mirrorY_(false),
-    mirrorCenterX_(0), mirrorCenterY_(0)
+    mirrorCenterX_(0), mirrorCenterY_(0),
+    brushTransparentIndex_(-1)
 {
     if (!path.isEmpty()) {
         image_.load(path);
@@ -440,11 +443,25 @@ void Buffer::clearUndoBuffer()
 void Buffer::setPen(Pen *pen)
 {
     pen_ = pen;
+    if (Brush *b = qobject_cast<Brush *>(pen)) {
+        brushStamp_ = b->image();
+        brushTransparentIndex_ = b->transparentIndex();
+    }
 }
 
 Pen *Buffer::pen() const
 {
     return pen_;
+}
+
+const QImage &Buffer::brushStamp() const
+{
+    return brushStamp_;
+}
+
+int Buffer::brushTransparentIndex() const
+{
+    return brushTransparentIndex_;
 }
 
 void Buffer::setToolPen(Pen *pen)

@@ -311,6 +311,32 @@ void PenTip::applyTransparent(const QPoint &point, Buffer *buffer, unsigned pain
                 doPixel(QPoint(point.x()+dx, point.y()+dy));
 }
 
+void PenTip::applyBrushMode(const QPoint &point, Buffer *buffer) const
+{
+    const QImage &stamp = buffer->brushStamp();
+    if (stamp.isNull()) {
+        applyColor(point, buffer, paintColor_);
+        return;
+    }
+    const int bw = stamp.width(), bh = stamp.height();
+    const int transparent = buffer->brushTransparentIndex();
+    QRect imageRect = buffer->image().rect();
+    auto doPixel = [&](const QPoint &p) {
+        if (!imageRect.contains(p)) return;
+        int bx = ((p.x() % bw) + bw) % bw;
+        int by = ((p.y() % bh) + bh) % bh;
+        int ci = stamp.pixelIndex(bx, by);
+        if (ci == transparent) return;
+        buffer->image().setPixel(p, static_cast<uint>(ci));
+    };
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
+                doPixel(QPoint(point.x() + dx, point.y() + dy));
+}
+
 void PenTip::applyPrimary(const QPoint &point, Buffer *buffer, bool isErase) const
 {
     unsigned paintC = isErase ? eraseColor_ : paintColor_;
@@ -331,6 +357,7 @@ void PenTip::applyPrimary(const QPoint &point, Buffer *buffer, bool isErase) con
     case Buffer::Dither1:      applyDither(point, buffer, paintC, eraseC, false); break;
     case Buffer::Dither2:      applyDither(point, buffer, paintC, eraseC, true); break;
     case Buffer::Transparent:  applyTransparent(point, buffer, paintC); break;
+    case Buffer::BrushMode:    applyBrushMode(point, buffer); break;
     default:                   applyColor(point, buffer, paintC); break;
     }
 }
