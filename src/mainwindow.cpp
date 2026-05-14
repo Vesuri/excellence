@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setAttribute(Qt::WA_Hover);
     installEventFilter(this);
+    qApp->installEventFilter(this);
 
     QTimer::singleShot(1, this, SLOT(initialize()));
 }
@@ -754,6 +755,15 @@ void MainWindow::paletteRemapPage()
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+    if (watched == qApp && event->type() == QEvent::Quit) {
+        if (isVisible()) {
+            if (close())
+                qApp->quit();
+            return true;
+        }
+        return false;
+    }
+
     switch (event->type()) {
     case QEvent::WindowActivate:
         foreach (BufferView *bufferView, bufferViews) {
