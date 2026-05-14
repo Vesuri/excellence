@@ -151,8 +151,6 @@ QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 
 QRect PenTip::rect(const QPoint &point) const
 {
-    if (width_ == 1 && height_ == 1)
-        return QRect(point, point);
     int hw = width_ / 2, hh = height_ / 2;
-    return QRect(point.x() - hw, point.y() - hh, width_, height_);
+    return QRect(point.x() - hw, point.y() - hh, 2 * hw + 1, 2 * hh + 1);
 }
