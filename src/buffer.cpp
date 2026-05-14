@@ -169,6 +169,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     pen_(nullptr),
     toolPen_(nullptr),
     penTip_(nullptr),
+    brush_(nullptr),
     paintColor_(1),
     eraseColor_(0),
     paintMode_(Normal),
@@ -196,6 +197,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     pen_(nullptr),
     toolPen_(nullptr),
     penTip_(nullptr),
+    brush_(nullptr),
     paintColor_(1),
     eraseColor_(0),
     paintMode_(Normal),
@@ -449,6 +451,7 @@ void Buffer::setPen(Pen *pen)
     if (PenTip *t = qobject_cast<PenTip *>(pen))
         penTip_ = t;
     else if (Brush *b = qobject_cast<Brush *>(pen)) {
+        brush_ = b;
         brushStamp_ = b->image();
         brushTransparentIndex_ = b->transparentIndex();
     }
@@ -458,6 +461,7 @@ void Buffer::setPen(Pen *pen)
 Pen *Buffer::pen() const { return pen_; }
 
 PenTip *Buffer::penTip() const { return penTip_; }
+Brush *Buffer::brush() const { return brush_; }
 
 const QImage &Buffer::brushStamp() const
 {

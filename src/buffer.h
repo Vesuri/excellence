@@ -11,6 +11,7 @@ class Tool;
 class UndoBuffer;
 class Pen;
 class PenTip;
+class Brush;
 
 class Buffer : public QObject
 {
@@ -36,6 +37,7 @@ public:
     void setPen(Pen *pen);
     Pen *pen() const;
     PenTip *penTip() const;
+    Brush *brush() const;
     void setToolPen(Pen *pen);
     Pen *toolPen() const;
     void setPaintColor(unsigned colorIndex);
@@ -120,6 +122,7 @@ private:
     Pen *pen_;
     Pen *toolPen_;
     PenTip *penTip_;
+    Brush *brush_;
     unsigned paintColor_;
     unsigned eraseColor_;
     PaintMode paintMode_;

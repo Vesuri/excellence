@@ -6,6 +6,7 @@
 #include <QPixmap>
 #include <QToolButton>
 #include <QWidget>
+#include "brush.h"
 #include "buffer.h"
 #include "pentip.h"
 #include "pentiptool.h"
@@ -249,8 +250,21 @@ void PenTipTool::registerTool()
 
 void PenTipTool::activate()
 {
-    if (!buffer_ || !buffer_->penTip()) return;
-    buffer_->setPen(buffer_->penTip());
+    if (!buffer_) return;
+    if (qobject_cast<PenTip *>(buffer_->pen())) {
+        // Pen tip active — switch to brush if one exists
+        if (!buffer_->brush()) {
+            button_->setChecked(true);  // no brush: keep button pressed
+            return;
+        }
+        buffer_->setPen(buffer_->brush());
+        buffer_->setPaintMode(Buffer::BrushMode);
+    } else {
+        // Brush active — switch to pen tip
+        if (!buffer_->penTip()) return;
+        buffer_->setPen(buffer_->penTip());
+        // DrawModeTool::onPenChanged handles the BrushMode → Normal transition
+    }
 }
 
 QWidget *PenTipTool::createOptionsWidget()
