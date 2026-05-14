@@ -34,7 +34,7 @@ void GridLockTool::registerTool()
     button_->setIcon(QIcon(":/gridlock.png"));
     button_->setToolTip("Grid Lock [G]");
     button_->setCheckable(true);
-    connect(button_, &QToolButton::clicked, this, &GridLockTool::activate);
+    connect(button_, &QPushButton::clicked, this, &GridLockTool::activate);
 }
 
 void GridLockTool::activate()

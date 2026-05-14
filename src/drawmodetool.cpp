@@ -6,7 +6,6 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QSpinBox>
-#include <QToolButton>
 #include <QVBoxLayout>
 #include <QWidget>
 #include "brush.h"
@@ -83,7 +82,7 @@ void DrawModeTool::registerTool()
     button_->setIcon(QIcon(":/drawmode.png"));
     button_->setToolTip("Draw Mode");
     button_->setCheckable(true);
-    connect(button_, &QToolButton::clicked, this, &DrawModeTool::activate);
+    connect(button_, &QPushButton::clicked, this, &DrawModeTool::activate);
 }
 
 void DrawModeTool::activate()

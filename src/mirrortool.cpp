@@ -33,7 +33,7 @@ void MirrorTool::registerTool()
     button_->setIcon(QIcon(":/mirror.png"));
     button_->setToolTip("Mirror Draw [/]");
     button_->setCheckable(true);
-    connect(button_, &QToolButton::clicked, this, &MirrorTool::activate);
+    connect(button_, &QPushButton::clicked, this, &MirrorTool::activate);
 }
 
 void MirrorTool::activate()

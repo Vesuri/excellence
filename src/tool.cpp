@@ -1,5 +1,5 @@
 #include <QTimer>
-#include <QToolButton>
+#include <QPushButton>
 #include "buffer.h"
 #include "tool.h"
 
@@ -59,7 +59,7 @@ void Tool::click()
 
 void Tool::registerTool()
 {
-    button_ = new QToolButton;
+    button_ = new QPushButton;
     button_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
     tools.append(this);
