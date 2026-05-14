@@ -24,6 +24,8 @@ signals:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void dragEnterEvent(QDragEnterEvent *event) override;
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -40,9 +42,16 @@ private:
     struct DitherPair { int idx1; int idx2; float blend; };
     DitherPair ditherPair(const QColor &ideal) const;
     QColor interpolatedColor(float slotPos, int pixelX, int pixelY) const;
+    void saveSlotState(int slot);
 
     GradientRange *range_ = nullptr;
     Buffer *buffer_ = nullptr;
+
+    bool dragging_ = false;
+    int dragStartSlot_ = 0;
+    int dragBaseColor_ = 0;
+    struct DragSlotState { bool hadMarker; int colorIndex; bool abrupt; };
+    QMap<int, DragSlotState> dragSavedStates_;
 };
 
 #endif // GRADIENTMARKERBOX_H

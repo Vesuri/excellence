@@ -2,6 +2,7 @@
 #include <QDragEnterEvent>
 #include <QDragMoveEvent>
 #include <QDropEvent>
+#include <QMap>
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPainter>
@@ -207,19 +208,81 @@ void GradientMarkerBox::paintEvent(QPaintEvent *)
     }
 }
 
+void GradientMarkerBox::saveSlotState(int slot)
+{
+    if (dragSavedStates_.contains(slot)) return;
+    const auto &markers = range_->markers();
+    for (const auto &m : markers) {
+        if (m.slot == slot) {
+            dragSavedStates_[slot] = {true, m.colorIndex, m.abrupt};
+            return;
+        }
+    }
+    dragSavedStates_[slot] = {false, -1, false};
+}
+
 void GradientMarkerBox::mousePressEvent(QMouseEvent *event)
 {
     if (!range_) return;
     int slot = slotAt(event->pos().x());
     if (event->button() == Qt::LeftButton) {
         int colorIndex = buffer_ ? static_cast<int>(buffer_->paintColor()) : 0;
+        dragging_ = true;
+        dragStartSlot_ = slot;
+        dragBaseColor_ = colorIndex;
+        dragSavedStates_.clear();
+        saveSlotState(slot);
         range_->addMarker(slot, colorIndex);
         emit rangeChanged();
         update();
     } else if (event->button() == Qt::RightButton) {
+        dragging_ = false;
+        dragSavedStates_.clear();
         range_->removeMarker(slot);
         emit rangeChanged();
         update();
+    }
+}
+
+void GradientMarkerBox::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!dragging_ || !range_) return;
+
+    int currentSlot = slotAt(event->pos().x());
+    int minSlot = qMin(dragStartSlot_, currentSlot);
+    int maxSlot = qMax(dragStartSlot_, currentSlot);
+    int paletteSize = buffer_ ? buffer_->image().colorCount() : 1;
+    if (paletteSize < 1) return;
+
+    // Save original state for any slot we're about to overwrite for the first time
+    for (int s = minSlot; s <= maxSlot; s++)
+        saveSlotState(s);
+
+    // Set markers for all slots in the drag range
+    for (int s = minSlot; s <= maxSlot; s++) {
+        int colorIndex = qBound(0, dragBaseColor_ + qAbs(s - dragStartSlot_), paletteSize - 1);
+        range_->addMarker(s, colorIndex);
+    }
+
+    // Restore slots that were previously set but are now outside the range
+    for (auto it = dragSavedStates_.cbegin(); it != dragSavedStates_.cend(); ++it) {
+        int s = it.key();
+        if (s >= minSlot && s <= maxSlot) continue;
+        if (it.value().hadMarker)
+            range_->addMarker(s, it.value().colorIndex, it.value().abrupt);
+        else
+            range_->removeMarker(s);
+    }
+
+    emit rangeChanged();
+    update();
+}
+
+void GradientMarkerBox::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        dragging_ = false;
+        dragSavedStates_.clear();
     }
 }
 
