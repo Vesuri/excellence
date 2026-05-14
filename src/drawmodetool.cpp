@@ -9,9 +9,11 @@
 #include <QToolButton>
 #include <QVBoxLayout>
 #include <QWidget>
+#include "brush.h"
 #include "buffer.h"
 #include "drawmodetool.h"
 #include "gradientrange.h"
+#include "pentip.h"
 
 DrawModeTool DrawModeTool::instance;
 
@@ -25,11 +27,13 @@ void DrawModeTool::setBuffer(Buffer *buffer)
     if (buffer_) {
         disconnect(buffer_, &Buffer::toolChanged, this, &DrawModeTool::onToolChanged);
         disconnect(buffer_, &Buffer::paintModeChanged, this, &DrawModeTool::onPaintModeChanged);
+        disconnect(buffer_, &Buffer::penChanged, this, &DrawModeTool::onPenChanged);
     }
     Tool::setBuffer(buffer);
     if (buffer_) {
         connect(buffer_, &Buffer::toolChanged, this, &DrawModeTool::onToolChanged);
         connect(buffer_, &Buffer::paintModeChanged, this, &DrawModeTool::onPaintModeChanged);
+        connect(buffer_, &Buffer::penChanged, this, &DrawModeTool::onPenChanged);
     }
     applyMode();
 }
@@ -51,6 +55,14 @@ void DrawModeTool::onPaintModeChanged(Buffer::PaintMode mode)
         drawModeActive = false;
     }
     emit selectedModeChanged(selectedMode_);
+}
+
+void DrawModeTool::onPenChanged(Pen *pen)
+{
+    bool brushActive = qobject_cast<Brush *>(pen) != nullptr;
+    emit brushModeAvailableChanged(brushActive);
+    if (!brushActive && buffer_->paintMode() == Buffer::BrushMode)
+        buffer_->setPaintMode(Buffer::Normal);
 }
 
 void DrawModeTool::applyMode()
@@ -125,6 +137,10 @@ QWidget *DrawModeTool::createOptionsWidget()
         btn->setChecked(selectedMode_ == kModes[i].mode);
         modeGroup->addButton(btn);
         Buffer::PaintMode m = kModes[i].mode;
+        if (m == Buffer::BrushMode) {
+            btn->setEnabled(qobject_cast<Brush *>(buffer_->pen()) != nullptr);
+            connect(this, &DrawModeTool::brushModeAvailableChanged, btn, &QPushButton::setEnabled);
+        }
         connect(btn, &QPushButton::clicked, [this, m]() {
             selectedMode_ = m;
             button_->setChecked(m != Buffer::Normal);

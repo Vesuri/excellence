@@ -1,6 +1,7 @@
 #include <QImage>
 #include <QMessageBox>
 #include "brush.h"
+#include "pentip.h"
 #include "undobuffer.h"
 #include "tool.h"
 #include "buffer.h"
@@ -167,6 +168,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     moveUndoBuffer(nullptr),
     pen_(nullptr),
     toolPen_(nullptr),
+    penTip_(nullptr),
     paintColor_(1),
     eraseColor_(0),
     paintMode_(Normal),
@@ -193,6 +195,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     moveUndoBuffer(nullptr),
     pen_(nullptr),
     toolPen_(nullptr),
+    penTip_(nullptr),
     paintColor_(1),
     eraseColor_(0),
     paintMode_(Normal),
@@ -443,16 +446,18 @@ void Buffer::clearUndoBuffer()
 void Buffer::setPen(Pen *pen)
 {
     pen_ = pen;
-    if (Brush *b = qobject_cast<Brush *>(pen)) {
+    if (PenTip *t = qobject_cast<PenTip *>(pen))
+        penTip_ = t;
+    else if (Brush *b = qobject_cast<Brush *>(pen)) {
         brushStamp_ = b->image();
         brushTransparentIndex_ = b->transparentIndex();
     }
+    emit penChanged(pen);
 }
 
-Pen *Buffer::pen() const
-{
-    return pen_;
-}
+Pen *Buffer::pen() const { return pen_; }
+
+PenTip *Buffer::penTip() const { return penTip_; }
 
 const QImage &Buffer::brushStamp() const
 {

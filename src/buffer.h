@@ -9,8 +9,8 @@
 
 class Tool;
 class UndoBuffer;
-class Tool;
 class Pen;
+class PenTip;
 
 class Buffer : public QObject
 {
@@ -35,6 +35,7 @@ public:
     Tool *tool() const;
     void setPen(Pen *pen);
     Pen *pen() const;
+    PenTip *penTip() const;
     void setToolPen(Pen *pen);
     Pen *toolPen() const;
     void setPaintColor(unsigned colorIndex);
@@ -103,6 +104,7 @@ signals:
     void mirrorChanged();
     void dirtyChanged(bool dirty);
     void paintModeChanged(PaintMode mode);
+    void penChanged(Pen *pen);
 
 private:
     void initialize(int width = 640, int height = 512, int colors = 32);
@@ -117,6 +119,7 @@ private:
     Tool *tool_ = nullptr;
     Pen *pen_;
     Pen *toolPen_;
+    PenTip *penTip_;
     unsigned paintColor_;
     unsigned eraseColor_;
     PaintMode paintMode_;

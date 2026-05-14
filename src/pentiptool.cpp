@@ -204,6 +204,8 @@ void PenTipTool::cancel()
 
 void PenTipTool::activateSizing(SizingMode mode)
 {
+    if (!qobject_cast<PenTip *>(buffer_->pen()) && buffer_->penTip())
+        buffer_->setPen(buffer_->penTip());
     sizingMode_ = mode;
     buffer_->setTool(this);
 }
@@ -213,6 +215,7 @@ void PenTipTool::activateSizing(SizingMode mode)
 void PenTipTool::updateButtonIcon()
 {
     PenTip *tip = buffer_ ? qobject_cast<PenTip *>(buffer_->pen()) : nullptr;
+    button_->setChecked(tip != nullptr);
     if (tip)
         button_->setIcon(QIcon(renderTip(tip->shape(), tip->width(), tip->height())));
     else
@@ -221,7 +224,17 @@ void PenTipTool::updateButtonIcon()
 
 void PenTipTool::setBuffer(Buffer *buffer)
 {
+    if (buffer_)
+        disconnect(buffer_, &Buffer::penChanged, this, &PenTipTool::onPenChanged);
     Tool::setBuffer(buffer);
+    if (buffer_)
+        connect(buffer_, &Buffer::penChanged, this, &PenTipTool::onPenChanged);
+    updateButtonIcon();
+}
+
+void PenTipTool::onPenChanged(Pen *pen)
+{
+    button_->setChecked(qobject_cast<PenTip *>(pen) != nullptr);
     updateButtonIcon();
 }
 
@@ -230,13 +243,14 @@ void PenTipTool::registerTool()
     Tool::registerTool();
     button_->setIcon(QIcon(":/pentip.png"));
     button_->setToolTip("Pen Tip");
-    button_->setCheckable(false);
+    button_->setCheckable(true);
     connect(button_, &QToolButton::clicked, this, &PenTipTool::activate);
 }
 
 void PenTipTool::activate()
 {
-    toggleOptionsWidget();
+    if (!buffer_ || !buffer_->penTip()) return;
+    buffer_->setPen(buffer_->penTip());
 }
 
 QWidget *PenTipTool::createOptionsWidget()
@@ -272,11 +286,14 @@ QWidget *PenTipTool::createOptionsWidget()
         int pw = preset.pw, ph = preset.ph;
         connect(btn, &QToolButton::clicked, [this, shape, pw, ph]() {
             PenTip *tip = qobject_cast<PenTip *>(buffer_->pen());
-            if (tip) {
-                tip->setSize(pw, ph);
-                tip->setShape(shape);
-                updateButtonIcon();
+            if (!tip) {
+                tip = buffer_->penTip();
+                if (!tip) return;
+                buffer_->setPen(tip);
             }
+            tip->setSize(pw, ph);
+            tip->setShape(shape);
+            updateButtonIcon();
         });
         hbox->addWidget(btn);
     }

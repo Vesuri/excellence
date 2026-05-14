@@ -1,6 +1,7 @@
 #ifndef PENTIPTOOL_H
 #define PENTIPTOOL_H
 
+#include "pen.h"
 #include "tool.h"
 
 class UndoBuffer;
@@ -26,6 +27,9 @@ protected:
     void registerTool() override;
     void activate() override;
     QWidget *createOptionsWidget() override;
+
+private slots:
+    void onPenChanged(Pen *pen);
 
 private:
     void updateButtonIcon();

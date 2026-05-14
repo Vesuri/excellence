@@ -25,10 +25,12 @@ protected:
 
 signals:
     void selectedModeChanged(Buffer::PaintMode mode);
+    void brushModeAvailableChanged(bool available);
 
 private slots:
     void onToolChanged(Tool *tool);
     void onPaintModeChanged(Buffer::PaintMode mode);
+    void onPenChanged(Pen *pen);
 
 private:
     void applyMode();
