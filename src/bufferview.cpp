@@ -9,7 +9,9 @@
 #include <QtCore/qmath.h>
 #include "tool.h"
 #include "brush.h"
+#include "brushtool.h"
 #include "drawtool.h"
+#include "rectangletool.h"
 #include "linetool.h"
 #include "pickcolortool.h"
 #include "curvetool.h"
@@ -35,26 +37,61 @@ public:
     bool pixelGrid() const { return pixelGrid_; }
     void setZoomLevel(int level) { zoomLevel_ = level; update(); }
 
+    void setGuides(bool visible, QPoint point, QSize imageSize)
+    {
+        guidesVisible_ = visible;
+        guidePoint_ = point;
+        imageSize_ = imageSize;
+        update();
+    }
+
+    void setStartGuide(bool visible, QPoint startPoint)
+    {
+        startGuideVisible_ = visible;
+        startGuidePoint_ = startPoint;
+        update();
+    }
+
 protected:
     void drawForeground(QPainter *painter, const QRectF &rect) override
     {
-        if (!pixelGrid_ || zoomLevel_ < 3) return;
-        painter->save();
-        painter->setPen(QPen(QColor(0, 0, 0, 80), 0));
-        int left = qFloor(rect.left());
-        int top  = qFloor(rect.top());
-        int right  = qCeil(rect.right());
-        int bottom = qCeil(rect.bottom());
-        for (int x = left + 1; x <= right; x++)
-            painter->drawLine(QLineF(x, rect.top(), x, rect.bottom()));
-        for (int y = top + 1; y <= bottom; y++)
-            painter->drawLine(QLineF(rect.left(), y, rect.right(), y));
-        painter->restore();
+        if (pixelGrid_ && zoomLevel_ >= 3) {
+            painter->save();
+            painter->setPen(QPen(QColor(0, 0, 0, 80), 0));
+            int left = qFloor(rect.left());
+            int top  = qFloor(rect.top());
+            int right  = qCeil(rect.right());
+            int bottom = qCeil(rect.bottom());
+            for (int x = left + 1; x <= right; x++)
+                painter->drawLine(QLineF(x, rect.top(), x, rect.bottom()));
+            for (int y = top + 1; y <= bottom; y++)
+                painter->drawLine(QLineF(rect.left(), y, rect.right(), y));
+            painter->restore();
+        }
+
+        if (guidesVisible_ && imageSize_.isValid()) {
+            painter->save();
+            painter->setCompositionMode(QPainter::CompositionMode_Difference);
+            painter->setPen(QPen(Qt::white, 1));
+            auto drawCrosshair = [&](QPoint p) {
+                painter->drawLine(QLineF(0, p.y() + 0.5, imageSize_.width(), p.y() + 0.5));
+                painter->drawLine(QLineF(p.x() + 0.5, 0, p.x() + 0.5, imageSize_.height()));
+            };
+            drawCrosshair(guidePoint_);
+            if (startGuideVisible_)
+                drawCrosshair(startGuidePoint_);
+            painter->restore();
+        }
     }
 
 private:
     bool pixelGrid_;
     int zoomLevel_;
+    bool guidesVisible_ = false;
+    bool startGuideVisible_ = false;
+    QPoint guidePoint_;
+    QPoint startGuidePoint_;
+    QSize imageSize_;
 };
 
 BufferView::BufferView(QWidget *parent) :
@@ -157,6 +194,9 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             switch (event->type()) {
             case QEvent::GraphicsSceneMousePress:
                 pendingZoom_ = buffer->tool() && buffer->tool()->type() == Tool::Zoom;
+                if (auto *bt = qobject_cast<BrushTool *>(buffer->tool()))
+                    if (bt->mode() == BrushTool::Rectangle)
+                        guideStartPoint_ = point;
                 buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
                 pendingZoom_ = false;
                 break;
@@ -174,6 +214,19 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 break;
             }
 
+            // Update crosshair position guides
+            {
+                Tool *tool = buffer->tool();
+                bool mouseDown = tool && tool->mouseButton() != Qt::NoButton;
+                auto *bt = qobject_cast<BrushTool *>(tool);
+                bool isBrushRect = bt && bt->mode() == BrushTool::Rectangle;
+                bool isRectOrEllipse = qobject_cast<RectangleTool *>(tool)
+                                    || qobject_cast<EllipseTool *>(tool);
+                bool showGuides = isBrushRect || (isRectOrEllipse && !mouseDown);
+                scene->setGuides(showGuides, point, buffer->image().size());
+                scene->setStartGuide(isBrushRect && mouseDown, guideStartPoint_);
+            }
+
             updateWindowTitle(point);
             lastMousePoint = point;
             break;
@@ -186,6 +239,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
         case QEvent::HoverLeave:
             if (buffer)
                 buffer->clearHoverPreview();
+            scene->setGuides(false, {}, {});
             updateWindowTitle();
             break;
         default:

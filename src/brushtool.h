@@ -67,6 +67,8 @@ protected:
     QWidget *createOptionsWidget() override;
 
 public:
+    Mode mode() const { return mode_; }
+    QPoint startPoint() const { return startPoint_; }
     QImage currentBrushImage() const;
     QPoint currentHandleOffset() const;
 

@@ -200,17 +200,11 @@ QRect BrushTool::move(const QPoint &point)
         return changedRect;
     }
 
-    if (!undoBuffer_)
-        return QRect();
-
-    undoBuffer_->apply(buffer_);
-    delete undoBuffer_;
-
-    QRect changedRect;
-    Algorithms::rectangle(startPoint_, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->changes(point)); });
-    undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-    Algorithms::rectangle(startPoint_, point, [this](const QPoint &point) { this->draw(point); });
-    return changedRect;
+    // No rectangle preview — guides show the selection area instead.
+    // Restore the initial press dot but keep undoBuffer_ for release().
+    if (undoBuffer_)
+        undoBuffer_->apply(buffer_);
+    return QRect();
 }
 
 QRect BrushTool::release(const QPoint &point)

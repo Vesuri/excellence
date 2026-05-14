@@ -51,6 +51,7 @@ private:
     bool cursorHidden_;
     bool pendingZoom_;
     int zoomLevel_;
+    QPoint guideStartPoint_;
     qreal aspectX_;
     qreal aspectY_;
 };
