@@ -57,6 +57,7 @@ public:
     QPoint smearDirection() const;
     void setDrawModeAmount(int amount);
     int drawModeAmount() const;
+    const QImage &referenceImage() const;
     bool isDirty() const;
     void clearDirty();
     void setGridEnabled(bool enabled);

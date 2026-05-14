@@ -616,6 +616,10 @@ void Buffer::resetCycle() { cycleIndex_ = 0; }
 
 void Buffer::setDrawModeAmount(int amount) { drawModeAmount_ = qBound(0, amount, 100); }
 int Buffer::drawModeAmount() const { return drawModeAmount_; }
+const QImage &Buffer::referenceImage() const
+{
+    return preModificationImage.isNull() ? image_ : preModificationImage;
+}
 
 void Buffer::setGridEnabled(bool enabled)
 {

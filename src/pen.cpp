@@ -117,7 +117,6 @@ static void colorEffectPixel(const QPoint &p, Buffer *buffer, unsigned baseColor
     const QVector<QRgb> palette = buffer->image().colorTable();
     QRgb paintRgb = (baseColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(baseColor)] : 0;
     QColor paintHSV = QColor(paintRgb).toHsv();
-    const int kStep = qMax(1, buffer->drawModeAmount() * 255 / 100);
     QRgb canvasRgb = buffer->image().color(buffer->image().pixelIndex(p));
     QColor canvasHSV = QColor(canvasRgb).toHsv();
     QRgb target = canvasRgb;
@@ -132,13 +131,17 @@ static void colorEffectPixel(const QPoint &p, Buffer *buffer, unsigned baseColor
                                  canvasHSV.value()).rgb();
         break;
     case Buffer::Brighten:
-        target = QColor::fromHsv(canvasHSV.hsvHue(), canvasHSV.hsvSaturation(),
-                                 qMin(255, canvasHSV.value() + kStep)).rgb();
+    case Buffer::Darken: {
+        // Shift perceptual luminance by the amount, then find nearest palette colour to the
+        // resulting grey. This matches Brilliance: both #000 and #00f at 50% → #999.
+        const QImage &ref = buffer->referenceImage();
+        QRgb refRgb = ref.color(ref.pixelIndex(p));
+        double Y = 0.2126 * qRed(refRgb) + 0.7152 * qGreen(refRgb) + 0.0722 * qBlue(refRgb);
+        double step = buffer->drawModeAmount() * 255.0 / 100.0;
+        int gray = qRound((mode == Buffer::Brighten) ? qMin(255.0, Y + step) : qMax(0.0, Y - step));
+        target = qRgb(gray, gray, gray);
         break;
-    case Buffer::Darken:
-        target = QColor::fromHsv(canvasHSV.hsvHue(), canvasHSV.hsvSaturation(),
-                                 qMax(0, canvasHSV.value() - kStep)).rgb();
-        break;
+    }
     case Buffer::Mix:
         target = qRgb((qRed(canvasRgb)   + qRed(paintRgb))   / 2,
                       (qGreen(canvasRgb) + qGreen(paintRgb)) / 2,
@@ -223,7 +226,14 @@ void Pen::applyPixelMode(const QPoint &p, Buffer *buffer,
     case Buffer::Brighten:
     case Buffer::Darken:
     case Buffer::Mix:
-    case Buffer::Negative:     colorEffectPixel(p, buffer, paintC, mode); break;
+    case Buffer::Negative:
+        if (isErase) {
+            if (buffer->image().rect().contains(p))
+                buffer->image().setPixel(p, paintC);
+        } else {
+            colorEffectPixel(p, buffer, paintC, mode);
+        }
+        break;
     case Buffer::Dither1:      ditherPixel(p, buffer, paintC, eraseC, false); break;
     case Buffer::Dither2:      ditherPixel(p, buffer, paintC, eraseC, true); break;
     case Buffer::Transparent:  transparentPixel(p, buffer, paintC); break;
