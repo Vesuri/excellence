@@ -101,8 +101,9 @@ QWidget *DrawModeTool::createOptionsWidget()
     QButtonGroup *modeGroup = new QButtonGroup(w);
     modeGroup->setExclusive(true);
 
-    auto makeMode = [&](const char *label, Buffer::PaintMode mode) -> QRadioButton * {
+    auto makeMode = [&](const char *label, Buffer::PaintMode mode, const char *tooltip = nullptr) -> QRadioButton * {
         QRadioButton *btn = new QRadioButton(label, w);
+        if (tooltip) btn->setToolTip(tooltip);
         btn->setChecked(selectedMode_ == mode);
         modeGroup->addButton(btn);
         if (mode == Buffer::BrushMode) {
@@ -120,8 +121,9 @@ QWidget *DrawModeTool::createOptionsWidget()
         return btn;
     };
 
-    auto makeStub = [&](const char *label) -> QRadioButton * {
+    auto makeStub = [&](const char *label, const char *tooltip = nullptr) -> QRadioButton * {
         QRadioButton *btn = new QRadioButton(label, w);
+        if (tooltip) btn->setToolTip(tooltip);
         btn->setEnabled(false);
         return btn;
     };
@@ -148,15 +150,15 @@ QWidget *DrawModeTool::createOptionsWidget()
     // ── Col 1: Brush | sep | transforms | sep | Replace ──────────────
     QVBoxLayout *col1 = new QVBoxLayout;
     col1->setSpacing(8);
-    col1->addWidget(makeMode("Brush", Buffer::BrushMode));
+    col1->addWidget(makeMode("Brush",       Buffer::BrushMode, "Brush draw mode"));
     addHSep(col1);
-    col1->addWidget(makeStub("Stretch"));
-    col1->addWidget(makeStub("Pattern"));
-    col1->addWidget(makeStub("Shape"));
-    col1->addWidget(makeStub("Perspective"));
+    col1->addWidget(makeStub("Stretch",    "Brush fill mode"));
+    col1->addWidget(makeStub("Pattern",    "Brush fill mode"));
+    col1->addWidget(makeStub("Shape",      "Brush fill mode"));
+    col1->addWidget(makeStub("Perspective","Brush fill mode"));
     col1->addStretch();
     addHSep(col1);
-    col1->addWidget(makeMode("Replace", Buffer::Replace));
+    col1->addWidget(makeMode("Replace",    Buffer::Replace, "Replace draw brush"));
     mainRow->addLayout(col1);
 
     addVSep(mainRow);
@@ -173,36 +175,37 @@ QWidget *DrawModeTool::createOptionsWidget()
     QVBoxLayout *col2 = new QVBoxLayout;
     col2->setSpacing(8);
     col2->setAlignment(Qt::AlignTop);
-    col2->addWidget(makeMode("Color",    Buffer::Normal));
-    col2->addWidget(makeMode("Tint",     Buffer::Tint));
-    col2->addWidget(makeMode("Colorize", Buffer::Colorize));
-    col2->addWidget(makeMode("Brighten", Buffer::Brighten));
-    col2->addWidget(makeMode("Darken",   Buffer::Darken));
-    col2->addWidget(makeStub("Stencil"));
+    static constexpr const char *kGeneral = "General draw mode";
+    col2->addWidget(makeMode("Color",    Buffer::Normal,       kGeneral));
+    col2->addWidget(makeMode("Tint",     Buffer::Tint,         kGeneral));
+    col2->addWidget(makeMode("Colorize", Buffer::Colorize,     kGeneral));
+    col2->addWidget(makeMode("Brighten", Buffer::Brighten,     kGeneral));
+    col2->addWidget(makeMode("Darken",   Buffer::Darken,       kGeneral));
+    col2->addWidget(makeStub("Stencil",                        kGeneral));
     modeCols->addLayout(col2);
 
     // Col 3
     QVBoxLayout *col3 = new QVBoxLayout;
     col3->setSpacing(8);
     col3->setAlignment(Qt::AlignTop);
-    col3->addWidget(makeMode("Mix",       Buffer::Mix));
-    col3->addWidget(makeMode("Smooth",    Buffer::Smooth));
-    col3->addWidget(makeMode("Smear",     Buffer::Smear));
-    col3->addWidget(makeMode("Avg Smear", Buffer::AverageSmear));
-    col3->addWidget(makeMode("Range",     Buffer::Range));
-    col3->addWidget(makeMode("Cycle",     Buffer::Cycle));
+    col3->addWidget(makeMode("Mix",       Buffer::Mix,          kGeneral));
+    col3->addWidget(makeMode("Smooth",    Buffer::Smooth,       kGeneral));
+    col3->addWidget(makeMode("Smear",     Buffer::Smear,        kGeneral));
+    col3->addWidget(makeMode("Avg Smear", Buffer::AverageSmear, kGeneral));
+    col3->addWidget(makeMode("Range",     Buffer::Range,        kGeneral));
+    col3->addWidget(makeMode("Cycle",     Buffer::Cycle,        kGeneral));
     modeCols->addLayout(col3);
 
     // Col 4
     QVBoxLayout *col4 = new QVBoxLayout;
     col4->setSpacing(8);
     col4->setAlignment(Qt::AlignTop);
-    col4->addWidget(makeMode("Random",      Buffer::Random));
-    col4->addWidget(makeMode("Dither 1",    Buffer::Dither1));
-    col4->addWidget(makeMode("Dither 2",    Buffer::Dither2));
-    col4->addWidget(makeMode("Negative",    Buffer::Negative));
-    col4->addWidget(makeStub("Halferite"));
-    col4->addWidget(makeMode("Transparent", Buffer::Transparent));
+    col4->addWidget(makeMode("Random",      Buffer::Random,      kGeneral));
+    col4->addWidget(makeMode("Dither 1",    Buffer::Dither1,     kGeneral));
+    col4->addWidget(makeMode("Dither 2",    Buffer::Dither2,     kGeneral));
+    col4->addWidget(makeMode("Negative",    Buffer::Negative,    kGeneral));
+    col4->addWidget(makeStub("Halferite",                        kGeneral));
+    col4->addWidget(makeMode("Transparent", Buffer::Transparent, kGeneral));
     modeCols->addLayout(col4);
 
     middleVBox->addLayout(modeCols);
@@ -218,6 +221,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     amountRow->setSpacing(4);
     amountRow->addWidget(new QLabel("Amount:", w));
     QSlider *slider = new QSlider(Qt::Horizontal, w);
+    slider->setToolTip("Dither or dark/brite");
     slider->setRange(0, 100);
     slider->setValue(buffer_->drawModeAmount());
     QSpinBox *spin = new QSpinBox(w);
@@ -255,6 +259,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     col5vb->setContentsMargins(0, 0, 0, 0);
     for (const auto &f : kFill) {
         QRadioButton *btn = new QRadioButton(f.label, col5);
+        btn->setToolTip("Gradient fill mode");
         btn->setChecked(activeGradientFillMode == f.mode);
         fillModeGroup->addButton(btn);
         GradientFillMode fm = f.mode;
@@ -268,13 +273,14 @@ QWidget *DrawModeTool::createOptionsWidget()
         sep->setFrameShadow(QFrame::Sunken);
         col5vb->addWidget(sep);
     }
-    auto makeCol5Stub = [&](const char *label) {
+    auto makeCol5Stub = [&](const char *label, const char *tooltip) {
         QRadioButton *b = new QRadioButton(label, col5);
+        b->setToolTip(tooltip);
         b->setEnabled(false);
         col5vb->addWidget(b);
     };
-    makeCol5Stub("Conform");
-    makeCol5Stub("Center");
+    makeCol5Stub("Conform", "Conform fill to edges");
+    makeCol5Stub("Center",  "Auto center to fill");
 
     mainRow->addWidget(col5);
 

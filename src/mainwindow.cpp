@@ -37,6 +37,12 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+#ifdef Q_OS_MAC
+    // Detach the menu bar so it becomes the application-level menu bar on
+    // macOS, visible regardless of which Excellence window is currently active.
+    menuBar()->setParent(nullptr);
+#endif
+
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
     connect(loadPaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(loadPalette(QString)));
     savePaletteDialog->setAcceptMode(QFileDialog::AcceptSave);
