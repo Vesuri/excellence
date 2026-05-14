@@ -61,8 +61,10 @@ void DrawModeTool::onPenChanged(Pen *pen)
 {
     bool brushActive = qobject_cast<Brush *>(pen) != nullptr;
     emit brushModeAvailableChanged(brushActive);
-    if (!brushActive && buffer_->paintMode() == Buffer::BrushMode)
+    if (!brushActive && buffer_->paintMode() == Buffer::BrushMode) {
+        selectedMode_ = Buffer::Normal;
         buffer_->setPaintMode(Buffer::Normal);
+    }
 }
 
 void DrawModeTool::applyMode()
