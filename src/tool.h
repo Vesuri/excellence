@@ -2,12 +2,12 @@
 #define TOOL_H
 
 #include <QObject>
-#include <QPushButton>
+#include <QToolButton>
 #include <QList>
 #include <QWidget>
 
 class Buffer;
-class QPushButton;
+class QToolButton;
 class QGridLayout;
 
 class Tool : public QObject
@@ -49,7 +49,7 @@ protected:
 
     Qt::MouseButton mouseButton_;
     Buffer *buffer_;
-    QPushButton *button_;
+    QToolButton *button_;
     QWidget *optionsWidget_;
 };
 

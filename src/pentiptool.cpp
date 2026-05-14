@@ -245,7 +245,7 @@ void PenTipTool::registerTool()
     button_->setIcon(QIcon(":/pentip.png"));
     button_->setToolTip("Pen Tip");
     button_->setCheckable(true);
-    connect(button_, &QPushButton::clicked, this, &PenTipTool::activate);
+    connect(button_, &QToolButton::clicked, this, &PenTipTool::activate);
 }
 
 void PenTipTool::activate()
@@ -298,7 +298,7 @@ QWidget *PenTipTool::createOptionsWidget()
         btn->setIcon(QIcon(renderTip(preset.shape, preset.pw, preset.ph)));
         PenTip::Shape shape = preset.shape;
         int pw = preset.pw, ph = preset.ph;
-        connect(btn, &QPushButton::clicked, [this, shape, pw, ph]() {
+        connect(btn, &QToolButton::clicked, [this, shape, pw, ph]() {
             PenTip *tip = qobject_cast<PenTip *>(buffer_->pen());
             if (!tip) {
                 tip = buffer_->penTip();
@@ -322,14 +322,14 @@ QWidget *PenTipTool::createOptionsWidget()
     QToolButton *circleBtn = new QToolButton(w);
     circleBtn->setIcon(QIcon(renderTip(PenTip::Circle, 9, 9)));
     circleBtn->setToolTip("Size Circle Pen Tip – drag from centre on canvas");
-    connect(circleBtn, &QPushButton::clicked, [this]() { activateSizing(SizingCircle); });
+    connect(circleBtn, &QToolButton::clicked, [this]() { activateSizing(SizingCircle); });
     hbox->addWidget(circleBtn);
 
     // Interactive rect sizer button
     QToolButton *rectBtn = new QToolButton(w);
     rectBtn->setIcon(QIcon(renderTip(PenTip::Square, 8, 8)));
     rectBtn->setToolTip("Size Rectangle Pen Tip – drag from bottom-right corner on canvas");
-    connect(rectBtn, &QPushButton::clicked, [this]() { activateSizing(SizingRect); });
+    connect(rectBtn, &QToolButton::clicked, [this]() { activateSizing(SizingRect); });
     hbox->addWidget(rectBtn);
 
     hbox->addStretch();

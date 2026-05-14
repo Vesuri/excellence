@@ -22,7 +22,7 @@ void GradientTool::registerTool()
     button_->setIcon(QIcon(":/cyclegradient.png"));
     button_->setToolTip("Gradient Range Editor");
     button_->setCheckable(false);
-    connect(button_, &QPushButton::clicked, this, &GradientTool::activate);
+    connect(button_, &QToolButton::clicked, this, &GradientTool::activate);
 }
 
 void GradientTool::activate()
