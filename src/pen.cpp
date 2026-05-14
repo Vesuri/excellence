@@ -4,6 +4,7 @@
 #include <QRect>
 #include <QVector>
 #include "pen.h"
+#include "tool.h"
 
 Pen::Pen(QObject *parent) : QObject(parent)
 {
@@ -187,14 +188,19 @@ static void transparentPixel(const QPoint &p, Buffer *buffer, unsigned paintColo
 unsigned Pen::resolveDrawColor(Buffer *buffer, Buffer::PaintMode &mode,
                                 bool &isErase, unsigned paintColor, unsigned eraseColor)
 {
+    Tool *tool = buffer->tool();
+    bool hovering = tool && tool->mouseButton() == Qt::NoButton;
+
     if (mode == Buffer::Cycle) {
         mode = Buffer::Normal;
+        if (hovering) return paintColor;
         unsigned color = static_cast<unsigned>(buffer->nextCycleColor(isErase));
         isErase = false;
         return color;
     }
     if (mode == Buffer::Random) {
         mode = Buffer::Normal;
+        if (hovering) return paintColor;
         QVector<int> grad = buffer->gradientColors();
         unsigned base = isErase ? eraseColor : paintColor;
         isErase = false;
