@@ -61,6 +61,12 @@ void Tool::registerTool()
 {
     button_ = new QToolButton;
     button_->setContextMenuPolicy(Qt::CustomContextMenu);
+    button_->setStyleSheet(
+        "QToolButton { border: 1px solid transparent; border-radius: 3px; padding: 1px; }"
+        "QToolButton:hover { border-color: palette(dark); background: palette(midlight); }"
+        "QToolButton:pressed { background: palette(mid); border-color: palette(shadow); }"
+        "QToolButton:checked { background: palette(mid); border-color: palette(dark); }"
+    );
     connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
     tools.append(this);
 }
