@@ -1,6 +1,8 @@
+#include <climits>
 #include <QImage>
 #include <QMessageBox>
 #include "brush.h"
+#include "gradientrange.h"
 #include "pentip.h"
 #include "undobuffer.h"
 #include "tool.h"
@@ -175,6 +177,8 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     paintMode_(Normal),
     smearDirection_(0, 0),
     cycleIndex_(0),
+    lastCycleColor_(0),
+    cycleUsed_(false),
     drawModeAmount_(50),
     gridEnabled_(false),
     pixelGrid_(false),
@@ -203,6 +207,8 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     paintMode_(Normal),
     smearDirection_(0, 0),
     cycleIndex_(0),
+    lastCycleColor_(0),
+    cycleUsed_(false),
     drawModeAmount_(50),
     gridEnabled_(false),
     pixelGrid_(false),
@@ -365,6 +371,8 @@ void Buffer::release(const QPoint &point)
             qDeleteAll(redoStack);
             redoStack.clear();
             if (!dirty_) { dirty_ = true; emit dirtyChanged(true); }
+            if (paintMode_ == Cycle && cycleUsed_)
+                setPaintColor(static_cast<unsigned>(lastCycleColor_));
         }
 
         modifiedArea = QRect();
@@ -604,15 +612,42 @@ QVector<int> Buffer::gradientColors() const
 
 int Buffer::nextCycleColor(bool reverse)
 {
-    QVector<int> grad = gradientColors();
-    if (grad.isEmpty()) return static_cast<int>(reverse ? eraseColor_ : paintColor_);
-    int idx = cycleIndex_ % grad.size();
-    int color = reverse ? grad[grad.size() - 1 - idx] : grad[idx];
-    cycleIndex_++;
-    return color;
+    const auto &markers = gradientRanges[activeGradientRange].markers();
+    if (markers.isEmpty()) return static_cast<int>(paintColor_);
+    int sz = markers.size();
+    int idx = ((cycleIndex_ % sz) + sz) % sz;
+    lastCycleColor_ = markers[idx].colorIndex;
+    cycleUsed_ = true;
+    cycleIndex_ += reverse ? -1 : 1;
+    return lastCycleColor_;
 }
 
-void Buffer::resetCycle() { cycleIndex_ = 0; }
+void Buffer::resetCycle()
+{
+    cycleUsed_ = false;
+    const auto &markers = gradientRanges[activeGradientRange].markers();
+    if (markers.isEmpty()) { cycleIndex_ = 0; return; }
+
+    int paintColorIdx = static_cast<int>(paintColor_);
+    for (int i = 0; i < markers.size(); i++) {
+        if (markers[i].colorIndex == paintColorIdx) { cycleIndex_ = i; return; }
+    }
+
+    const QVector<QRgb> &table = image_.colorTable();
+    if (paintColorIdx < 0 || paintColorIdx >= table.size()) { cycleIndex_ = 0; return; }
+    QRgb fgRgb = table[paintColorIdx];
+    int bestIdx = 0, bestDist = INT_MAX;
+    for (int i = 0; i < markers.size(); i++) {
+        int ci = markers[i].colorIndex;
+        if (ci < 0 || ci >= table.size()) continue;
+        int dr = qRed(fgRgb)   - qRed(table[ci]);
+        int dg = qGreen(fgRgb) - qGreen(table[ci]);
+        int db = qBlue(fgRgb)  - qBlue(table[ci]);
+        int dist = dr*dr + dg*dg + db*db;
+        if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+    cycleIndex_ = bestIdx;
+}
 
 void Buffer::setDrawModeAmount(int amount) { drawModeAmount_ = qBound(0, amount, 100); }
 int Buffer::drawModeAmount() const { return drawModeAmount_; }

@@ -129,6 +129,8 @@ private:
     PaintMode paintMode_;
     QPoint smearDirection_;
     int cycleIndex_;
+    int lastCycleColor_;
+    bool cycleUsed_;
     int drawModeAmount_;
     bool gridEnabled_;
     bool pixelGrid_;
