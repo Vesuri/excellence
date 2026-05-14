@@ -22,11 +22,15 @@ DrawModeTool::DrawModeTool(QObject *parent) : Tool(parent),
 
 void DrawModeTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_)
+    if (buffer_) {
         disconnect(buffer_, &Buffer::toolChanged, this, &DrawModeTool::onToolChanged);
+        disconnect(buffer_, &Buffer::paintModeChanged, this, &DrawModeTool::onPaintModeChanged);
+    }
     Tool::setBuffer(buffer);
-    if (buffer_)
+    if (buffer_) {
         connect(buffer_, &Buffer::toolChanged, this, &DrawModeTool::onToolChanged);
+        connect(buffer_, &Buffer::paintModeChanged, this, &DrawModeTool::onPaintModeChanged);
+    }
     applyMode();
 }
 
@@ -34,6 +38,19 @@ void DrawModeTool::onToolChanged(Tool *tool)
 {
     if (fillGroupWidget_)
         fillGroupWidget_->setEnabled(tool && tool->hasFill());
+}
+
+void DrawModeTool::onPaintModeChanged(Buffer::PaintMode mode)
+{
+    if (mode != Buffer::Normal) {
+        selectedMode_ = mode;
+        button_->setChecked(true);
+        drawModeActive = true;
+    } else {
+        button_->setChecked(false);
+        drawModeActive = false;
+    }
+    emit selectedModeChanged(selectedMode_);
 }
 
 void DrawModeTool::applyMode()
@@ -112,6 +129,9 @@ QWidget *DrawModeTool::createOptionsWidget()
             selectedMode_ = m;
             button_->setChecked(m != Buffer::Normal);
             applyMode();
+        });
+        connect(this, &DrawModeTool::selectedModeChanged, btn, [btn, m](Buffer::PaintMode active) {
+            btn->setChecked(active == m);
         });
         modeGrid->addWidget(btn, i / 4, i % 4);
     }

@@ -23,8 +23,12 @@ protected:
     void activate() override;
     QWidget *createOptionsWidget() override;
 
+signals:
+    void selectedModeChanged(Buffer::PaintMode mode);
+
 private slots:
     void onToolChanged(Tool *tool);
+    void onPaintModeChanged(Buffer::PaintMode mode);
 
 private:
     void applyMode();

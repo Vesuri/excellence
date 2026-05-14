@@ -574,7 +574,7 @@ void Buffer::setColor(unsigned colorIndex, const QColor &color)
     emit modified(image_.rect());
 }
 
-void Buffer::setPaintMode(PaintMode mode) { paintMode_ = mode; }
+void Buffer::setPaintMode(PaintMode mode) { paintMode_ = mode; emit paintModeChanged(mode); }
 Buffer::PaintMode Buffer::paintMode() const { return paintMode_; }
 void Buffer::setSmearDirection(const QPoint &dir) { smearDirection_ = dir; }
 QPoint Buffer::smearDirection() const { return smearDirection_; }

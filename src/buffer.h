@@ -102,6 +102,7 @@ signals:
     void pixelGridChanged(bool enabled);
     void mirrorChanged();
     void dirtyChanged(bool dirty);
+    void paintModeChanged(PaintMode mode);
 
 private:
     void initialize(int width = 640, int height = 512, int colors = 32);
