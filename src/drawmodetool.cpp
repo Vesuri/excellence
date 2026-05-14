@@ -1,9 +1,9 @@
 #include <QButtonGroup>
 #include <QGridLayout>
-#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QSlider>
 #include <QSpinBox>
 #include <QToolButton>
@@ -98,100 +98,125 @@ QWidget *DrawModeTool::createOptionsWidget()
     QWidget *w = new QWidget;
     w->setWindowTitle("Draw Mode");
 
-    QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(4);
-    vbox->setContentsMargins(4, 4, 4, 4);
-
-    QHBoxLayout *topRow = new QHBoxLayout;
-    topRow->setSpacing(8);
-    topRow->setAlignment(Qt::AlignTop);
-
-    // Draw mode buttons
-    static const struct { const char *label; Buffer::PaintMode mode; } kModes[] = {
-        {"Brush",      Buffer::BrushMode},
-        {"Color",      Buffer::Normal},
-        {"Replace",    Buffer::Replace},
-        {"Smear",      Buffer::Smear},
-        {"Smooth",     Buffer::Smooth},
-        {"Range",      Buffer::Range},
-        {"Avg Smear",  Buffer::AverageSmear},
-        {"Cycle",      Buffer::Cycle},
-        {"Random",     Buffer::Random},
-        {"Tint",       Buffer::Tint},
-        {"Colorize",   Buffer::Colorize},
-        {"Brighten",   Buffer::Brighten},
-        {"Darken",     Buffer::Darken},
-        {"Mix",        Buffer::Mix},
-        {"Negative",   Buffer::Negative},
-        {"Dither 1",   Buffer::Dither1},
-        {"Dither 2",   Buffer::Dither2},
-        {"Transparent",Buffer::Transparent},
-    };
-
     QButtonGroup *modeGroup = new QButtonGroup(w);
     modeGroup->setExclusive(true);
-    QGridLayout *modeGrid = new QGridLayout;
-    modeGrid->setSpacing(2);
-    for (int i = 0; i < 18; i++) {
-        QPushButton *btn = new QPushButton(kModes[i].label, w);
-        btn->setFixedSize(72, 24);
-        btn->setCheckable(true);
-        btn->setChecked(selectedMode_ == kModes[i].mode);
+
+    auto makeMode = [&](const char *label, Buffer::PaintMode mode) -> QRadioButton * {
+        QRadioButton *btn = new QRadioButton(label, w);
+        btn->setChecked(selectedMode_ == mode);
         modeGroup->addButton(btn);
-        Buffer::PaintMode m = kModes[i].mode;
-        if (m == Buffer::BrushMode) {
+        if (mode == Buffer::BrushMode) {
             btn->setEnabled(qobject_cast<Brush *>(buffer_->pen()) != nullptr);
-            connect(this, &DrawModeTool::brushModeAvailableChanged, btn, &QPushButton::setEnabled);
+            connect(this, &DrawModeTool::brushModeAvailableChanged, btn, &QWidget::setEnabled);
         }
-        connect(btn, &QPushButton::clicked, [this, m]() {
-            selectedMode_ = m;
-            button_->setChecked(m != Buffer::Normal);
+        connect(btn, &QRadioButton::clicked, [this, mode]() {
+            selectedMode_ = mode;
+            button_->setChecked(mode != Buffer::Normal);
             applyMode();
         });
-        connect(this, &DrawModeTool::selectedModeChanged, btn, [btn, m](Buffer::PaintMode active) {
-            btn->setChecked(active == m);
+        connect(this, &DrawModeTool::selectedModeChanged, btn, [btn, mode](Buffer::PaintMode active) {
+            btn->setChecked(active == mode);
         });
-        modeGrid->addWidget(btn, i / 4, i % 4);
-    }
-    topRow->addLayout(modeGrid);
-
-    // Gradient fill section
-    QGroupBox *fillGroup = new QGroupBox("Gradient Fill", w);
-    fillGroupWidget_ = fillGroup;
-    fillGroup->setEnabled(buffer_ && buffer_->tool() && buffer_->tool()->hasFill());
-
-    static const struct { const char *label; GradientFillMode mode; } kFillModes[] = {
-        {"Horizontal", FillHorizontal},
-        {"Vertical",   FillVertical},
-        {"Linear",     FillLinear},
-        {"Radial",     FillRadial},
-        {"Spherical",  FillSpherical},
-        {"Highlight",  FillHighlight},
+        return btn;
     };
 
-    QButtonGroup *fillModeGroup = new QButtonGroup(w);
-    fillModeGroup->setExclusive(true);
-    QVBoxLayout *fillVbox = new QVBoxLayout(fillGroup);
-    fillVbox->setSpacing(2);
-    for (int i = 0; i < 6; i++) {
-        QPushButton *btn = new QPushButton(kFillModes[i].label, fillGroup);
-        btn->setFixedSize(80, 24);
-        btn->setCheckable(true);
-        btn->setChecked(activeGradientFillMode == kFillModes[i].mode);
-        fillModeGroup->addButton(btn);
-        GradientFillMode fm = kFillModes[i].mode;
-        connect(btn, &QPushButton::clicked, [fm]() {
-            activeGradientFillMode = fm;
-        });
-        fillVbox->addWidget(btn);
+    auto makeStub = [&](const char *label) -> QRadioButton * {
+        QRadioButton *btn = new QRadioButton(label, w);
+        btn->setEnabled(false);
+        return btn;
+    };
+
+    auto addHSep = [&](QVBoxLayout *col) {
+        QFrame *sep = new QFrame(w);
+        sep->setFrameShape(QFrame::HLine);
+        sep->setFrameShadow(QFrame::Sunken);
+        col->addWidget(sep);
+    };
+
+    auto addVSep = [&](QHBoxLayout *row) {
+        QFrame *sep = new QFrame(w);
+        sep->setFrameShape(QFrame::VLine);
+        sep->setFrameShadow(QFrame::Sunken);
+        row->addWidget(sep);
+    };
+
+    QHBoxLayout *mainRow = new QHBoxLayout(w);
+    mainRow->setSpacing(4);
+    mainRow->setContentsMargins(4, 4, 4, 4);
+    mainRow->setAlignment(Qt::AlignTop);
+
+    // ── Col 1: Brush | sep | transforms | sep | Replace ──────────────
+    QVBoxLayout *col1 = new QVBoxLayout;
+    col1->setSpacing(8);
+    col1->addWidget(makeMode("Brush", Buffer::BrushMode));
+    addHSep(col1);
+    col1->addWidget(makeStub("Stretch"));
+    col1->addWidget(makeStub("Pattern"));
+    col1->addWidget(makeStub("Shape"));
+    col1->addWidget(makeStub("Perspective"));
+    col1->addStretch();
+    addHSep(col1);
+    col1->addWidget(makeMode("Replace", Buffer::Replace));
+    mainRow->addLayout(col1);
+
+    addVSep(mainRow);
+
+    // ── Middle: cols 2-4 side by side + Amount at bottom ─────────────
+    QVBoxLayout *middleVBox = new QVBoxLayout;
+    middleVBox->setSpacing(2);
+
+    QHBoxLayout *modeCols = new QHBoxLayout;
+    modeCols->setSpacing(8);
+    modeCols->setAlignment(Qt::AlignTop);
+
+    // Col 2
+    QVBoxLayout *col2 = new QVBoxLayout;
+    col2->setSpacing(8);
+    col2->setAlignment(Qt::AlignTop);
+    col2->addWidget(makeMode("Color",    Buffer::Normal));
+    col2->addWidget(makeMode("Tint",     Buffer::Tint));
+    col2->addWidget(makeMode("Colorize", Buffer::Colorize));
+    col2->addWidget(makeMode("Brighten", Buffer::Brighten));
+    col2->addWidget(makeMode("Darken",   Buffer::Darken));
+    col2->addWidget(makeStub("Stencil"));
+    modeCols->addLayout(col2);
+
+    // Col 3
+    QVBoxLayout *col3 = new QVBoxLayout;
+    col3->setSpacing(8);
+    col3->setAlignment(Qt::AlignTop);
+    col3->addWidget(makeMode("Mix",       Buffer::Mix));
+    col3->addWidget(makeMode("Smooth",    Buffer::Smooth));
+    col3->addWidget(makeMode("Smear",     Buffer::Smear));
+    col3->addWidget(makeMode("Avg Smear", Buffer::AverageSmear));
+    col3->addWidget(makeMode("Range",     Buffer::Range));
+    col3->addWidget(makeMode("Cycle",     Buffer::Cycle));
+    modeCols->addLayout(col3);
+
+    // Col 4
+    QVBoxLayout *col4 = new QVBoxLayout;
+    col4->setSpacing(8);
+    col4->setAlignment(Qt::AlignTop);
+    col4->addWidget(makeMode("Random",      Buffer::Random));
+    col4->addWidget(makeMode("Dither 1",    Buffer::Dither1));
+    col4->addWidget(makeMode("Dither 2",    Buffer::Dither2));
+    col4->addWidget(makeMode("Negative",    Buffer::Negative));
+    col4->addWidget(makeStub("Halferite"));
+    col4->addWidget(makeMode("Transparent", Buffer::Transparent));
+    modeCols->addLayout(col4);
+
+    middleVBox->addLayout(modeCols);
+    middleVBox->addStretch();
+    {
+        QFrame *sep = new QFrame(w);
+        sep->setFrameShape(QFrame::HLine);
+        sep->setFrameShadow(QFrame::Sunken);
+        middleVBox->addWidget(sep);
     }
-    topRow->addWidget(fillGroup);
-    topRow->addStretch();
 
-    vbox->addLayout(topRow);
-
-    vbox->addWidget(new QLabel("Amount (Dither/Brighten/Darken/Transparent):", w));
     QHBoxLayout *amountRow = new QHBoxLayout;
+    amountRow->setSpacing(4);
+    amountRow->addWidget(new QLabel("Amount:", w));
     QSlider *slider = new QSlider(Qt::Horizontal, w);
     slider->setRange(0, 100);
     slider->setValue(buffer_->drawModeAmount());
@@ -202,11 +227,57 @@ QWidget *DrawModeTool::createOptionsWidget()
     connect(slider, &QSlider::valueChanged, spin, &QSpinBox::setValue);
     connect(spin, QOverload<int>::of(&QSpinBox::valueChanged), slider, &QSlider::setValue);
     connect(slider, &QSlider::valueChanged, [this](int v) { buffer_->setDrawModeAmount(v); });
-    amountRow->addWidget(slider);
+    amountRow->addWidget(slider, 1);
     amountRow->addWidget(spin);
-    vbox->addLayout(amountRow);
+    middleVBox->addLayout(amountRow);
 
-    vbox->addStretch();
+    mainRow->addLayout(middleVBox);
+
+    addVSep(mainRow);
+
+    // ── Col 5: Gradient fill | sep | Conform / Center stubs ──────────
+    static const struct { const char *label; GradientFillMode mode; } kFill[] = {
+        {"Horizontal", FillHorizontal},
+        {"Vertical",   FillVertical},
+        {"Linear",     FillLinear},
+        {"Highlight",  FillHighlight},
+        {"Spherical",  FillSpherical},
+        {"Radial",     FillRadial},
+    };
+    QButtonGroup *fillModeGroup = new QButtonGroup(w);
+    fillModeGroup->setExclusive(true);
+
+    QWidget *col5 = new QWidget(w);
+    fillGroupWidget_ = col5;
+    col5->setEnabled(buffer_ && buffer_->tool() && buffer_->tool()->hasFill());
+    QVBoxLayout *col5vb = new QVBoxLayout(col5);
+    col5vb->setSpacing(8);
+    col5vb->setContentsMargins(0, 0, 0, 0);
+    for (const auto &f : kFill) {
+        QRadioButton *btn = new QRadioButton(f.label, col5);
+        btn->setChecked(activeGradientFillMode == f.mode);
+        fillModeGroup->addButton(btn);
+        GradientFillMode fm = f.mode;
+        connect(btn, &QRadioButton::clicked, [fm]() { activeGradientFillMode = fm; });
+        col5vb->addWidget(btn);
+    }
+    col5vb->addStretch();
+    {
+        QFrame *sep = new QFrame(col5);
+        sep->setFrameShape(QFrame::HLine);
+        sep->setFrameShadow(QFrame::Sunken);
+        col5vb->addWidget(sep);
+    }
+    auto makeCol5Stub = [&](const char *label) {
+        QRadioButton *b = new QRadioButton(label, col5);
+        b->setEnabled(false);
+        col5vb->addWidget(b);
+    };
+    makeCol5Stub("Conform");
+    makeCol5Stub("Center");
+
+    mainRow->addWidget(col5);
+
     return w;
 }
 
