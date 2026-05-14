@@ -146,6 +146,7 @@ void BufferView::setBuffer(Buffer *buffer)
         connect(buffer, SIGNAL(zoomed(QRect)), this, SLOT(setZoom(QRect)));
         connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(onToolChanged()));
+        connect(buffer, &Buffer::paintModeChanged, this, [this](Buffer::PaintMode) { updateWindowTitle(); });
         connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         connect(buffer, &Buffer::pixelGridChanged, scene, &CanvasScene::setPixelGrid);
