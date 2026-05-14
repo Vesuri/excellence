@@ -38,6 +38,7 @@ private slots:
     void setPixmap(const QRect &area);
     void setZoom(const QRect &area);
     void updateWindowTitle(const QPoint &mouseCoordinates = QPoint(-1, -1));
+    void onToolChanged();
 
 private:
     void applyTransform();
@@ -52,6 +53,7 @@ private:
     bool pendingZoom_;
     int zoomLevel_;
     QPoint guideStartPoint_;
+    bool mouseOverCanvas_ = false;
     qreal aspectX_;
     qreal aspectY_;
 };

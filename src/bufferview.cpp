@@ -145,6 +145,7 @@ void BufferView::setBuffer(Buffer *buffer)
         connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
         connect(buffer, SIGNAL(zoomed(QRect)), this, SLOT(setZoom(QRect)));
         connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateWindowTitle()));
+        connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(onToolChanged()));
         connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         connect(buffer, &Buffer::pixelGridChanged, scene, &CanvasScene::setPixelGrid);
@@ -201,6 +202,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 pendingZoom_ = false;
                 break;
             case QEvent::GraphicsSceneMouseMove:
+                mouseOverCanvas_ = true;
                 buffer->move(point);
                 break;
             case QEvent::GraphicsSceneMouseRelease:
@@ -237,6 +239,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
     } else if (watched == this) {
         switch (event->type()) {
         case QEvent::HoverLeave:
+            mouseOverCanvas_ = false;
             if (buffer)
                 buffer->clearHoverPreview();
             scene->setGuides(false, {}, {});
@@ -560,4 +563,10 @@ void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
     }
 
     setWindowTitle(title);
+}
+
+void BufferView::onToolChanged()
+{
+    if (mouseOverCanvas_ && buffer && buffer->tool() && buffer->tool()->mouseButton() == Qt::NoButton)
+        buffer->move(lastMousePoint);
 }
