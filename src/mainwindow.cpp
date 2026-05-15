@@ -322,6 +322,8 @@ void MainWindow::newWindow()
     connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
     bufferView->show();
     bufferViews.append(bufferView);
+    if (!activeBufferView)
+        activeBufferView = bufferView;
 }
 
 void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
