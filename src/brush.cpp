@@ -36,7 +36,9 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
     for (int y = 0; y < brushImage.height(); y++) {
         for (int x = 0; x < brushImage.width(); x++) {
             int idx = brushImage.pixelIndex(x, y);
-            if (idx == transparentIndex)
+            bool isTransparent = (idx == transparentIndex);
+            // Replace fills the full bounding rect; all other modes skip transparent pixels
+            if (isTransparent && mode != Buffer::Replace)
                 continue;
             QPoint p(origin.x() + x, origin.y() + y);
             if (!imageRect.contains(p))
@@ -46,7 +48,7 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
                 // Erase: BrushMode treated as Normal (use eraseColor, not brush pixel)
                 Buffer::PaintMode eraseMode = (mode == Buffer::BrushMode) ? Buffer::Normal : mode;
                 Pen::applyPixelMode(p, buffer, eraseMode, effectiveErase, paintC, eraseC);
-            } else if (mode == Buffer::Replace || mode == Buffer::BrushMode) {
+            } else if (mode == Buffer::BrushMode) {
                 // Stamp the brush's own pixel colors
                 buffer->image().setPixel(p, static_cast<uint>(idx));
             } else {
