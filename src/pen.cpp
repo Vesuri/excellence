@@ -37,10 +37,17 @@ static void smearPixel(const QPoint &p, Buffer *buffer, unsigned fallbackColor)
     if (!imageRect.contains(p)) return;
     QPoint dir = buffer->smearDirection();
     QPoint src = p - dir;
-    if (dir.isNull() || !imageRect.contains(src))
+    if (dir.isNull() || !imageRect.contains(src)) {
         buffer->image().setPixel(p, fallbackColor);
-    else
-        buffer->image().setPixel(p, static_cast<uint>(buffer->image().pixelIndex(src)));
+        return;
+    }
+    const QVector<QRgb> palette = buffer->image().colorTable();
+    QRgb srcColor = buffer->image().color(buffer->image().pixelIndex(src));
+    QRgb dstColor = buffer->image().color(buffer->image().pixelIndex(p));
+    QRgb mixed = qRgb((qRed(srcColor)   + qRed(dstColor))   / 2,
+                      (qGreen(srcColor) + qGreen(dstColor)) / 2,
+                      (qBlue(srcColor)  + qBlue(dstColor))  / 2);
+    buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, mixed)));
 }
 
 static void smoothPixel(const QPoint &p, Buffer *buffer)
