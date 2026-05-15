@@ -83,6 +83,20 @@ QRect RectangleTool::move(const QPoint &point)
         Algorithms::rectangle(p0, p1, changesLambda);
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
         Algorithms::rectangle(p0, p1, drawLambda);
+    } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
+               && gradientFillActive()) {
+        QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
+        changedRect = fillRect;
+        undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+        QImage &image = buffer_->image();
+        const GradientRange *range = &gradientRanges[activeGradientRange];
+        for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
+            for (int x = fillRect.left(); x <= fillRect.right(); x++) {
+                float t = GradientRenderer::computeT(x, y, activeGradientFillMode, startPoint, point);
+                int ci = GradientRenderer::colorIndex(t, x, y, range, image);
+                image.setPixel(x, y, static_cast<uint>(ci));
+            }
+        }
     } else {
         Algorithms::fillRectangle(p0, p1, changesLambda);
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
