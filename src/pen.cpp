@@ -117,11 +117,18 @@ static void averageSmearPixel(const QPoint &p, Buffer *buffer)
         }
         return bestIdx;
     };
+    // Only affects pixels whose colour falls within the gradient range
+    int dstIdx = buffer->image().pixelIndex(p);
+    if (!grad.isEmpty() && !grad.contains(dstIdx)) return;
+    QRgb dstColor = buffer->image().color(dstIdx);
+    // Only lift source pixel if it is also within the gradient range
     QPoint src = p - dir;
-    QRgb srcColor = (imageRect.contains(src) && !dir.isNull())
-                    ? buffer->image().color(buffer->image().pixelIndex(src))
-                    : buffer->image().color(buffer->image().pixelIndex(p));
-    QRgb dstColor = buffer->image().color(buffer->image().pixelIndex(p));
+    QRgb srcColor = dstColor;
+    if (!dir.isNull() && imageRect.contains(src)) {
+        int srcIdx = buffer->image().pixelIndex(src);
+        if (grad.isEmpty() || grad.contains(srcIdx))
+            srcColor = buffer->image().color(srcIdx);
+    }
     QRgb avg = qRgb((qRed(srcColor)   + qRed(dstColor))   / 2,
                     (qGreen(srcColor) + qGreen(dstColor)) / 2,
                     (qBlue(srcColor)  + qBlue(dstColor))  / 2);
