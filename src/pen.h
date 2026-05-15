@@ -24,7 +24,7 @@ public:
     // the resolved color. For all other modes: returns paintColor unchanged.
     // Callers can pass the return value directly as paintColor to applyPixelMode.
     static unsigned resolveDrawColor(Buffer *buffer, Buffer::PaintMode &mode,
-                                     bool &isErase, unsigned paintColor, unsigned eraseColor);
+                                     bool &isErase, unsigned paintColor);
 
     static void applyPixelMode(const QPoint &p, Buffer *buffer,
                                Buffer::PaintMode mode, bool isErase,

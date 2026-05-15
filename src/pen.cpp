@@ -3,6 +3,7 @@
 #include <QColor>
 #include <QRect>
 #include <QVector>
+#include "gradientrange.h"
 #include "pen.h"
 #include "tool.h"
 
@@ -242,7 +243,7 @@ static void transparentPixel(const QPoint &p, Buffer *buffer, unsigned paintColo
 // ── Public methods ────────────────────────────────────────────────────────────
 
 unsigned Pen::resolveDrawColor(Buffer *buffer, Buffer::PaintMode &mode,
-                                bool &isErase, unsigned paintColor, unsigned eraseColor)
+                                bool &isErase, unsigned paintColor)
 {
     Tool *tool = buffer->tool();
     bool hovering = tool && tool->mouseButton() == Qt::NoButton;
@@ -257,10 +258,10 @@ unsigned Pen::resolveDrawColor(Buffer *buffer, Buffer::PaintMode &mode,
     if (mode == Buffer::Random) {
         mode = Buffer::Normal;
         if (hovering) return paintColor;
-        QVector<int> grad = buffer->gradientColors();
-        unsigned base = isErase ? eraseColor : paintColor;
+        const auto &markers = gradientRanges[activeGradientRange].markers();
         isErase = false;
-        return grad.isEmpty() ? base : static_cast<unsigned>(grad[rand() % grad.size()]);
+        if (markers.isEmpty()) return paintColor;
+        return static_cast<unsigned>(markers[rand() % markers.size()].colorIndex);
     }
     return paintColor;
 }

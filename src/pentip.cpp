@@ -111,7 +111,7 @@ QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 {
     Buffer::PaintMode mode = buffer->paintMode();
     bool isErase = false;
-    unsigned paintC = Pen::resolveDrawColor(buffer, mode, isErase, paintColor_, eraseColor_);
+    unsigned paintC = Pen::resolveDrawColor(buffer, mode, isErase, paintColor_);
 
     QPoint pts[4]; bool active[4];
     collectMirrorPoints(point, buffer, pts, active);
@@ -132,7 +132,7 @@ QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 {
     Buffer::PaintMode mode = buffer->paintMode();
     bool isErase = true;
-    unsigned paintC = Pen::resolveDrawColor(buffer, mode, isErase, paintColor_, eraseColor_);
+    unsigned paintC = Pen::resolveDrawColor(buffer, mode, isErase, paintColor_);
 
     QPoint pts[4]; bool active[4];
     collectMirrorPoints(point, buffer, pts, active);

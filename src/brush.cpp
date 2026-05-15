@@ -30,7 +30,7 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
     unsigned paintC = buffer->paintColor();
     unsigned eraseC = buffer->eraseColor();
     bool effectiveErase = isErase;
-    paintC = Pen::resolveDrawColor(buffer, mode, effectiveErase, paintC, eraseC);
+    paintC = Pen::resolveDrawColor(buffer, mode, effectiveErase, paintC);
     // mode is now Normal if it was Cycle/Random; effectiveErase is false in that case.
 
     for (int y = 0; y < brushImage.height(); y++) {
