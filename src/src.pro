@@ -96,4 +96,4 @@ RESOURCES += \
 
 LIBS += -Lplugins/ilbm -Lplugins/raw
 CONFIG(release, debug|release): LIBS += -lilbm -lraw
-else:CONFIG(debug, debug|release): LIBS += -lilbm_debug -lraw_debug
+else:CONFIG(debug, debug|release): LIBS += -lilbm -lraw
