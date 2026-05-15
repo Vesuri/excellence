@@ -362,6 +362,10 @@ void Buffer::move(const QPoint &point)
 
 void Buffer::release(const QPoint &point)
 {
+    // Clear any path recorded during ghost/preview draws so only the final
+    // tool draw (inside tool_->release) is captured for # of Points mode.
+    segmentPath_.clear();
+
     QRect area = tool_->release(snapToGrid(point));
 
     switch (tool_->type()) {
