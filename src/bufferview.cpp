@@ -214,7 +214,8 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                     break;
                 case QEvent::GraphicsSceneMouseRelease:
                     panDragging_ = false;
-                    ui->graphicsView->viewport()->setCursor(Qt::OpenHandCursor);
+                    panMode_ = false;
+                    ui->graphicsView->viewport()->setCursor(Qt::CrossCursor);
                     break;
                 default:
                     break;
