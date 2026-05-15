@@ -60,11 +60,12 @@ void Algorithms::rectangle(const QPoint &topLeft, const QPoint &bottomRight, std
 
 void Algorithms::fillRectangle(const QPoint &topLeft, const QPoint &bottomRight, std::function<void(const QPoint &)> point)
 {
-    for (int y = topLeft.y(); y <= bottomRight.y(); y++) {
-        QPoint left(topLeft.x(), y);
-        QPoint right(bottomRight.x(), y);
-        line(left, right, point);
-    }
+    int x0 = qMin(topLeft.x(), bottomRight.x());
+    int y0 = qMin(topLeft.y(), bottomRight.y());
+    int x1 = qMax(topLeft.x(), bottomRight.x());
+    int y1 = qMax(topLeft.y(), bottomRight.y());
+    for (int y = y0; y <= y1; y++)
+        line(QPoint(x0, y), QPoint(x1, y), point);
 }
 
 void Algorithms::ellipse(int cx, int cy, int rx, int ry, double angle,
