@@ -35,6 +35,8 @@ public:
     virtual QString name() const;
     virtual QString status() const;
     virtual bool hasFill() const { return false; }
+    virtual bool restrictToColorAndRandom() const { return false; }
+    virtual bool allowsBrushModeButton() const { return true; }
 
 public slots:
     void toggleOptionsWidget();

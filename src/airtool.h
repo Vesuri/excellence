@@ -15,6 +15,8 @@ public:
     explicit AirTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
+    bool restrictToColorAndRandom() const override { return sprayMode_ != Splatter; }
+    bool allowsBrushModeButton() const override { return sprayMode_ == ShapeAirbrush; }
     QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;

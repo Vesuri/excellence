@@ -1,6 +1,5 @@
 #include <climits>
 #include <cstdlib>
-#include <QColor>
 #include <QRect>
 #include <QVector>
 #include "pen.h"
@@ -117,20 +116,35 @@ static void colorEffectPixel(const QPoint &p, Buffer *buffer, unsigned baseColor
     if (!imageRect.contains(p)) return;
     const QVector<QRgb> palette = buffer->image().colorTable();
     QRgb paintRgb = (baseColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(baseColor)] : 0;
-    QColor paintHSV = QColor(paintRgb).toHsv();
     QRgb canvasRgb = buffer->image().color(buffer->image().pixelIndex(p));
-    QColor canvasHSV = QColor(canvasRgb).toHsv();
     QRgb target = canvasRgb;
+    // Brilliance-compatible luma: (R*77 + G*150 + B*29) >> 8
+    auto brillLuma = [](QRgb c) { return (qRed(c)*77 + qGreen(c)*150 + qBlue(c)*29) >> 8; };
+    // Scale each paint channel by brightness ratio, clamping at 255
+    auto scaleRgb = [](QRgb paint, int num, int denom) -> QRgb {
+        return qRgb(qMin(255, qRed(paint)   * num / denom),
+                    qMin(255, qGreen(paint) * num / denom),
+                    qMin(255, qBlue(paint)  * num / denom));
+    };
     switch (mode) {
-    case Buffer::Tint:
-        target = QColor::fromHsv(paintHSV.hsvHue(), paintHSV.hsvSaturation(),
-                                 canvasHSV.value()).rgb();
+    case Buffer::Tint: {
+        // Scale paint by canvas_luma / paint_luma (Brilliance Rec.601-like)
+        int lc = brillLuma(canvasRgb);
+        int lp = qMax(1, brillLuma(paintRgb));
+        target = scaleRgb(paintRgb, lc, lp);
         break;
-    case Buffer::Colorize:
-        if (canvasHSV.hsvSaturation() < 32) return;
-        target = QColor::fromHsv(paintHSV.hsvHue(), paintHSV.hsvSaturation(),
-                                 canvasHSV.value()).rgb();
+    }
+    case Buffer::Colorize: {
+        // No effect on achromatic (grey/black/white) canvas
+        int cv = qMax(qRed(canvasRgb), qMax(qGreen(canvasRgb), qBlue(canvasRgb)));
+        if (cv == 0) return;
+        if (qAbs(qRed(canvasRgb) - qGreen(canvasRgb)) < 8 &&
+            qAbs(qGreen(canvasRgb) - qBlue(canvasRgb)) < 8) return;
+        // Scale paint by canvas_V / paint_V (HSV value = max channel)
+        int pv = qMax(1, qMax(qRed(paintRgb), qMax(qGreen(paintRgb), qBlue(paintRgb))));
+        target = scaleRgb(paintRgb, cv, pv);
         break;
+    }
     case Buffer::Brighten:
     case Buffer::Darken: {
         // Shift perceptual luminance by the amount, then find nearest palette colour to the

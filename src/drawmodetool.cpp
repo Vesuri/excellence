@@ -38,10 +38,9 @@ void DrawModeTool::setBuffer(Buffer *buffer)
     applyMode();
 }
 
-void DrawModeTool::onToolChanged(Tool *tool)
+void DrawModeTool::onToolChanged(Tool *)
 {
-    if (fillGroupWidget_)
-        fillGroupWidget_->setEnabled(tool && tool->hasFill());
+    updateAvailability();
 }
 
 void DrawModeTool::onPaintModeChanged(Buffer::PaintMode mode)
@@ -57,13 +56,64 @@ void DrawModeTool::onPaintModeChanged(Buffer::PaintMode mode)
     emit selectedModeChanged(selectedMode_);
 }
 
-void DrawModeTool::onPenChanged(Pen *pen)
+void DrawModeTool::onPenChanged(Pen *)
 {
-    bool brushActive = qobject_cast<Brush *>(pen) != nullptr;
-    emit brushModeAvailableChanged(brushActive);
-    if (!brushActive && buffer_->paintMode() == Buffer::BrushMode) {
+    updateAvailability();
+    if (buffer_ && !isModeAvailable(buffer_->paintMode())) {
         selectedMode_ = Buffer::Normal;
         buffer_->setPaintMode(Buffer::Normal);
+    }
+}
+
+void DrawModeTool::updateAvailability()
+{
+    if (!buffer_) return;
+
+    bool brushActive = qobject_cast<Brush *>(buffer_->pen()) != nullptr;
+    Tool *tool = buffer_->tool();
+    bool hasFill = tool && tool->hasFill();
+    bool restricted = tool && tool->restrictToColorAndRandom();
+    bool allowsBrushBtn = !tool || tool->allowsBrushModeButton();
+
+    if (brushModeBtn_)
+        brushModeBtn_->setEnabled(brushActive && allowsBrushBtn);
+    if (replaceModeBtn_)
+        replaceModeBtn_->setEnabled(brushActive);
+    if (randomModeBtn_)
+        randomModeBtn_->setEnabled(restricted);
+    for (auto *btn : generalModeBtns_)
+        btn->setEnabled(!restricted);
+    for (auto *btn : fillSensitiveBtns_)
+        btn->setEnabled(!restricted && !hasFill);
+    if (fillGroupWidget_)
+        fillGroupWidget_->setEnabled(hasFill);
+
+    if (button_->isChecked() && !isModeAvailable(selectedMode_)) {
+        selectedMode_ = Buffer::Normal;
+        buffer_->setPaintMode(Buffer::Normal);
+    }
+}
+
+bool DrawModeTool::isModeAvailable(Buffer::PaintMode mode) const
+{
+    if (!buffer_) return mode == Buffer::Normal;
+
+    bool brushActive = qobject_cast<Brush *>(buffer_->pen()) != nullptr;
+    Tool *tool = buffer_->tool();
+    bool hasFill = tool && tool->hasFill();
+    bool restricted = tool && tool->restrictToColorAndRandom();
+    bool allowsBrushBtn = !tool || tool->allowsBrushModeButton();
+
+    switch (mode) {
+    case Buffer::Normal:      return true;
+    case Buffer::BrushMode:   return brushActive && allowsBrushBtn;
+    case Buffer::Replace:     return brushActive;
+    case Buffer::Random:      return restricted;
+    case Buffer::Mix:
+    case Buffer::Smear:
+    case Buffer::AverageSmear:
+    case Buffer::Cycle:       return !restricted && !hasFill;
+    default:                  return !restricted;
     }
 }
 
@@ -106,10 +156,6 @@ QWidget *DrawModeTool::createOptionsWidget()
         if (tooltip) btn->setToolTip(tooltip);
         btn->setChecked(selectedMode_ == mode);
         modeGroup->addButton(btn);
-        if (mode == Buffer::BrushMode) {
-            btn->setEnabled(qobject_cast<Brush *>(buffer_->pen()) != nullptr);
-            connect(this, &DrawModeTool::brushModeAvailableChanged, btn, &QWidget::setEnabled);
-        }
         connect(btn, &QRadioButton::clicked, [this, mode]() {
             selectedMode_ = mode;
             button_->setChecked(mode != Buffer::Normal);
@@ -150,7 +196,8 @@ QWidget *DrawModeTool::createOptionsWidget()
     // ── Col 1: Brush | sep | transforms | sep | Replace ──────────────
     QVBoxLayout *col1 = new QVBoxLayout;
     col1->setSpacing(8);
-    col1->addWidget(makeMode("Brush",       Buffer::BrushMode, "Brush draw mode"));
+    brushModeBtn_ = makeMode("Brush",       Buffer::BrushMode, "Brush draw mode");
+    col1->addWidget(brushModeBtn_);
     addHSep(col1);
     col1->addWidget(makeStub("Stretch",    "Brush fill mode"));
     col1->addWidget(makeStub("Pattern",    "Brush fill mode"));
@@ -158,7 +205,8 @@ QWidget *DrawModeTool::createOptionsWidget()
     col1->addWidget(makeStub("Perspective","Brush fill mode"));
     col1->addStretch();
     addHSep(col1);
-    col1->addWidget(makeMode("Replace",    Buffer::Replace, "Replace draw brush"));
+    replaceModeBtn_ = makeMode("Replace",  Buffer::Replace, "Replace draw brush");
+    col1->addWidget(replaceModeBtn_);
     mainRow->addLayout(col1);
 
     addVSep(mainRow);
@@ -177,35 +225,54 @@ QWidget *DrawModeTool::createOptionsWidget()
     col2->setAlignment(Qt::AlignTop);
     static constexpr const char *kGeneral = "General draw mode";
     col2->addWidget(makeMode("Color",    Buffer::Normal,       kGeneral));
-    col2->addWidget(makeMode("Tint",     Buffer::Tint,         kGeneral));
-    col2->addWidget(makeMode("Colorize", Buffer::Colorize,     kGeneral));
-    col2->addWidget(makeMode("Brighten", Buffer::Brighten,     kGeneral));
-    col2->addWidget(makeMode("Darken",   Buffer::Darken,       kGeneral));
+    auto *tintBtn      = makeMode("Tint",     Buffer::Tint,         kGeneral);
+    auto *colorizeBtn  = makeMode("Colorize", Buffer::Colorize,     kGeneral);
+    auto *brightenBtn  = makeMode("Brighten", Buffer::Brighten,     kGeneral);
+    auto *darkenBtn    = makeMode("Darken",   Buffer::Darken,       kGeneral);
+    col2->addWidget(tintBtn);
+    col2->addWidget(colorizeBtn);
+    col2->addWidget(brightenBtn);
+    col2->addWidget(darkenBtn);
     col2->addWidget(makeStub("Stencil",                        kGeneral));
+    generalModeBtns_ << tintBtn << colorizeBtn << brightenBtn << darkenBtn;
     modeCols->addLayout(col2);
 
     // Col 3
     QVBoxLayout *col3 = new QVBoxLayout;
     col3->setSpacing(8);
     col3->setAlignment(Qt::AlignTop);
-    col3->addWidget(makeMode("Mix",       Buffer::Mix,          kGeneral));
-    col3->addWidget(makeMode("Smooth",    Buffer::Smooth,       kGeneral));
-    col3->addWidget(makeMode("Smear",     Buffer::Smear,        kGeneral));
-    col3->addWidget(makeMode("Avg Smear", Buffer::AverageSmear, kGeneral));
-    col3->addWidget(makeMode("Range",     Buffer::Range,        kGeneral));
-    col3->addWidget(makeMode("Cycle",     Buffer::Cycle,        kGeneral));
+    auto *mixBtn       = makeMode("Mix",       Buffer::Mix,          kGeneral);
+    auto *smoothBtn    = makeMode("Smooth",    Buffer::Smooth,       kGeneral);
+    auto *smearBtn     = makeMode("Smear",     Buffer::Smear,        kGeneral);
+    auto *avgSmearBtn  = makeMode("Avg Smear", Buffer::AverageSmear, kGeneral);
+    auto *rangeBtn     = makeMode("Range",     Buffer::Range,        kGeneral);
+    auto *cycleBtn     = makeMode("Cycle",     Buffer::Cycle,        kGeneral);
+    col3->addWidget(mixBtn);
+    col3->addWidget(smoothBtn);
+    col3->addWidget(smearBtn);
+    col3->addWidget(avgSmearBtn);
+    col3->addWidget(rangeBtn);
+    col3->addWidget(cycleBtn);
+    generalModeBtns_ << smoothBtn << rangeBtn;
+    fillSensitiveBtns_ << mixBtn << smearBtn << avgSmearBtn << cycleBtn;
     modeCols->addLayout(col3);
 
     // Col 4
     QVBoxLayout *col4 = new QVBoxLayout;
     col4->setSpacing(8);
     col4->setAlignment(Qt::AlignTop);
-    col4->addWidget(makeMode("Random",      Buffer::Random,      kGeneral));
-    col4->addWidget(makeMode("Dither 1",    Buffer::Dither1,     kGeneral));
-    col4->addWidget(makeMode("Dither 2",    Buffer::Dither2,     kGeneral));
-    col4->addWidget(makeMode("Negative",    Buffer::Negative,    kGeneral));
+    randomModeBtn_ = makeMode("Random",      Buffer::Random,      kGeneral);
+    auto *dither1Btn   = makeMode("Dither 1",    Buffer::Dither1,     kGeneral);
+    auto *dither2Btn   = makeMode("Dither 2",    Buffer::Dither2,     kGeneral);
+    auto *negativeBtn  = makeMode("Negative",    Buffer::Negative,    kGeneral);
+    auto *transpBtn    = makeMode("Transparent", Buffer::Transparent, kGeneral);
+    col4->addWidget(randomModeBtn_);
+    col4->addWidget(dither1Btn);
+    col4->addWidget(dither2Btn);
+    col4->addWidget(negativeBtn);
     col4->addWidget(makeStub("Halferite",                        kGeneral));
-    col4->addWidget(makeMode("Transparent", Buffer::Transparent, kGeneral));
+    col4->addWidget(transpBtn);
+    generalModeBtns_ << dither1Btn << dither2Btn << negativeBtn << transpBtn;
     modeCols->addLayout(col4);
 
     middleVBox->addLayout(modeCols);
@@ -263,7 +330,11 @@ QWidget *DrawModeTool::createOptionsWidget()
         btn->setChecked(activeGradientFillMode == f.mode);
         fillModeGroup->addButton(btn);
         GradientFillMode fm = f.mode;
-        connect(btn, &QRadioButton::clicked, [fm]() { activeGradientFillMode = fm; });
+        connect(btn, &QRadioButton::clicked, [this, fm]() {
+            activeGradientFillMode = fm;
+            button_->setChecked(true);
+            applyMode();
+        });
         col5vb->addWidget(btn);
     }
     col5vb->addStretch();
@@ -283,6 +354,8 @@ QWidget *DrawModeTool::createOptionsWidget()
     makeCol5Stub("Center",  "Auto center to fill");
 
     mainRow->addWidget(col5);
+
+    updateAvailability();
 
     return w;
 }
