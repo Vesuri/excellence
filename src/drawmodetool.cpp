@@ -49,11 +49,16 @@ void DrawModeTool::onPaintModeChanged(Buffer::PaintMode mode)
         selectedMode_ = mode;
         button_->setChecked(true);
         drawModeActive = true;
+    } else if (fillModeSelected_) {
+        // Gradient fill is active with Normal paint mode — keep draw mode on.
+        button_->setChecked(true);
+        drawModeActive = true;
     } else {
         button_->setChecked(false);
         drawModeActive = false;
     }
-    emit selectedModeChanged(selectedMode_);
+    if (!fillModeSelected_)
+        emit selectedModeChanged(selectedMode_);
 }
 
 void DrawModeTool::onPenChanged(Pen *)
@@ -88,7 +93,21 @@ void DrawModeTool::updateAvailability()
     if (fillGroupWidget_)
         fillGroupWidget_->setEnabled(hasFill);
 
-    if (button_->isChecked() && !isModeAvailable(selectedMode_)) {
+    // Sync radio-button selection with fill availability.
+    if (!hasFill && fillModeSelected_) {
+        fillModeSelected_ = false;
+        emit selectedModeChanged(selectedMode_);
+    } else if (hasFill && !fillModeSelected_ && activeGradientFillMode != FillFlat) {
+        fillModeSelected_ = true;
+        for (auto &fb : fillModeBtns_) {
+            if (fb.second == activeGradientFillMode) {
+                fb.first->setChecked(true);
+                break;
+            }
+        }
+    }
+
+    if (button_->isChecked() && !fillModeSelected_ && !isModeAvailable(selectedMode_)) {
         selectedMode_ = Buffer::Normal;
         buffer_->setPaintMode(Buffer::Normal);
     }
@@ -154,15 +173,17 @@ QWidget *DrawModeTool::createOptionsWidget()
     auto makeMode = [&](const char *label, Buffer::PaintMode mode, const char *tooltip = nullptr) -> QRadioButton * {
         QRadioButton *btn = new QRadioButton(label, w);
         if (tooltip) btn->setToolTip(tooltip);
-        btn->setChecked(selectedMode_ == mode);
+        btn->setChecked(!fillModeSelected_ && selectedMode_ == mode);
         modeGroup->addButton(btn);
         connect(btn, &QRadioButton::clicked, [this, mode]() {
+            fillModeSelected_ = false;
             selectedMode_ = mode;
             button_->setChecked(mode != Buffer::Normal);
             applyMode();
         });
-        connect(this, &DrawModeTool::selectedModeChanged, btn, [btn, mode](Buffer::PaintMode active) {
-            btn->setChecked(active == mode);
+        connect(this, &DrawModeTool::selectedModeChanged, btn, [this, btn, mode](Buffer::PaintMode active) {
+            if (!fillModeSelected_)
+                btn->setChecked(active == mode);
         });
         return btn;
     };
@@ -315,9 +336,6 @@ QWidget *DrawModeTool::createOptionsWidget()
         {"Spherical",  FillSpherical},
         {"Radial",     FillRadial},
     };
-    QButtonGroup *fillModeGroup = new QButtonGroup(w);
-    fillModeGroup->setExclusive(true);
-
     QWidget *col5 = new QWidget(w);
     fillGroupWidget_ = col5;
     col5->setEnabled(buffer_ && buffer_->tool() && buffer_->tool()->hasFill());
@@ -327,10 +345,12 @@ QWidget *DrawModeTool::createOptionsWidget()
     for (const auto &f : kFill) {
         QRadioButton *btn = new QRadioButton(f.label, col5);
         btn->setToolTip("Gradient fill mode");
-        btn->setChecked(activeGradientFillMode == f.mode);
-        fillModeGroup->addButton(btn);
+        btn->setChecked(fillModeSelected_ && activeGradientFillMode == f.mode);
+        modeGroup->addButton(btn);
         GradientFillMode fm = f.mode;
+        fillModeBtns_.append({btn, fm});
         connect(btn, &QRadioButton::clicked, [this, fm]() {
+            fillModeSelected_ = true;
             activeGradientFillMode = fm;
             button_->setChecked(true);
             applyMode();

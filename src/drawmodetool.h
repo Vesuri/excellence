@@ -2,8 +2,10 @@
 #define DRAWMODETOOL_H
 
 #include <QList>
+#include <QPair>
 #include <QWidget>
 #include "buffer.h"
+#include "gradientrange.h"
 #include "tool.h"
 
 class QRadioButton;
@@ -40,12 +42,14 @@ private:
     bool isModeAvailable(Buffer::PaintMode mode) const;
 
     Buffer::PaintMode selectedMode_;
+    bool fillModeSelected_ = false;
     QWidget *fillGroupWidget_ = nullptr;
     QRadioButton *brushModeBtn_ = nullptr;
     QRadioButton *replaceModeBtn_ = nullptr;
     QRadioButton *randomModeBtn_ = nullptr;
     QList<QRadioButton *> generalModeBtns_;    // disabled when restrictToColorAndRandom
     QList<QRadioButton *> fillSensitiveBtns_;  // disabled when restrictToColorAndRandom or hasFill
+    QList<QPair<QRadioButton *, GradientFillMode>> fillModeBtns_;
     static DrawModeTool instance;
 };
 
