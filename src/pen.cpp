@@ -209,12 +209,13 @@ static void ditherPixel(const QPoint &p, Buffer *buffer, unsigned fgColor, unsig
 
 static void transparentPixel(const QPoint &p, Buffer *buffer, unsigned paintColor)
 {
-    QRect imageRect = buffer->image().rect();
+    const QImage &ref = buffer->referenceImage();
+    QRect imageRect = ref.rect();
     if (!imageRect.contains(p)) return;
     const QVector<QRgb> palette = buffer->image().colorTable();
     QRgb paintRgb = (paintColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(paintColor)] : 0;
     int opacity = buffer->drawModeAmount();
-    QRgb canvasRgb = buffer->image().color(buffer->image().pixelIndex(p));
+    QRgb canvasRgb = ref.color(ref.pixelIndex(p));
     QRgb blended = qRgb(
         (qRed(paintRgb)   * opacity + qRed(canvasRgb)   * (100 - opacity)) / 100,
         (qGreen(paintRgb) * opacity + qGreen(canvasRgb) * (100 - opacity)) / 100,
