@@ -438,6 +438,9 @@ void BufferView::handleKey(QKeyEvent *event)
     case Qt::Key_G:
         buffer->setGridEnabled(!buffer->gridEnabled());
         break;
+    case Qt::Key_Tab:
+        GradientTool::instance.toggle();
+        break;
     case Qt::Key_Slash:
         MirrorTool::instance.toggle();
         break;

@@ -14,20 +14,38 @@ GradientTool GradientTool::instance;
 
 GradientTool::GradientTool() : Tool()
 {
+    cycleTimer_ = new QTimer(this);
+    cycleTimer_->setInterval(14); // ~71 Hz
+    connect(cycleTimer_, &QTimer::timeout, this, &GradientTool::onCycleTick);
 }
 
 void GradientTool::registerTool()
 {
     Tool::registerTool();
     button_->setIcon(QIcon(":/cyclegradient.png"));
-    button_->setToolTip("Gradient Range Editor");
-    button_->setCheckable(false);
+    button_->setToolTip("Gradient / Color Cycling\nRight-click for options");
+    button_->setCheckable(true);
     connect(button_, &QToolButton::clicked, this, &GradientTool::activate);
 }
 
 void GradientTool::activate()
 {
-    toggleOptionsWidget();
+    cyclingEnabled_ = !cyclingEnabled_;
+    memset(cycleAccumulators_, 0, sizeof(cycleAccumulators_));
+    updateTimer();
+    syncButtonState();
+    // Do NOT call Tool::activate() — this does not change the active drawing tool.
+}
+
+void GradientTool::toggle()
+{
+    activate();
+}
+
+void GradientTool::syncButtonState()
+{
+    if (button_)
+        button_->setChecked(cyclingEnabled_);
 }
 
 void GradientTool::addButtonToGridLayout(QGridLayout *layout)
@@ -84,6 +102,17 @@ void GradientTool::refreshPanel()
         ditherSlider_->setEnabled(range->random());
         ditherSlider_->blockSignals(false);
     }
+
+    if (cycleButton_) {
+        cycleButton_->blockSignals(true);
+        cycleButton_->setChecked(range->cycling());
+        cycleButton_->blockSignals(false);
+    }
+    if (speedSlider_) {
+        speedSlider_->blockSignals(true);
+        speedSlider_->setValue(range->cycleSpeed());
+        speedSlider_->blockSignals(false);
+    }
 }
 
 void GradientTool::onRangeChanged()
@@ -98,6 +127,45 @@ void GradientTool::setBuffer(Buffer *buffer)
     Tool::setBuffer(buffer);
     if (markerBox_)
         markerBox_->setBuffer(buffer);
+}
+
+void GradientTool::updateTimer()
+{
+    bool needed = false;
+    if (cyclingEnabled_) {
+        for (int r = 0; r < kGradientRangeCount; r++) {
+            if (gradientRanges[r].cycling() && gradientRanges[r].cycleSpeed() > 0) {
+                needed = true;
+                break;
+            }
+        }
+    }
+    if (needed && !cycleTimer_->isActive())
+        cycleTimer_->start();
+    else if (!needed && cycleTimer_->isActive())
+        cycleTimer_->stop();
+}
+
+void GradientTool::onCycleTick()
+{
+    if (!buffer_) return;
+    for (int r = 0; r < kGradientRangeCount; r++) {
+        GradientRange &range = gradientRanges[r];
+        if (!range.cycling() || range.cycleSpeed() == 0) continue;
+
+        cycleAccumulators_[r] += range.cycleSpeed() / 71.0;
+        if (cycleAccumulators_[r] < 1.0) continue;
+        cycleAccumulators_[r] -= 1.0;
+
+        const QVector<GradientMarker> &markers = range.markers();
+        if (markers.size() < 2) continue;
+
+        int n = markers.size();
+        QRgb saved = buffer_->image().color(markers[n - 1].colorIndex);
+        for (int i = n - 1; i > 0; i--)
+            buffer_->setColor(markers[i].colorIndex, QColor(buffer_->image().color(markers[i - 1].colorIndex)));
+        buffer_->setColor(markers[0].colorIndex, QColor(saved));
+    }
 }
 
 QWidget *GradientTool::createOptionsWidget()
@@ -189,6 +257,33 @@ QWidget *GradientTool::createOptionsWidget()
     });
     ditherRow->addWidget(ditherSlider_);
     vbox->addLayout(ditherRow);
+
+    // Cycle controls
+    QHBoxLayout *cycleRow = new QHBoxLayout;
+    cycleButton_ = new QPushButton("Cycle", w);
+    cycleButton_->setCheckable(true);
+    cycleButton_->setChecked(range->cycling());
+    cycleButton_->setFixedHeight(24);
+    connect(cycleButton_, &QPushButton::toggled, [this](bool v) {
+        gradientRanges[activeGradientRange].setCycling(v);
+        cycleAccumulators_[activeGradientRange] = 0.0;
+        updateTimer();
+    });
+    cycleRow->addWidget(cycleButton_);
+
+    cycleRow->addStretch();
+    cycleRow->addWidget(new QLabel("Speed:", w));
+
+    speedSlider_ = new QSlider(Qt::Horizontal, w);
+    speedSlider_->setRange(0, 71);
+    speedSlider_->setValue(range->cycleSpeed());
+    speedSlider_->setFixedWidth(80);
+    connect(speedSlider_, &QSlider::valueChanged, [this](int v) {
+        gradientRanges[activeGradientRange].setCycleSpeed(v);
+        updateTimer();
+    });
+    cycleRow->addWidget(speedSlider_);
+    vbox->addLayout(cycleRow);
 
     // Operation buttons
     QHBoxLayout *btnRow = new QHBoxLayout;

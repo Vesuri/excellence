@@ -28,6 +28,11 @@ public:
     int ditherAmount() const { return ditherAmount_; }
     void setDitherAmount(int v) { ditherAmount_ = qBound(0, v, 100); }
 
+    bool cycling() const { return cycling_; }
+    void setCycling(bool v) { cycling_ = v; }
+    int cycleSpeed() const { return cycleSpeed_; }
+    void setCycleSpeed(int v) { cycleSpeed_ = qBound(0, v, 71); }
+
     void flip();
     void clear();
     void undo();
@@ -51,6 +56,8 @@ private:
     bool random_ = false;
     bool hardEdges_ = false;
     int ditherAmount_ = 0;
+    bool cycling_ = false;
+    int cycleSpeed_ = 0;
     Snapshot undoSnapshot_;
     Snapshot restorePoint_;
 };
