@@ -89,7 +89,7 @@ QRect AirTool::paintDot(const QPoint &point)
             for (int attempt = 0; attempt < 16; attempt++) {
                 int bx = QRandomGenerator::global()->bounded(bimg.width());
                 int by = QRandomGenerator::global()->bounded(bimg.height());
-                if (bimg.pixelIndex(bx, by) == 0)
+                if (bimg.pixelIndex(bx, by) == brush->transparentIndex())
                     continue;
                 QPoint cp(point.x() + bx - bimg.width() / 2,
                           point.y() + by - bimg.height() / 2);
