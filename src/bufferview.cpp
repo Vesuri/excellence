@@ -256,6 +256,11 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
 
 void BufferView::keyPressEvent(QKeyEvent *event)
 {
+    handleKey(event);
+}
+
+void BufferView::handleKey(QKeyEvent *event)
+{
     switch (event->key()) {
     case '+':
     case '>':
@@ -450,6 +455,11 @@ void BufferView::keyPressEvent(QKeyEvent *event)
 }
 
 void BufferView::keyReleaseEvent(QKeyEvent *event)
+{
+    handleKeyRelease(event);
+}
+
+void BufferView::handleKeyRelease(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_Alt && altPreviousTool_ && buffer) {
         altPreviousTool_->click();

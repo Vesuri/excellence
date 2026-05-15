@@ -1,6 +1,9 @@
 #include "palettebutton.h"
+#include <QAbstractSpinBox>
 #include <QCloseEvent>
 #include <QInputDialog>
+#include <QKeyEvent>
+#include <QLineEdit>
 #include <QSizePolicy>
 #include <QTimer>
 #include <QFileDialog>
@@ -774,6 +777,23 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
     }
 
     switch (event->type()) {
+    case QEvent::KeyPress:
+    case QEvent::KeyRelease: {
+        if (activeBufferView) {
+            QWidget *fw = QApplication::focusWidget();
+            bool inBufferView = fw && (fw == activeBufferView || activeBufferView->isAncestorOf(fw));
+            bool inTextInput  = qobject_cast<QLineEdit *>(fw) || qobject_cast<QAbstractSpinBox *>(fw);
+            if (!inBufferView && !inTextInput) {
+                auto *keyEvent = static_cast<QKeyEvent *>(event);
+                if (event->type() == QEvent::KeyPress)
+                    activeBufferView->handleKey(keyEvent);
+                else
+                    activeBufferView->handleKeyRelease(keyEvent);
+                return true;
+            }
+        }
+        break;
+    }
     case QEvent::WindowActivate:
         foreach (BufferView *bufferView, bufferViews) {
             if (watched == bufferView) {

@@ -26,6 +26,8 @@ public:
     void centerOn(const QPoint &point);
     QSize idealSize(int zoomLevel) const;
     bool eventFilter(QObject *watched, QEvent *event) override;
+    void handleKey(QKeyEvent *event);
+    void handleKeyRelease(QKeyEvent *event);
 
 signals:
     void magnifyAtPointRequested(int zoomLevel, QPoint point);
