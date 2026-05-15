@@ -1,5 +1,6 @@
 #include <climits>
 #include <cstdlib>
+#include <QColor>
 #include <QRect>
 #include <QVector>
 #include "pen.h"
@@ -216,10 +217,25 @@ static void transparentPixel(const QPoint &p, Buffer *buffer, unsigned paintColo
     QRgb paintRgb = (paintColor < static_cast<unsigned>(palette.size())) ? palette[static_cast<int>(paintColor)] : 0;
     int opacity = buffer->drawModeAmount();
     QRgb canvasRgb = ref.color(ref.pixelIndex(p));
-    QRgb blended = qRgb(
-        (qRed(paintRgb)   * opacity + qRed(canvasRgb)   * (100 - opacity)) / 100,
-        (qGreen(paintRgb) * opacity + qGreen(canvasRgb) * (100 - opacity)) / 100,
-        (qBlue(paintRgb)  * opacity + qBlue(canvasRgb)  * (100 - opacity)) / 100);
+    QRgb blended;
+    if (buffer->transparentMixHSV()) {
+        QColor pc = QColor::fromRgb(paintRgb).toHsv();
+        QColor cc = QColor::fromRgb(canvasRgb).toHsv();
+        int h1 = pc.hsvHue() < 0 ? 0 : pc.hsvHue();
+        int h2 = cc.hsvHue() < 0 ? 0 : cc.hsvHue();
+        int dh = h1 - h2;
+        if (dh >  180) dh -= 360;
+        if (dh < -180) dh += 360;
+        int h = ((h2 + dh * opacity / 100) % 360 + 360) % 360;
+        int s = (pc.hsvSaturation() * opacity + cc.hsvSaturation() * (100 - opacity)) / 100;
+        int v = (pc.value()          * opacity + cc.value()          * (100 - opacity)) / 100;
+        blended = QColor::fromHsv(h, s, v).rgb();
+    } else {
+        blended = qRgb(
+            (qRed(paintRgb)   * opacity + qRed(canvasRgb)   * (100 - opacity)) / 100,
+            (qGreen(paintRgb) * opacity + qGreen(canvasRgb) * (100 - opacity)) / 100,
+            (qBlue(paintRgb)  * opacity + qBlue(canvasRgb)  * (100 - opacity)) / 100);
+    }
     buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, blended)));
 }
 

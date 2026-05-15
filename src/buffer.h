@@ -57,6 +57,8 @@ public:
     QPoint smearDirection() const;
     void setDrawModeAmount(int amount);
     int drawModeAmount() const;
+    bool transparentMixHSV() const;
+    void setTransparentMixHSV(bool hsv);
     const QImage &referenceImage() const;
     bool isDirty() const;
     void clearDirty();
@@ -132,6 +134,7 @@ private:
     int lastCycleColor_;
     bool cycleUsed_;
     int drawModeAmount_;
+    bool transparentMixHSV_;
     bool gridEnabled_;
     bool pixelGrid_;
     int gridW_, gridH_;

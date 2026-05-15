@@ -180,6 +180,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
     lastCycleColor_(0),
     cycleUsed_(false),
     drawModeAmount_(50),
+    transparentMixHSV_(false),
     gridEnabled_(false),
     pixelGrid_(false),
     gridW_(8), gridH_(8),
@@ -210,6 +211,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     lastCycleColor_(0),
     cycleUsed_(false),
     drawModeAmount_(50),
+    transparentMixHSV_(false),
     gridEnabled_(false),
     pixelGrid_(false),
     gridW_(8), gridH_(8),
@@ -651,6 +653,8 @@ void Buffer::resetCycle()
 
 void Buffer::setDrawModeAmount(int amount) { drawModeAmount_ = qBound(0, amount, 100); }
 int Buffer::drawModeAmount() const { return drawModeAmount_; }
+bool Buffer::transparentMixHSV() const { return transparentMixHSV_; }
+void Buffer::setTransparentMixHSV(bool hsv) { transparentMixHSV_ = hsv; }
 const QImage &Buffer::referenceImage() const
 {
     return preModificationImage.isNull() ? image_ : preModificationImage;

@@ -323,6 +323,25 @@ QWidget *DrawModeTool::createOptionsWidget()
     amountRow->addWidget(spin);
     middleVBox->addLayout(amountRow);
 
+    QHBoxLayout *mixingRow = new QHBoxLayout;
+    mixingRow->setSpacing(4);
+    mixingRow->addWidget(new QLabel("Mixing:", w));
+    QRadioButton *rgbMixBtn = new QRadioButton("RGB", w);
+    QRadioButton *hsvMixBtn = new QRadioButton("HSV", w);
+    QButtonGroup *mixGroup = new QButtonGroup(w);
+    mixGroup->addButton(rgbMixBtn);
+    mixGroup->addButton(hsvMixBtn);
+    rgbMixBtn->setChecked(!buffer_->transparentMixHSV());
+    hsvMixBtn->setChecked(buffer_->transparentMixHSV());
+    rgbMixBtn->setToolTip("Transparent: blend in RGB space");
+    hsvMixBtn->setToolTip("Transparent: blend in HSV space (e.g. Blue 50% over Green → Cyan)");
+    connect(rgbMixBtn, &QRadioButton::clicked, [this]() { buffer_->setTransparentMixHSV(false); });
+    connect(hsvMixBtn, &QRadioButton::clicked, [this]() { buffer_->setTransparentMixHSV(true); });
+    mixingRow->addWidget(rgbMixBtn);
+    mixingRow->addWidget(hsvMixBtn);
+    mixingRow->addStretch();
+    middleVBox->addLayout(mixingRow);
+
     mainRow->addLayout(middleVBox);
 
     addVSep(mainRow);
