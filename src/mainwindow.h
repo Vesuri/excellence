@@ -97,7 +97,7 @@ private:
     QFileDialog *savePaletteDialog;
     PropertiesDialog *propertiesDialog;
     QVector<BufferView *> bufferViews;
-    BufferView *activeBufferView;
+    BufferView *activeBufferView = nullptr;
     Buffer *buffer;
     PenTip *penTip;
     PenTip *toolPenTip;
