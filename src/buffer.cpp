@@ -727,8 +727,8 @@ QRect Buffer::finalizeSegmentStroke()
     segmentActive_ = false;
     for (int i = 1; i <= N; i++) {
         // N=1: manual says "centers a brush between two points" → midpoint.
-        // N>1: N equal divisions, stamp at end of each (last stamp at path end).
-        float target = (N == 1) ? totalLen * 0.5f : totalLen * i / N;
+        // N>1: evenly spaced including both endpoints (first at start, last at end).
+        float target = (N == 1) ? totalLen * 0.5f : totalLen * (i - 1) / (N - 1);
         // Binary search / linear scan for segment containing target
         int j = 1;
         while (j < segmentPath_.size() - 1 && cumLen[j] < target) j++;
