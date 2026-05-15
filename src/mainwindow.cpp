@@ -183,7 +183,8 @@ void MainWindow::initialize()
 
     penTip->setPaintColor(buffer->paintColor());
     penTip->setEraseColor(buffer->eraseColor());
-    toolPenTip->setPaintColor(1);
+    toolPenTip->setPaintColor(buffer->paintColor());
+    toolPenTip->setEraseColor(buffer->eraseColor());
 
     newWindow();
     activateWindow();
@@ -249,6 +250,8 @@ void MainWindow::setBuffer(Buffer *newBuffer)
     paletteUndoSnapshot_ = paletteRestorePoint_;
     connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), penTip, SLOT(setPaintColor(unsigned)));
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), penTip, SLOT(setEraseColor(unsigned)));
+    connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), toolPenTip, SLOT(setPaintColor(unsigned)));
+    connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), toolPenTip, SLOT(setEraseColor(unsigned)));
     connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setPaintColor(unsigned, QColor)));
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setEraseColor(unsigned, QColor)));
     connect(buffer, &Buffer::dirtyChanged, this, &MainWindow::onDirtyChanged);

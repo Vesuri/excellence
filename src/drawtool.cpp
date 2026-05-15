@@ -56,7 +56,8 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     lastStampedPoint = point;
     buffer_->setSmearDirection(QPoint(0, 0));
     buffer_->resetCycle();
-    drawnBounds_ = buffer_->pen()->rect(point).intersected(buffer_->image().rect());
+    Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
+    drawnBounds_ = p->rect(point).intersected(buffer_->image().rect());
     pathPoints_.clear();
     pathPoints_.append(point);
     return draw(point);
@@ -89,7 +90,8 @@ QRect DrawTool::move(const QPoint &point)
 
 QRect DrawTool::hover(const QPoint &point)
 {
-    return buffer_->pen()->rect(point);
+    Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
+    return p->rect(point);
 }
 
 QRect DrawTool::release(const QPoint &point)
@@ -115,10 +117,11 @@ QRect DrawTool::release(const QPoint &point)
 
 QRect DrawTool::draw(const QPoint &point)
 {
+    Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
     if (mouseButton_ == Qt::RightButton) {
-        return buffer_->pen()->erase(point, buffer_);
+        return p->erase(point, buffer_);
     } else {
-        return buffer_->pen()->paint(point, buffer_);
+        return p->paint(point, buffer_);
     }
 }
 

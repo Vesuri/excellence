@@ -132,7 +132,8 @@ QRect EllipseTool::drawEllipseShape(double angle, bool applyGradient)
 
 QRect EllipseTool::ellipseBoundingRect(double angle) const
 {
-    QRect penRect = buffer_->pen()->rect(QPoint(0, 0));
+    Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
+    QRect penRect = p->rect(QPoint(0, 0));
     int margin = qMax(penRect.width(), penRect.height()) + 2;
     double cosA = qCos(angle), sinA = qSin(angle);
     int hw = qRound(qSqrt((double)rx_ * rx_ * cosA * cosA + (double)ry_ * ry_ * sinA * sinA)) + margin;
@@ -142,9 +143,10 @@ QRect EllipseTool::ellipseBoundingRect(double angle) const
 
 QRect EllipseTool::draw(const QPoint &point)
 {
+    Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
     if (erasing_)
-        return buffer_->pen()->erase(point, buffer_);
-    return buffer_->pen()->paint(point, buffer_);
+        return p->erase(point, buffer_);
+    return p->paint(point, buffer_);
 }
 
 // ── press ──────────────────────────────────────────────────────────────────
@@ -164,7 +166,8 @@ QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     erasing_ = (mouseButton_ == Qt::RightButton);
     phase_ = 1;
     startPoint_ = point;
-    QRect dotRect = buffer_->pen()->rect(point).intersected(buffer_->image().rect());
+    Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
+    QRect dotRect = p->rect(point).intersected(buffer_->image().rect());
     if (dotRect.isEmpty()) return QRect();
     undoBuffer_ = new UndoBuffer(dotRect.topLeft(), buffer_->image().copy(dotRect), this);
     return draw(point);
@@ -180,8 +183,10 @@ QRect EllipseTool::move(const QPoint &point)
     }
 
     if (mouseButton_ == Qt::NoButton) {
-        if (phase_ == 0)
-            return buffer_->pen()->paint(point, buffer_);
+        if (phase_ == 0) {
+            Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
+            return p->paint(point, buffer_);
+        }
         return QRect();
     }
     if (phase_ != 1)
@@ -234,8 +239,10 @@ QRect EllipseTool::release(const QPoint &point)
 
 QRect EllipseTool::hover(const QPoint &point)
 {
-    if (phase_ == 0)
-        return buffer_->pen()->rect(point);
+    if (phase_ == 0) {
+        Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
+        return p->rect(point);
+    }
     if (rotateMode_ && phase_ == 2) {
         double angle = qAtan2((double)(point.y() - cy_), (double)(point.x() - cx_));
         return ellipseBoundingRect(angle);

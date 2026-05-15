@@ -165,8 +165,10 @@ QRect LineTool::move(const QPoint &point)
     }
 
     // Connected lines / filled polygon
-    if (!active_)
-        return buffer_->pen()->paint(point, buffer_);
+    if (!active_) {
+        Pen *p = mode_ == FilledPolygon ? buffer_->toolPen() : buffer_->pen();
+        return p->paint(point, buffer_);
+    }
 
     if (mouseButton_ != Qt::NoButton) {
         if (dragUndoBuffer_ != nullptr) {
@@ -231,8 +233,10 @@ QRect LineTool::release(const QPoint &point)
 
 QRect LineTool::hover(const QPoint &point)
 {
-    if (mode_ == Line || !active_)
-        return buffer_->pen()->rect(point);
+    if (mode_ == Line || !active_) {
+        Pen *p = mode_ == FilledPolygon ? buffer_->toolPen() : buffer_->pen();
+        return p->rect(point);
+    }
     return lineBoundingRect(lastPoint_, point);
 }
 
@@ -259,12 +263,13 @@ QRect LineTool::drawPixel(const QPoint &point)
 
 QRect LineTool::paintPixel(const QPoint &point)
 {
-    return buffer_->pen()->paint(point, buffer_);
+    return buffer_->toolPen()->paint(point, buffer_);
 }
 
 QRect LineTool::lineBoundingRect(const QPoint &from, const QPoint &to) const
 {
-    QRect penRect = buffer_->pen()->rect(QPoint(0, 0));
+    Pen *p = mode_ == FilledPolygon ? buffer_->toolPen() : buffer_->pen();
+    QRect penRect = p->rect(QPoint(0, 0));
     int penW = penRect.width();
     int penH = penRect.height();
     return QRect(from, to).normalized().adjusted(-penW, -penH, penW, penH);

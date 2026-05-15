@@ -59,13 +59,15 @@ QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 
 QRect RectangleTool::hover(const QPoint &point)
 {
-    return buffer_->pen()->rect(point);
+    Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
+    return p->rect(point);
 }
 
 QRect RectangleTool::move(const QPoint &point)
 {
     if (mouseButton_ == Qt::NoButton) {
-        return buffer_->pen()->paint(point, buffer_);
+        Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
+        return p->paint(point, buffer_);
     }
 
     if (!undoBuffer)
@@ -176,15 +178,17 @@ void RectangleTool::setAnchorMode(bool centerToCorner)
 
 QRect RectangleTool::changes(const QPoint &point)
 {
-    return buffer_->pen()->rect(point);
+    Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
+    return p->rect(point);
 }
 
 QRect RectangleTool::draw(const QPoint &point)
 {
+    Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
     if (mouseButton_ == Qt::LeftButton) {
-        return buffer_->pen()->paint(point, buffer_);
+        return p->paint(point, buffer_);
     } else {
-        return buffer_->pen()->erase(point, buffer_);
+        return p->erase(point, buffer_);
     }
 }
 
