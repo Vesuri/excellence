@@ -109,6 +109,7 @@ static void collectMirrorPoints(const QPoint &point, Buffer *buffer, QPoint pts[
 
 QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 {
+    if (!buffer->segmentCheck(point)) return QRect();
     Buffer::PaintMode mode = buffer->paintMode();
     bool isErase = false;
     unsigned paintC = Pen::resolveDrawColor(buffer, mode, isErase, paintColor_);
@@ -130,6 +131,7 @@ QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
 
 QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 {
+    if (!buffer->segmentCheck(point)) return QRect();
     Buffer::PaintMode mode = buffer->paintMode();
     bool isErase = true;
     unsigned paintC = Pen::resolveDrawColor(buffer, mode, isErase, paintColor_);

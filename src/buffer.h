@@ -84,6 +84,16 @@ public:
     int nextCycleColor(bool reverse = false);
     void resetCycle();
 
+    // Segment draw
+    bool segmentActive() const { return segmentActive_; }
+    void setSegmentActive(bool v);
+    bool segmentByDistance() const { return segmentByDistance_; }
+    void setSegmentByDistance(bool v);
+    int segmentValue() const { return segmentValue_; }
+    void setSegmentValue(int v);
+    // Called by Pen implementations on each paint/erase point; returns true if stamp should fire.
+    bool segmentCheck(const QPoint &point);
+
 public slots:
     void clear();
     void clearWithColor(unsigned colorIndex);
@@ -110,9 +120,11 @@ signals:
     void dirtyChanged(bool dirty);
     void paintModeChanged(PaintMode mode);
     void penChanged(Pen *pen);
+    void segmentChanged();
 
 private:
     void initialize(int width = 640, int height = 512, int colors = 32);
+    QRect finalizeSegmentStroke();
 
     QString path_;
     QImage image_;
@@ -144,6 +156,12 @@ private:
     bool dirty_;
     QImage brushStamp_;
     int brushTransparentIndex_;
+    bool segmentActive_ = false;
+    bool segmentByDistance_ = true;
+    int segmentValue_ = 10;
+    float segmentAccum_ = 0.0f;
+    QPoint segmentLastVisited_;
+    QList<QPoint> segmentPath_;
 };
 
 #endif // BUFFER_H

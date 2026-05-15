@@ -308,6 +308,11 @@ void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt:
 
         preModificationImage = image_.copy();
 
+        // Reset segment state for new stroke; pre-charge so first stamp fires at press
+        segmentAccum_ = static_cast<float>(segmentValue_);
+        segmentLastVisited_ = p;
+        segmentPath_.clear();
+
         modifiedArea = tool_->press(p, modifiers);
 
         emit modified(modifiedArea);
@@ -365,6 +370,15 @@ void Buffer::release(const QPoint &point)
         break;
     default:
         modifiedArea = modifiedArea.united(area);
+
+        // # of Points segment finalization: stamp N evenly-spaced points along recorded path
+        if (segmentActive_ && !segmentByDistance_ && !segmentPath_.isEmpty()) {
+            QRect segArea = finalizeSegmentStroke();
+            modifiedArea = modifiedArea.united(segArea);
+            if (!segArea.isNull())
+                emit modified(segArea);
+        }
+        segmentPath_.clear();
 
         emit modified(area);
 
@@ -658,6 +672,61 @@ void Buffer::setTransparentMixHSV(bool hsv) { transparentMixHSV_ = hsv; }
 const QImage &Buffer::referenceImage() const
 {
     return preModificationImage.isNull() ? image_ : preModificationImage;
+}
+
+void Buffer::setSegmentActive(bool v) { segmentActive_ = v; emit segmentChanged(); }
+void Buffer::setSegmentByDistance(bool v) { segmentByDistance_ = v; emit segmentChanged(); }
+void Buffer::setSegmentValue(int v) { segmentValue_ = qMax(1, v); emit segmentChanged(); }
+
+bool Buffer::segmentCheck(const QPoint &point)
+{
+    if (!segmentActive_) return true;
+    if (!tool_ || tool_->mouseButton() == Qt::NoButton) return true; // hover: always stamp
+
+    if (segmentByDistance_) {
+        QPoint delta = point - segmentLastVisited_;
+        float dist = sqrt(static_cast<float>(delta.x() * delta.x() + delta.y() * delta.y()));
+        segmentAccum_ += dist;
+        segmentLastVisited_ = point;
+        if (segmentAccum_ < static_cast<float>(segmentValue_)) return false;
+        segmentAccum_ -= static_cast<float>(segmentValue_);
+        return true;
+    } else {
+        segmentPath_.append(point);
+        return false;
+    }
+}
+
+QRect Buffer::finalizeSegmentStroke()
+{
+    if (segmentPath_.isEmpty() || segmentValue_ < 1) return QRect();
+
+    // Compute cumulative distances along recorded path
+    QVector<float> cumLen(segmentPath_.size(), 0.0f);
+    for (int i = 1; i < segmentPath_.size(); i++) {
+        QPoint d = segmentPath_[i] - segmentPath_[i - 1];
+        cumLen[i] = cumLen[i - 1] + sqrt(static_cast<float>(d.x() * d.x() + d.y() * d.y()));
+    }
+    float totalLen = cumLen.last();
+
+    int N = segmentValue_;
+    QRect result;
+    // Temporarily disable segment so replay doesn't recurse
+    segmentActive_ = false;
+    for (int i = 1; i <= N; i++) {
+        float target = totalLen * i / (N + 1);
+        // Binary search / linear scan for segment containing target
+        int j = 1;
+        while (j < segmentPath_.size() - 1 && cumLen[j] < target) j++;
+        float segLen = cumLen[j] - cumLen[j - 1];
+        float t = segLen > 0.0f ? (target - cumLen[j - 1]) / segLen : 0.0f;
+        t = qBound(0.0f, t, 1.0f);
+        QPoint d = segmentPath_[j] - segmentPath_[j - 1];
+        QPoint stampPoint = segmentPath_[j - 1] + QPoint(qRound(d.x() * t), qRound(d.y() * t));
+        result = result.united(pen_->paint(stampPoint, this));
+    }
+    segmentActive_ = true;
+    return result;
 }
 
 void Buffer::setGridEnabled(bool enabled)

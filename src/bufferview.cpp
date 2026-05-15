@@ -25,6 +25,7 @@
 #include "gridlocktool.h"
 #include "gradienttool.h"
 #include "mirrortool.h"
+#include "segmenttool.h"
 #include "zoomtool.h"
 #include "ui_bufferview.h"
 

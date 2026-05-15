@@ -60,6 +60,7 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
 
 QRect Brush::paint(const QPoint &point, Buffer *buffer) const
 {
+    if (!buffer->segmentCheck(point)) return QRect();
     QRect imageRect = buffer->image().rect();
     QPoint origin = point - handleOffset_;
     brushStampAt(image_, transparentIndex_, buffer, origin, false);
@@ -86,6 +87,7 @@ QRect Brush::paint(const QPoint &point, Buffer *buffer) const
 
 QRect Brush::erase(const QPoint &point, Buffer *buffer) const
 {
+    if (!buffer->segmentCheck(point)) return QRect();
     QRect imageRect = buffer->image().rect();
     QPoint origin = point - handleOffset_;
     brushStampAt(image_, transparentIndex_, buffer, origin, true);
