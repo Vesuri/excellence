@@ -538,6 +538,7 @@ static QString paintModeName(Buffer::PaintMode mode)
 
 void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
 {
+    if (!buffer) return;
     QString path = buffer->path();
     int depth = 1;
     for (int i = buffer->image().colorCount(); i > 2; i >>= 1)
