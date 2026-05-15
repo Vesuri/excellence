@@ -346,7 +346,15 @@ void Buffer::move(const QPoint &point)
         }
     }
 
+    // For # of Points segment mode: clear stale path so only this move's draw is recorded,
+    // then replay N stamps after the tool draws (gives live preview during drag).
+    if (segmentActive_ && !segmentByDistance_ && tool_->mouseButton() != Qt::NoButton)
+        segmentPath_.clear();
+
     QRect area = tool_->move(p);
+
+    if (segmentActive_ && !segmentByDistance_ && tool_->mouseButton() != Qt::NoButton && !segmentPath_.isEmpty())
+        area = area.united(finalizeSegmentStroke());
 
     switch (tool_->type()) {
     case Tool::Zoom:
