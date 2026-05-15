@@ -193,6 +193,35 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             QPointF scenePos = mouseEvent->scenePos();
             QPoint point(qFloor(scenePos.x()), qFloor(scenePos.y()));
 
+            if (panMode_) {
+                switch (event->type()) {
+                case QEvent::GraphicsSceneMousePress:
+                    panDragging_ = true;
+                    panLastScreenPos_ = mouseEvent->screenPos();
+                    ui->graphicsView->viewport()->setCursor(Qt::ClosedHandCursor);
+                    break;
+                case QEvent::GraphicsSceneMouseMove:
+                    mouseOverCanvas_ = true;
+                    lastMousePoint = point;
+                    if (panDragging_) {
+                        QPoint delta = mouseEvent->screenPos() - panLastScreenPos_;
+                        panLastScreenPos_ = mouseEvent->screenPos();
+                        ui->graphicsView->horizontalScrollBar()->setValue(
+                            ui->graphicsView->horizontalScrollBar()->value() - delta.x());
+                        ui->graphicsView->verticalScrollBar()->setValue(
+                            ui->graphicsView->verticalScrollBar()->value() - delta.y());
+                    }
+                    break;
+                case QEvent::GraphicsSceneMouseRelease:
+                    panDragging_ = false;
+                    ui->graphicsView->viewport()->setCursor(Qt::OpenHandCursor);
+                    break;
+                default:
+                    break;
+                }
+                return true;
+            }
+
             switch (event->type()) {
             case QEvent::GraphicsSceneMousePress:
                 pendingZoom_ = buffer->tool() && buffer->tool()->type() == Tool::Zoom;
@@ -269,6 +298,29 @@ void BufferView::handleKey(QKeyEvent *event)
     case '-':
     case '<':
         setZoomLevel(zoomLevel_ - 1);
+        break;
+    case Qt::Key_S:
+        if (buffer) {
+            QSize vp = ui->graphicsView->viewport()->size();
+            int fw = qMax(1, qCeil(buffer->image().width()  * aspectX_));
+            int fh = qMax(1, qCeil(buffer->image().height() * aspectY_));
+            setZoomLevel(qBound(1, qMin(vp.width() / fw, vp.height() / fh), 32));
+            ui->graphicsView->centerOn(pixmapItem);
+        }
+        break;
+    case Qt::Key_N:
+        if (event->modifiers() & Qt::ShiftModifier) {
+            panMode_ = !panMode_;
+            panDragging_ = false;
+            ui->graphicsView->viewport()->setCursor(
+                panMode_ ? Qt::OpenHandCursor : Qt::CrossCursor);
+        } else {
+            if (mouseOverCanvas_)
+                ui->graphicsView->centerOn(QPointF(lastMousePoint));
+            else if (buffer)
+                ui->graphicsView->centerOn(
+                    QPointF(buffer->image().width() / 2.0, buffer->image().height() / 2.0));
+        }
         break;
     case Qt::Key_M:
         for (Tool *tool : tools) {

@@ -56,6 +56,9 @@ private:
     int zoomLevel_;
     QPoint guideStartPoint_;
     bool mouseOverCanvas_ = false;
+    bool panMode_ = false;
+    bool panDragging_ = false;
+    QPoint panLastScreenPos_;
     qreal aspectX_;
     qreal aspectY_;
 };
