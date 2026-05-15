@@ -112,8 +112,7 @@ QRect RectangleTool::release(const QPoint &point)
         const GradientRange *range = &gradientRanges[activeGradientRange];
         for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
             for (int x = fillRect.left(); x <= fillRect.right(); x++) {
-                float t = GradientRenderer::computeT(x, y, image.width(), image.height(),
-                                                      activeGradientFillMode, startPoint, point);
+                float t = GradientRenderer::computeT(x, y, activeGradientFillMode, startPoint, point);
                 int ci = GradientRenderer::colorIndex(t, x, y, range, image);
                 image.setPixel(x, y, static_cast<uint>(ci));
             }

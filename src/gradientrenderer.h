@@ -11,9 +11,9 @@ namespace GradientRenderer {
     int colorIndex(float t, int pixelX, int pixelY,
                    const GradientRange *range, const QImage &image);
 
-    // Computes the t value (0..1) for a pixel based on the fill mode and
-    // the drag start/end points. For Horizontal/Vertical the from/to are ignored.
-    float computeT(int px, int py, int imageW, int imageH,
+    // Computes the t value (0..1) for a pixel based on the fill mode.
+    // For Horizontal/Vertical, from/to define the start and end of the gradient span.
+    float computeT(int px, int py,
                    GradientFillMode mode, const QPoint &from, const QPoint &to);
 }
 

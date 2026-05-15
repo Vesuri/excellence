@@ -141,6 +141,9 @@ QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
 
     const bool useGradient = gradientFillActive();
     const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
+    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    QPoint gradFrom = hvMode ? QPoint(0, 0) : startingPoint;
+    QPoint gradTo   = hvMode ? QPoint(image.width() - 1, image.height() - 1) : to;
 
     QRect changedRect;
     for (int y = minY; y <= maxY; y++) {
@@ -159,8 +162,7 @@ QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
             int x2 = qMin(xs[i + 1], imageRect.right());
             for (int x = x1; x <= x2; x++) {
                 if (useGradient) {
-                    float t = GradientRenderer::computeT(x, y, image.width(), image.height(),
-                                                          activeGradientFillMode, startingPoint, to);
+                    float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo);
                     int ci = GradientRenderer::colorIndex(t, x, y, range, image);
                     image.setPixel(x, y, static_cast<uint>(ci));
                 } else {

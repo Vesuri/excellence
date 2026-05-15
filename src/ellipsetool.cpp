@@ -107,10 +107,11 @@ QRect EllipseTool::drawEllipseShape(double angle, bool applyGradient)
         && gradientFillActive()) {
         QImage &image = buffer_->image();
         const GradientRange *range = &gradientRanges[activeGradientRange];
-        QPoint releasePoint(cx_ + rx_, cy_);  // Use bounding edge as gradient end
+        bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+        QPoint gradFrom = hvMode ? QPoint(cx_ - rx_, cy_ - ry_) : startPoint_;
+        QPoint gradTo   = hvMode ? QPoint(cx_ + rx_, cy_ + ry_) : QPoint(cx_ + rx_, cy_);
         auto fn = [&](const QPoint &p) {
-            float t = GradientRenderer::computeT(p.x(), p.y(), image.width(), image.height(),
-                                                  activeGradientFillMode, startPoint_, releasePoint);
+            float t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo);
             int ci = GradientRenderer::colorIndex(t, p.x(), p.y(), range, image);
             image.setPixel(p.x(), p.y(), static_cast<uint>(ci));
             changedRect = changedRect.united(QRect(p, p));

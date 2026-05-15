@@ -125,14 +125,18 @@ int colorIndex(float t, int pixelX, int pixelY,
     return markers.last().colorIndex;
 }
 
-float computeT(int px, int py, int imageW, int imageH,
+float computeT(int px, int py,
                GradientFillMode mode, const QPoint &from, const QPoint &to)
 {
     switch (mode) {
-    case FillHorizontal:
-        return float(px) / qMax(imageW - 1, 1);
-    case FillVertical:
-        return float(py) / qMax(imageH - 1, 1);
+    case FillHorizontal: {
+        int x0 = qMin(from.x(), to.x()), x1 = qMax(from.x(), to.x());
+        return float(px - x0) / qMax(x1 - x0, 1);
+    }
+    case FillVertical: {
+        int y0 = qMin(from.y(), to.y()), y1 = qMax(from.y(), to.y());
+        return float(py - y0) / qMax(y1 - y0, 1);
+    }
     case FillLinear: {
         float dx = float(to.x() - from.x());
         float dy = float(to.y() - from.y());

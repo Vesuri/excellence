@@ -184,12 +184,14 @@ QRect FillTool::applyGradientFill(const QPoint &endPoint)
         return visitedRect_;
     }
 
+    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    QPoint gradFrom = hvMode ? QPoint(0, 0) : startPoint_;
+    QPoint gradTo   = hvMode ? QPoint(image.width() - 1, image.height() - 1) : endPoint;
     for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
         for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
             if (y < 0 || y >= visitedH_ || x < 0 || x >= visitedW_) continue;
             if (!visited_[y * visitedW_ + x]) continue;
-            float t = GradientRenderer::computeT(x, y, image.width(), image.height(),
-                                                  activeGradientFillMode, startPoint_, endPoint);
+            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo);
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
         }
