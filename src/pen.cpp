@@ -49,20 +49,30 @@ static void smoothPixel(const QPoint &p, Buffer *buffer)
     QRect imageRect = ref.rect();
     if (!imageRect.contains(p)) return;
     const QVector<QRgb> palette = buffer->image().colorTable();
-    int rSum = 0, gSum = 0, bSum = 0, count = 0;
+    int centerIdx = ref.pixelIndex(p.x(), p.y());
+    QRgb centerColor = ref.color(centerIdx);
     const int nx[] = {0, 0, -1, 1};
     const int ny[] = {-1, 1, 0, 0};
+    int rSum = 0, gSum = 0, bSum = 0, count = 0;
     for (int i = 0; i < 4; i++) {
         QPoint n(p.x() + nx[i], p.y() + ny[i]);
-        if (imageRect.contains(n)) {
-            QRgb c = ref.color(ref.pixelIndex(n));
-            rSum += qRed(c); gSum += qGreen(c); bSum += qBlue(c); count++;
-        }
+        if (!imageRect.contains(n)) continue;
+        int nIdx = ref.pixelIndex(n.x(), n.y());
+        if (nIdx == centerIdx) continue;  // same color, not a boundary
+        QRgb nc = ref.color(nIdx);
+        rSum += qRed(nc); gSum += qGreen(nc); bSum += qBlue(nc); count++;
     }
-    if (count > 0) {
-        QRgb avg = qRgb(rSum/count, gSum/count, bSum/count);
-        buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, avg)));
-    }
+    if (count == 0) return;  // no color boundary, leave pixel unchanged
+    // Find the palette color closest to the midpoint between this pixel and its
+    // differently-colored neighbours. Only apply if a genuinely intermediate
+    // palette entry exists (i.e. the result differs from the original colour).
+    QRgb neighborAvg = qRgb(rSum / count, gSum / count, bSum / count);
+    QRgb mid = qRgb((qRed(centerColor)   + qRed(neighborAvg))   / 2,
+                    (qGreen(centerColor) + qGreen(neighborAvg)) / 2,
+                    (qBlue(centerColor)  + qBlue(neighborAvg))  / 2);
+    int nearest = findNearestPalette(palette, mid);
+    if (nearest != centerIdx)
+        buffer->image().setPixel(p, static_cast<uint>(nearest));
 }
 
 static void rangePixel(const QPoint &p, Buffer *buffer, bool isErase)
