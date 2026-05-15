@@ -45,7 +45,8 @@ static void smearPixel(const QPoint &p, Buffer *buffer, unsigned fallbackColor)
 
 static void smoothPixel(const QPoint &p, Buffer *buffer)
 {
-    QRect imageRect = buffer->image().rect();
+    const QImage &ref = buffer->referenceImage();
+    QRect imageRect = ref.rect();
     if (!imageRect.contains(p)) return;
     const QVector<QRgb> palette = buffer->image().colorTable();
     int rSum = 0, gSum = 0, bSum = 0, count = 0;
@@ -54,7 +55,7 @@ static void smoothPixel(const QPoint &p, Buffer *buffer)
     for (int i = 0; i < 4; i++) {
         QPoint n(p.x() + nx[i], p.y() + ny[i]);
         if (imageRect.contains(n)) {
-            QRgb c = buffer->image().color(buffer->image().pixelIndex(n));
+            QRgb c = ref.color(ref.pixelIndex(n));
             rSum += qRed(c); gSum += qGreen(c); bSum += qBlue(c); count++;
         }
     }
