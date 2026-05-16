@@ -402,11 +402,9 @@ void BufferView::handleKey(QKeyEvent *event)
     case Qt::Key_C:
         for (Tool *tool : tools) {
             if (auto *et = qobject_cast<EllipseTool *>(tool)) {
+                tool->click();
                 if (event->modifiers() & Qt::ShiftModifier)
                     et->setDrawMode(EllipseTool::FilledEllipse);
-                else
-                    et->setDrawMode(EllipseTool::Ellipse);
-                tool->click();
                 break;
             }
         }
@@ -491,11 +489,9 @@ void BufferView::handleKey(QKeyEvent *event)
         } else {
             for (Tool *tool : tools) {
                 if (auto *rt = qobject_cast<RectangleTool *>(tool)) {
+                    tool->click();
                     if (event->modifiers() & Qt::ShiftModifier)
                         rt->setDrawMode(RectangleTool::FilledRectangle);
-                    else
-                        rt->setDrawMode(RectangleTool::Rectangle);
-                    tool->click();
                     break;
                 }
             }
