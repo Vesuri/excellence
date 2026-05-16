@@ -88,7 +88,18 @@ Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on 
 - `floodFill(QImage&, seed, targetColor, fillColor)` — scanline flood fill; defined but used internally only by `FillTool` (via its own flood-fill logic)
 
 `GradientRenderer` (`gradientrenderer.{h,cpp}`) contains:
-- `polygonFillScanline(image, polygon, fillColor, useGradient, range, fillMode, gradFrom, gradTo)` — scanline polygon fill with optional gradient support; shared by `DrawTool` (FilledShape mode) and `LineTool` (FilledPolygon mode). Callers compute the gradient endpoints and pass them in; the function handles both flat and gradient fills in one pass.
+- `computeT(px, py, mode, from, to, conformRect = QRect())` — maps a pixel coordinate to a gradient position t ∈ [0, 1]. `conformRect`, when valid, scales the gradient relative to the bounding rect rather than using absolute canvas coordinates (see Gradient Fill Controls below).
+- `polygonFillScanline(image, polygon, fillColor, useGradient, range, fillMode, gradFrom, gradTo, conformRect = QRect())` — scanline polygon fill with optional gradient support; shared by `DrawTool` (FilledShape mode) and `LineTool` (FilledPolygon mode). When `conformRect` is valid and mode is Horizontal/Vertical, the function performs a per-row or per-column extent pass internally so each scanline's gradient spans its actual pixel width/height.
+
+**`Algorithms::fillEllipse` row-order guarantee** — pixels are delivered strictly top-to-bottom, left-to-right within each row (the outer loop is `for dy in -yBound..yBound`, inner is a left-to-right `line()` call). Code that accumulates per-row state inside the callback (e.g. `EllipseTool`'s conform logic that re-solves the quadratic once per new y) can rely on this.
+
+### Gradient Fill Controls
+
+`gradientrange.h` exports two global flags alongside `activeGradientFillMode`:
+
+- **`conformFill`** — when true, gradient fills scale to the cross-sections of the filled area rather than using absolute canvas coordinates. For Horizontal/Vertical modes this means per-row or per-column normalization (each row/column gets a gradient that spans exactly its own pixel extent). For Linear/Radial/Spherical/Highlight the gradient is bounded by the fill's bounding rect. Implemented in `GradientRenderer::computeT()` via the `conformRect` parameter, and via pre-scan loops in `polygonFillScanline`, `FillTool::applyGradientFill`, and `EllipseTool::drawEllipseShape`.
+- **`centerFill`** — when true, Radial/Spherical/Highlight fills originate from the geometric center of the filled area (fill rect center, polygon bbox center, `(cx_, cy_)` for ellipses) rather than the drag start point.
+- **`gradientFillIsRadial(mode)`** — inline helper in `gradientrange.h` returning true for `FillRadial | FillSpherical | FillHighlight`; use this instead of repeating the three-way check. Note: `FillTool::applyGradientFill` intentionally excludes `FillHighlight` from its center check because that mode uses a separate BFS distance-transform path that doesn't accept a gradient origin point.
 
 ### Palette Quantization
 
