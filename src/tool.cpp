@@ -1,3 +1,4 @@
+#include <QSizePolicy>
 #include <QTimer>
 #include <QToolButton>
 #include "buffer.h"
@@ -74,6 +75,7 @@ void Tool::click()
 void Tool::registerTool()
 {
     button_ = new QToolButton;
+    button_->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     button_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
     tools.append(this);
