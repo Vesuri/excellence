@@ -12,6 +12,7 @@ public:
 
     virtual QRect paint(const QPoint &point, Buffer *buffer) const = 0;
     virtual QRect erase(const QPoint &point, Buffer *buffer) const = 0;
+    virtual QRect paintAsColor(const QPoint &point, Buffer *buffer) const = 0;
     virtual QRect rect(const QPoint &point) const = 0;
 
     // Shared per-pixel paint mode dispatch used by PenTip and Brush.

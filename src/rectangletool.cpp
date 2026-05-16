@@ -220,6 +220,8 @@ QRect RectangleTool::draw(const QPoint &point)
 {
     Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
     if (mouseButton_ == Qt::LeftButton) {
+        if (drawMode == FilledRectangle && gradientFillActive())
+            return p->paintAsColor(point, buffer_);
         return p->paint(point, buffer_);
     } else {
         return p->erase(point, buffer_);

@@ -287,6 +287,8 @@ QRect LineTool::drawPixel(const QPoint &point)
 
 QRect LineTool::paintPixel(const QPoint &point)
 {
+    if (mode_ == FilledPolygon && gradientFillActive())
+        return buffer_->toolPen()->paintAsColor(point, buffer_);
     return buffer_->toolPen()->paint(point, buffer_);
 }
 
@@ -303,22 +305,25 @@ QRect LineTool::polygonFill()
 {
     const int fillColor = static_cast<int>(buffer_->paintColor());
     const bool useGradient = gradientFillActive();
-    const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
-    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
-    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
     QImage &image = buffer_->image();
 
     QRect polyBbox;
     for (const QPoint &v : vertices_)
         polyBbox = polyBbox.united(QRect(v, v));
 
+    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
     QPoint gradFrom = hvMode ? QPoint(0, 0) : firstPoint_;
     if (centerFill && isRadial)
         gradFrom = polyBbox.center();
     QPoint gradTo = hvMode ? QPoint(image.width() - 1, image.height() - 1) : lastPoint_;
-    QRect conformRect = conformFill ? polyBbox : QRect();
+
+    if (useGradient)
+        return GradientRenderer::applyPolygonGradient(image, vertices_, fillColor,
+            &gradientRanges[activeGradientRange], activeGradientFillMode,
+            gradFrom, gradTo, conformFill);
     return GradientRenderer::polygonFillScanline(image, vertices_, fillColor,
-        useGradient, range, activeGradientFillMode, gradFrom, gradTo, conformRect);
+        false, nullptr, activeGradientFillMode, gradFrom, gradTo, QRect());
 }
 
 QRect LineTool::applyPolygonGradient(const QList<QPoint> &verts, const QPoint &gradFrom, const QPoint &gradTo)

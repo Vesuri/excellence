@@ -222,6 +222,8 @@ QRect EllipseTool::draw(const QPoint &point)
     Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
     if (erasing_)
         return p->erase(point, buffer_);
+    if (drawMode_ == FilledEllipse && gradientFillActive())
+        return p->paintAsColor(point, buffer_);
     return p->paint(point, buffer_);
 }
 

@@ -145,9 +145,11 @@ QRect DrawTool::draw(const QPoint &point)
     Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
     if (mouseButton_ == Qt::RightButton) {
         return p->erase(point, buffer_);
-    } else {
-        return p->paint(point, buffer_);
     }
+    if (drawMode == FilledShape && gradientFillActive()) {
+        return p->paintAsColor(point, buffer_);
+    }
+    return p->paint(point, buffer_);
 }
 
 void DrawTool::cancel()
@@ -175,22 +177,25 @@ QRect DrawTool::applyPolygonGradient(const QList<QPoint> &path, const QPoint &gr
 QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
 {
     const bool useGradient = gradientFillActive();
-    const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
-    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
-    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
     QImage &image = buffer_->image();
 
     QRect polyBbox;
     for (const QPoint &p : pathPoints_)
         polyBbox = polyBbox.united(QRect(p, p));
 
+    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
     QPoint gradFrom = hvMode ? QPoint(0, 0) : startingPoint;
     if (centerFill && isRadial)
         gradFrom = polyBbox.center();
     QPoint gradTo = hvMode ? QPoint(image.width() - 1, image.height() - 1) : to;
-    QRect conformRect = conformFill ? polyBbox : QRect();
+
+    if (useGradient)
+        return GradientRenderer::applyPolygonGradient(image, pathPoints_, fillColor,
+            &gradientRanges[activeGradientRange], activeGradientFillMode,
+            gradFrom, gradTo, conformFill);
     return GradientRenderer::polygonFillScanline(image, pathPoints_, fillColor,
-        useGradient, range, activeGradientFillMode, gradFrom, gradTo, conformRect);
+        false, nullptr, activeGradientFillMode, gradFrom, gradTo, QRect());
 }
 
 void DrawTool::registerTool()

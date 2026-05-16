@@ -129,6 +129,20 @@ QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
     return changed.intersected(buffer->image().rect());
 }
 
+QRect PenTip::paintAsColor(const QPoint &point, Buffer *buffer) const
+{
+    if (!buffer->segmentCheck(point)) return QRect();
+    QPoint pts[4]; bool active[4];
+    collectMirrorPoints(point, buffer, pts, active);
+    QRect changed;
+    for (int i = 0; i < 4; i++) {
+        if (!active[i]) continue;
+        applyTipAt(pts[i], buffer, Buffer::Color, false, paintColor_, eraseColor_);
+        changed = changed.united(rect(pts[i]));
+    }
+    return changed.intersected(buffer->image().rect());
+}
+
 QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
 {
     if (!buffer->segmentCheck(point)) return QRect();

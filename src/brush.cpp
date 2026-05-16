@@ -85,6 +85,11 @@ QRect Brush::paint(const QPoint &point, Buffer *buffer) const
     return changed.intersected(imageRect);
 }
 
+QRect Brush::paintAsColor(const QPoint &point, Buffer *buffer) const
+{
+    return paint(point, buffer);
+}
+
 QRect Brush::erase(const QPoint &point, Buffer *buffer) const
 {
     if (!buffer->segmentCheck(point)) return QRect();
