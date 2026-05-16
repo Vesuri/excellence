@@ -261,10 +261,12 @@ QRect FillTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         rubberBand_.clear();
 
         if (activeGradientFillMode == FillLinear) {
-            // Any mouse button sets the angle and applies the gradient.
+            // Linear pre-filled the region with the foreground colour; merge that
+            // undo entry so the whole operation collapses to a single undo step.
+            buffer_->mergeLastUndo();
             return applyGradientFill(rubberBand_.from, point);
         } else {
-            // Radial/Spherical/Highlight: any click picks the gradient center.
+            // Radial/Spherical/Highlight: no pre-fill was done, so no undo to merge.
             float r = GradientRenderer::conformRadius(visitedRect_, point);
             return applyGradientFill(point, point + QPoint(qRound(r), 0));
         }

@@ -103,6 +103,7 @@ public slots:
     void resetToDefaultPalette();
     void undo();
     void redo();
+    void mergeLastUndo();
     void undoAll();
     void redoAll();
     void clearUndoBuffer();

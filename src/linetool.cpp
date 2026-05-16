@@ -109,6 +109,9 @@ QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         QPoint savedFrom = rubberBand_.from;
         QList<QPoint> savedVerts = pendingVertices_;
         rubberBand_.clear();
+        // The polygon was pre-filled before the rubber band; merge that undo entry
+        // so the whole operation collapses to a single undo step.
+        buffer_->mergeLastUndo();
         if (gradientFillIsRadial(activeGradientFillMode)) {
             QRect polyBbox;
             for (const QPoint &v : savedVerts) polyBbox = polyBbox.united(QRect(v, v));

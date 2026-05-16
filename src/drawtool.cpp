@@ -61,6 +61,9 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         startingPoint = point;
         previousPoint = point;
         pathPoints_.clear();
+        // The shape was pre-filled before the rubber band; merge that undo entry
+        // so the whole operation collapses to a single undo step.
+        buffer_->mergeLastUndo();
         if (gradientFillIsRadial(activeGradientFillMode)) {
             QRect polyBbox;
             for (const QPoint &p : savedPath) polyBbox = polyBbox.united(QRect(p, p));

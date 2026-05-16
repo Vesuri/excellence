@@ -55,6 +55,9 @@ QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         QPoint savedFrom = rubberBand_.from;
         QRect savedFill = pendingFillRect_;
         rubberBand_.clear();
+        // The rectangle was pre-filled before the rubber band; merge that undo entry
+        // so the whole operation collapses to a single undo step.
+        buffer_->mergeLastUndo();
         if (gradientFillIsRadial(activeGradientFillMode)) {
             float r = GradientRenderer::conformRadius(savedFill, point);
             return applyGradientRect(savedFill, point, point + QPoint(qRound(r), 0));

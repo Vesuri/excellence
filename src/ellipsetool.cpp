@@ -277,6 +277,9 @@ QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         QPoint savedFrom = rubberBand_.from;
         double savedAngle = pendingAngle_;
         rubberBand_.clear();
+        // The ellipse was pre-filled with the foreground colour before the rubber band
+        // started; merge that undo entry so the whole operation is one undo step.
+        buffer_->mergeLastUndo();
         if (gradientFillIsRadial(activeGradientFillMode)) {
             QRect ellipseBbox = QRect(cx_ - rx_, cy_ - ry_, 2 * rx_ + 1, 2 * ry_ + 1);
             float r = GradientRenderer::conformRadius(ellipseBbox, point);
