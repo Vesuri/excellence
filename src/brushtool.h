@@ -9,6 +9,8 @@
 #include <QPolygon>
 #include "tool.h"
 
+namespace Ui { class BrushToolOptions; }
+
 class UndoBuffer;
 
 class BrushWellButton : public QAbstractButton
@@ -38,6 +40,8 @@ class BrushHandleWidget : public QWidget
     Q_OBJECT
 public:
     explicit BrushHandleWidget(BrushTool *tool, QWidget *parent = nullptr);
+    explicit BrushHandleWidget(QWidget *parent = nullptr);
+    void setTool(BrushTool *tool);
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void showEvent(QShowEvent *event) override;
@@ -119,8 +123,8 @@ private:
     static const int WellCount = 8;
     QImage wells_[WellCount];
     BrushWellButton *wellButtons_[WellCount];
-    BrushHandleWidget *handleWidget_;
-    QLabel *dimensionsLabel_;
+
+    Ui::BrushToolOptions *ui_ = nullptr;
 
     static BrushTool instance;
 };

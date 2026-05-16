@@ -7,6 +7,7 @@
 #include <QWidget>
 #include "buffer.h"
 #include "zoomtool.h"
+#include "ui_zoomtooloptions.h"
 
 ZoomTool ZoomTool::instance;
 
@@ -51,47 +52,29 @@ QRect ZoomTool::release(const QPoint &)
 QWidget *ZoomTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Zoom Options");
-
-    QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(8);
-    vbox->setContentsMargins(6, 6, 6, 6);
-
-    QCheckBox *gridCheck = new QCheckBox("Show Pixel Grid [P]", w);
-    gridCheck->setChecked(buffer_ && buffer_->pixelGrid());
-    connect(gridCheck, &QCheckBox::toggled, [this](bool checked) {
+    ui_ = new Ui::ZoomToolOptions;
+    ui_->setupUi(w);
+    ui_->gridCheck->setChecked(buffer_ && buffer_->pixelGrid());
+    ui_->zoomSpin->setValue(magnifierZoom_);
+    connect(ui_->gridCheck, &QCheckBox::toggled, [this](bool checked) {
         if (buffer_) buffer_->setPixelGrid(checked);
     });
     if (buffer_) {
-        connect(buffer_, &Buffer::pixelGridChanged, gridCheck, [gridCheck](bool enabled) {
-            bool blocked = gridCheck->blockSignals(true);
-            gridCheck->setChecked(enabled);
-            gridCheck->blockSignals(blocked);
+        connect(buffer_, &Buffer::pixelGridChanged, ui_->gridCheck, [this](bool enabled) {
+            bool blocked = ui_->gridCheck->blockSignals(true);
+            ui_->gridCheck->setChecked(enabled);
+            ui_->gridCheck->blockSignals(blocked);
         });
     }
-    vbox->addWidget(gridCheck);
-
-    QFormLayout *form = new QFormLayout;
-    form->setSpacing(4);
-    QSpinBox *zoomSpin = new QSpinBox(w);
-    zoomSpin->setRange(2, 32);
-    zoomSpin->setValue(magnifierZoom_);
-    connect(zoomSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    connect(ui_->zoomSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         magnifierZoom_ = v;
     });
-    form->addRow("Magnifier Zoom:", zoomSpin);
-    vbox->addLayout(form);
-
-    QPushButton *placeBtn = new QPushButton("Place Magnifier", w);
-    connect(placeBtn, &QPushButton::clicked, [this, zoomSpin]() {
-        magnifierZoom_ = zoomSpin->value();
+    connect(ui_->placeBtn, &QPushButton::clicked, [this]() {
+        magnifierZoom_ = ui_->zoomSpin->value();
         placeMagnifierMode_ = true;
         activate();
         if (optionsWidget_) optionsWidget_->hide();
     });
-    vbox->addWidget(placeBtn);
-
-    vbox->addStretch();
     return w;
 }
 

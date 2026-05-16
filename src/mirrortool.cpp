@@ -6,12 +6,11 @@
 #include <QWidget>
 #include "buffer.h"
 #include "mirrortool.h"
+#include "ui_mirrortooloptions.h"
 
 MirrorTool MirrorTool::instance;
 
-MirrorTool::MirrorTool(QObject *parent) : Tool(parent),
-    checkX_(nullptr), checkY_(nullptr),
-    spinCX_(nullptr), spinCY_(nullptr)
+MirrorTool::MirrorTool(QObject *parent) : Tool(parent)
 {
 }
 
@@ -65,78 +64,44 @@ void MirrorTool::syncButtonState()
 
 void MirrorTool::syncWidgets()
 {
-    if (!buffer_)
-        return;
-    if (checkX_) {
-        checkX_->blockSignals(true);
-        checkX_->setChecked(buffer_->mirrorX());
-        checkX_->blockSignals(false);
-    }
-    if (checkY_) {
-        checkY_->blockSignals(true);
-        checkY_->setChecked(buffer_->mirrorY());
-        checkY_->blockSignals(false);
-    }
-    if (spinCX_) {
-        spinCX_->blockSignals(true);
-        spinCX_->setValue(buffer_->mirrorCenterX());
-        spinCX_->blockSignals(false);
-    }
-    if (spinCY_) {
-        spinCY_->blockSignals(true);
-        spinCY_->setValue(buffer_->mirrorCenterY());
-        spinCY_->blockSignals(false);
-    }
+    if (!buffer_ || !ui_) return;
+    ui_->checkX->blockSignals(true);
+    ui_->checkX->setChecked(buffer_->mirrorX());
+    ui_->checkX->blockSignals(false);
+    ui_->checkY->blockSignals(true);
+    ui_->checkY->setChecked(buffer_->mirrorY());
+    ui_->checkY->blockSignals(false);
+    ui_->spinCX->blockSignals(true);
+    ui_->spinCX->setValue(buffer_->mirrorCenterX());
+    ui_->spinCX->blockSignals(false);
+    ui_->spinCY->blockSignals(true);
+    ui_->spinCY->setValue(buffer_->mirrorCenterY());
+    ui_->spinCY->blockSignals(false);
 }
 
 QWidget *MirrorTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Mirror Draw");
-
-    QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(8);
-    vbox->setContentsMargins(6, 6, 6, 6);
-
-    checkX_ = new QCheckBox("Mirror X", w);
-    checkY_ = new QCheckBox("Mirror Y", w);
-
+    ui_ = new Ui::MirrorToolOptions;
+    ui_->setupUi(w);
     if (buffer_) {
-        checkX_->setChecked(buffer_->mirrorX());
-        checkY_->setChecked(buffer_->mirrorY());
+        ui_->checkX->setChecked(buffer_->mirrorX());
+        ui_->checkY->setChecked(buffer_->mirrorY());
+        ui_->spinCX->setValue(buffer_->mirrorCenterX());
+        ui_->spinCY->setValue(buffer_->mirrorCenterY());
     }
-
-    vbox->addWidget(checkX_);
-    vbox->addWidget(checkY_);
-
-    QFormLayout *form = new QFormLayout;
-    form->setSpacing(4);
-    spinCX_ = new QSpinBox(w);
-    spinCX_->setRange(0, 4096);
-    spinCY_ = new QSpinBox(w);
-    spinCY_->setRange(0, 4096);
-    if (buffer_) {
-        spinCX_->setValue(buffer_->mirrorCenterX());
-        spinCY_->setValue(buffer_->mirrorCenterY());
-    }
-    form->addRow("Center X:", spinCX_);
-    form->addRow("Center Y:", spinCY_);
-    vbox->addLayout(form);
-    vbox->addStretch();
-
-    connect(checkX_, &QCheckBox::toggled, [this](bool v) {
+    connect(ui_->checkX, &QCheckBox::toggled, [this](bool v) {
         if (buffer_) buffer_->setMirrorX(v);
     });
-    connect(checkY_, &QCheckBox::toggled, [this](bool v) {
+    connect(ui_->checkY, &QCheckBox::toggled, [this](bool v) {
         if (buffer_) buffer_->setMirrorY(v);
     });
-    connect(spinCX_, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    connect(ui_->spinCX, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         if (buffer_) buffer_->setMirrorCenter(v, buffer_->mirrorCenterY());
     });
-    connect(spinCY_, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    connect(ui_->spinCY, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         if (buffer_) buffer_->setMirrorCenter(buffer_->mirrorCenterX(), v);
     });
-
     return w;
 }
 

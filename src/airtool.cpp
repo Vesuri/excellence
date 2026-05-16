@@ -5,6 +5,7 @@
 #include <QSpinBox>
 #include <QSlider>
 #include <QRandomGenerator>
+#include "ui_airtooloptions.h"
 #include <QtCore/qmath.h>
 #include <cmath>
 #include "pen.h"
@@ -180,41 +181,17 @@ QRect AirTool::release(const QPoint &)
 QWidget* AirTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Airbrush");
-    QVBoxLayout *vl = new QVBoxLayout(w);
-    vl->setSpacing(8);
-    vl->setContentsMargins(6, 6, 6, 6);
-
-    auto addRow = [&](const QString &label, QWidget *ctrl) {
-        QHBoxLayout *hl = new QHBoxLayout;
-        hl->setSpacing(6);
-        hl->addWidget(new QLabel(label));
-        hl->addWidget(ctrl);
-        vl->addLayout(hl);
-    };
-
-    QSpinBox *sizeBox = new QSpinBox;
-    sizeBox->setRange(1, 200);
-    sizeBox->setValue(nozzleRadius_);
-    sizeBox->setSuffix(" px");
-    connect(sizeBox, QOverload<int>::of(&QSpinBox::valueChanged),
+    ui_ = new Ui::AirToolOptions;
+    ui_->setupUi(w);
+    ui_->sizeBox->setValue(nozzleRadius_);
+    ui_->flowSlider->setValue(flow_);
+    ui_->focusSlider->setValue(focus_);
+    connect(ui_->sizeBox, QOverload<int>::of(&QSpinBox::valueChanged),
             [this](int v) { nozzleRadius_ = v; });
-    addRow("Size:", sizeBox);
-
-    QSlider *flowSlider = new QSlider(Qt::Horizontal);
-    flowSlider->setRange(0, 100);
-    flowSlider->setValue(flow_);
-    connect(flowSlider, &QSlider::valueChanged,
+    connect(ui_->flowSlider, &QSlider::valueChanged,
             [this](int v) { flow_ = v; });
-    addRow("Flow:", flowSlider);
-
-    QSlider *focusSlider = new QSlider(Qt::Horizontal);
-    focusSlider->setRange(0, 100);
-    focusSlider->setValue(focus_);
-    connect(focusSlider, &QSlider::valueChanged,
+    connect(ui_->focusSlider, &QSlider::valueChanged,
             [this](int v) { focus_ = v; });
-    addRow("Focus:", focusSlider);
-
     return w;
 }
 

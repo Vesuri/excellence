@@ -3,6 +3,7 @@
 #include <QGridLayout>
 #include <QRadioButton>
 #include <QVBoxLayout>
+#include "ui_rectangletooloptions.h"
 #include "pen.h"
 #include "buffer.h"
 #include "undobuffer.h"
@@ -160,17 +161,11 @@ void RectangleTool::cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) 
 QWidget* RectangleTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Rectangle");
-    QVBoxLayout *layout = new QVBoxLayout(w);
-    layout->setSpacing(8);
-    layout->setContentsMargins(6, 6, 6, 6);
-    QRadioButton *cornerBtn = new QRadioButton("Corner to Corner");
-    QRadioButton *centerBtn = new QRadioButton("Center to Corner");
-    cornerBtn->setChecked(anchorMode_ == CornerToCorner);
-    centerBtn->setChecked(anchorMode_ == CenterToCorner);
-    connect(centerBtn, &QRadioButton::toggled, this, &RectangleTool::setAnchorMode);
-    layout->addWidget(cornerBtn);
-    layout->addWidget(centerBtn);
+    ui_ = new Ui::RectangleToolOptions;
+    ui_->setupUi(w);
+    ui_->cornerBtn->setChecked(anchorMode_ == CornerToCorner);
+    ui_->centerBtn->setChecked(anchorMode_ == CenterToCorner);
+    connect(ui_->centerBtn, &QRadioButton::toggled, this, &RectangleTool::setAnchorMode);
     return w;
 }
 

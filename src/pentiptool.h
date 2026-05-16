@@ -6,6 +6,8 @@
 
 class UndoBuffer;
 
+namespace Ui { class PenTipToolOptions; }
+
 class PenTipTool : public Tool
 {
     Q_OBJECT
@@ -43,6 +45,8 @@ private:
     int lastCircleSize_;
     int lastRectSize_;
     UndoBuffer *undoBuffer_;
+
+    Ui::PenTipToolOptions *ui_ = nullptr;
 
     static PenTipTool instance;
 };

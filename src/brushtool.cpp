@@ -16,6 +16,7 @@
 #include "undobuffer.h"
 #include "algorithms.h"
 #include "brushtool.h"
+#include "ui_brushtooloptions.h"
 
 // ── BrushWellButton ──────────────────────────────────────────────────────────
 
@@ -90,6 +91,18 @@ BrushHandleWidget::BrushHandleWidget(BrushTool *tool, QWidget *parent)
     setCursor(Qt::CrossCursor);
 }
 
+BrushHandleWidget::BrushHandleWidget(QWidget *parent)
+    : QWidget(parent), tool_(nullptr)
+{
+    setFixedSize(80, 80);
+    setCursor(Qt::CrossCursor);
+}
+
+void BrushHandleWidget::setTool(BrushTool *tool)
+{
+    tool_ = tool;
+}
+
 void BrushHandleWidget::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
@@ -99,6 +112,7 @@ void BrushHandleWidget::showEvent(QShowEvent *event)
 void BrushHandleWidget::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
+    if (!tool_) { p.fillRect(rect(), QColor(80, 80, 80)); return; }
     QImage img = tool_->currentBrushImage();
     if (!img.isNull()) {
         QImage rgb = img.convertToFormat(QImage::Format_RGB32);
@@ -123,6 +137,7 @@ void BrushHandleWidget::paintEvent(QPaintEvent *)
 
 void BrushHandleWidget::mousePressEvent(QMouseEvent *event)
 {
+    if (!tool_) return;
     QImage img = tool_->currentBrushImage();
     if (img.isNull() || width() == 0 || height() == 0)
         return;
@@ -138,9 +153,7 @@ BrushTool BrushTool::instance;
 
 BrushTool::BrushTool(QObject *parent) : Tool(parent),
     mode_(Rectangle),
-    undoBuffer_(nullptr),
-    handleWidget_(nullptr),
-    dimensionsLabel_(nullptr)
+    undoBuffer_(nullptr)
 {
     for (int i = 0; i < WellCount; i++)
         wellButtons_[i] = nullptr;
@@ -291,8 +304,8 @@ void BrushTool::setHandle(const QPoint &offset)
     if (!brush)
         return;
     brush->setHandleOffset(offset);
-    if (handleWidget_)
-        handleWidget_->update();
+    if (ui_)
+        ui_->handleWidget->update();
 }
 
 void BrushTool::setHandleTopLeft()     { setHandle(QPoint(0, 0)); }
@@ -327,114 +340,60 @@ void BrushTool::wellCtrlClicked(int index)
 QWidget *BrushTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Brush");
+    ui_ = new Ui::BrushToolOptions;
+    ui_->setupUi(w);
 
-    QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(4);
-    vbox->setContentsMargins(4, 4, 4, 4);
+    ui_->handleWidget->setTool(this);
 
-    // ── Dimensions + Tile Cut ──────────────────────────────────────────────
-    {
-        QHBoxLayout *dimRow = new QHBoxLayout;
-        dimRow->setSpacing(6);
-        Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
-        QString dimText = brush
-            ? QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height())
-            : QString("– × –");
-        dimensionsLabel_ = new QLabel(dimText, w);
-        dimRow->addWidget(dimensionsLabel_);
-        dimRow->addStretch();
-        QPushButton *tileCutBtn = new QPushButton("Tile Cut", w);
-        connect(tileCutBtn, SIGNAL(clicked()), this, SLOT(brushTileCut()));
-        dimRow->addWidget(tileCutBtn);
-        vbox->addLayout(dimRow);
-    }
+    Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
+    QString dimText = brush
+        ? QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height())
+        : QString("– × –");
+    ui_->dimensionsLabel->setText(dimText);
 
-    // ── Wells row ──────────────────────────────────────────────────────────
-    QHBoxLayout *wellsRow = new QHBoxLayout;
-    wellsRow->setSpacing(2);
-
+    BrushWellButton *wellPtrs[] = {
+        ui_->well0, ui_->well1, ui_->well2, ui_->well3,
+        ui_->well4, ui_->well5, ui_->well6, ui_->well7
+    };
     QSignalMapper *clickMapper = new QSignalMapper(w);
     QSignalMapper *ctrlMapper  = new QSignalMapper(w);
     connect(clickMapper, SIGNAL(mapped(int)), this, SLOT(wellClicked(int)));
     connect(ctrlMapper,  SIGNAL(mapped(int)), this, SLOT(wellCtrlClicked(int)));
-
     for (int i = 0; i < WellCount; i++) {
-        BrushWellButton *btn = new BrushWellButton(w);
-        wellButtons_[i] = btn;
+        wellButtons_[i] = wellPtrs[i];
         if (!wells_[i].isNull())
-            btn->store(wells_[i]);
-        clickMapper->setMapping(btn, i);
-        ctrlMapper->setMapping(btn, i);
-        connect(btn, SIGNAL(clicked()),     clickMapper, SLOT(map()));
-        connect(btn, SIGNAL(ctrlClicked()), ctrlMapper,  SLOT(map()));
-        wellsRow->addWidget(btn);
+            wellButtons_[i]->store(wells_[i]);
+        clickMapper->setMapping(wellButtons_[i], i);
+        ctrlMapper->setMapping(wellButtons_[i], i);
+        connect(wellButtons_[i], SIGNAL(clicked()),     clickMapper, SLOT(map()));
+        connect(wellButtons_[i], SIGNAL(ctrlClicked()), ctrlMapper,  SLOT(map()));
     }
-    vbox->addLayout(wellsRow);
 
-    // ── Separator ──────────────────────────────────────────────────────────
-    QFrame *sep = new QFrame(w);
-    sep->setFrameShape(QFrame::HLine);
-    vbox->addWidget(sep);
+    connect(ui_->tileCutBtn, SIGNAL(clicked()), this, SLOT(brushTileCut()));
 
-    // ── Handle section ─────────────────────────────────────────────────────
-    QHBoxLayout *handleRow = new QHBoxLayout;
-    handleRow->setSpacing(6);
+    connect(ui_->handleTL,     SIGNAL(clicked()), this, SLOT(setHandleTopLeft()));
+    connect(ui_->handleTR,     SIGNAL(clicked()), this, SLOT(setHandleTopRight()));
+    connect(ui_->handleCenter, SIGNAL(clicked()), this, SLOT(setHandleCenter()));
+    connect(ui_->handleBL,     SIGNAL(clicked()), this, SLOT(setHandleBottomLeft()));
+    connect(ui_->handleBR,     SIGNAL(clicked()), this, SLOT(setHandleBottomRight()));
 
-    // Preset buttons arranged as a 3x2 grid (TL, TR / C / BL, BR)
-    QGridLayout *presetGrid = new QGridLayout;
-    presetGrid->setSpacing(2);
-    auto makePreset = [&](const QString &label, const char *slot, int row, int col) {
-        QPushButton *btn = new QPushButton(label, w);
-        btn->setFixedSize(28, 22);
-        connect(btn, SIGNAL(clicked()), this, slot);
-        presetGrid->addWidget(btn, row, col);
-    };
-    makePreset("TL", SLOT(setHandleTopLeft()),     0, 0);
-    makePreset("TR", SLOT(setHandleTopRight()),    0, 1);
-    makePreset("C",  SLOT(setHandleCenter()),      1, 0);
-    makePreset("BL", SLOT(setHandleBottomLeft()),  2, 0);
-    makePreset("BR", SLOT(setHandleBottomRight()), 2, 1);
-
-    handleRow->addLayout(presetGrid);
-
-    // Clickable preview
-    handleWidget_ = new BrushHandleWidget(this, w);
-    handleRow->addWidget(handleWidget_);
-
-    vbox->addLayout(handleRow);
-
-    // ── Transform section ──────────────────────────────────────────────────
-    QFrame *sep2 = new QFrame(w);
-    sep2->setFrameShape(QFrame::HLine);
-    vbox->addWidget(sep2);
-
-    QGridLayout *xformGrid = new QGridLayout;
-    xformGrid->setSpacing(2);
-    auto makeXform = [&](const QString &label, const char *slot, int row, int col) {
-        QPushButton *btn = new QPushButton(label, w);
-        btn->setFixedSize(52, 22);
-        connect(btn, SIGNAL(clicked()), this, slot);
-        xformGrid->addWidget(btn, row, col);
-    };
-    makeXform("Flip H",    SLOT(brushFlipH()),       0, 0);
-    makeXform("Flip V",    SLOT(brushFlipV()),       0, 1);
-    makeXform("Rot CW",    SLOT(brushRotate90CW()),  0, 2);
-    makeXform("Rot CCW",   SLOT(brushRotate90CCW()), 0, 3);
-    makeXform("Double",    SLOT(brushDouble()),      1, 0);
-    makeXform("Halve",     SLOT(brushHalve()),       1, 1);
-    makeXform("Shear X+",  SLOT(brushShearXPlus()),  2, 0);
-    makeXform("Shear X-",  SLOT(brushShearXMinus()), 2, 1);
-    makeXform("Shear Y+",  SLOT(brushShearYPlus()),  2, 2);
-    makeXform("Shear Y-",  SLOT(brushShearYMinus()), 2, 3);
-    makeXform("Bend X+",   SLOT(brushBendXPlus()),   3, 0);
-    makeXform("Bend X-",   SLOT(brushBendXMinus()),  3, 1);
-    makeXform("Bend Y+",   SLOT(brushBendYPlus()),   3, 2);
-    makeXform("Bend Y-",   SLOT(brushBendYMinus()),  3, 3);
-    makeXform("Outline",   SLOT(brushOutline()),     4, 0);
-    makeXform("Trim",      SLOT(brushTrim()),        4, 1);
-    makeXform("Restore",   SLOT(brushRestore()),     4, 2);
-    vbox->addLayout(xformGrid);
+    connect(ui_->xformFlipH,    SIGNAL(clicked()), this, SLOT(brushFlipH()));
+    connect(ui_->xformFlipV,    SIGNAL(clicked()), this, SLOT(brushFlipV()));
+    connect(ui_->xformRotCW,    SIGNAL(clicked()), this, SLOT(brushRotate90CW()));
+    connect(ui_->xformRotCCW,   SIGNAL(clicked()), this, SLOT(brushRotate90CCW()));
+    connect(ui_->xformDouble,   SIGNAL(clicked()), this, SLOT(brushDouble()));
+    connect(ui_->xformHalve,    SIGNAL(clicked()), this, SLOT(brushHalve()));
+    connect(ui_->xformShearXP,  SIGNAL(clicked()), this, SLOT(brushShearXPlus()));
+    connect(ui_->xformShearXM,  SIGNAL(clicked()), this, SLOT(brushShearXMinus()));
+    connect(ui_->xformShearYP,  SIGNAL(clicked()), this, SLOT(brushShearYPlus()));
+    connect(ui_->xformShearYM,  SIGNAL(clicked()), this, SLOT(brushShearYMinus()));
+    connect(ui_->xformBendXP,   SIGNAL(clicked()), this, SLOT(brushBendXPlus()));
+    connect(ui_->xformBendXM,   SIGNAL(clicked()), this, SLOT(brushBendXMinus()));
+    connect(ui_->xformBendYP,   SIGNAL(clicked()), this, SLOT(brushBendYPlus()));
+    connect(ui_->xformBendYM,   SIGNAL(clicked()), this, SLOT(brushBendYMinus()));
+    connect(ui_->xformOutline,  SIGNAL(clicked()), this, SLOT(brushOutline()));
+    connect(ui_->xformTrim,     SIGNAL(clicked()), this, SLOT(brushTrim()));
+    connect(ui_->xformRestore,  SIGNAL(clicked()), this, SLOT(brushRestore()));
 
     return w;
 }
@@ -451,8 +410,8 @@ static Brush *currentBrush(Buffer *buf)
     if (!brush) return; \
     if (!brush->hasOriginal()) brush->storeOriginal(); \
     brush->method; \
-    if (handleWidget_) handleWidget_->update(); \
-    if (dimensionsLabel_) dimensionsLabel_->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
+    if (ui_) ui_->handleWidget->update(); \
+    if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 
 void BrushTool::brushFlipH()       { BRUSH_TRANSFORM(flipHorizontal()) }
 void BrushTool::brushFlipV()       { BRUSH_TRANSFORM(flipVertical()) }
@@ -474,8 +433,8 @@ void BrushTool::brushOutline()
     if (!brush || !buffer_) return;
     if (!brush->hasOriginal()) brush->storeOriginal();
     brush->outline(static_cast<int>(buffer_->paintColor()));
-    if (handleWidget_) handleWidget_->update();
-    if (dimensionsLabel_) dimensionsLabel_->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
+    if (ui_) ui_->handleWidget->update();
+    if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 }
 void BrushTool::brushTrim() { BRUSH_TRANSFORM(trim()) }
 void BrushTool::brushRestore()
@@ -483,8 +442,8 @@ void BrushTool::brushRestore()
     Brush *brush = currentBrush(buffer_);
     if (!brush) return;
     brush->restoreOriginal();
-    if (handleWidget_) handleWidget_->update();
-    if (dimensionsLabel_) dimensionsLabel_->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
+    if (ui_) ui_->handleWidget->update();
+    if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 }
 
 void BrushTool::brushTileCut() { BRUSH_TRANSFORM(tileCut()) }

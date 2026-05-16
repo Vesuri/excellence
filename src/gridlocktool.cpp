@@ -8,11 +8,11 @@
 #include "brush.h"
 #include "buffer.h"
 #include "gridlocktool.h"
+#include "ui_gridlocktooloptions.h"
 
 GridLockTool GridLockTool::instance;
 
-GridLockTool::GridLockTool(QObject *parent) : Tool(parent),
-    spinW_(nullptr), spinH_(nullptr), spinOX_(nullptr), spinOY_(nullptr)
+GridLockTool::GridLockTool(QObject *parent) : Tool(parent)
 {
 }
 
@@ -52,12 +52,12 @@ void GridLockTool::syncButtonState()
 
 void GridLockTool::syncSpinboxes()
 {
-    if (!buffer_ || !spinW_)
+    if (!buffer_ || !ui_)
         return;
-    spinW_->setValue(buffer_->gridW());
-    spinH_->setValue(buffer_->gridH());
-    spinOX_->setValue(buffer_->gridOffsetX());
-    spinOY_->setValue(buffer_->gridOffsetY());
+    ui_->spinW->setValue(buffer_->gridW());
+    ui_->spinH->setValue(buffer_->gridH());
+    ui_->spinOX->setValue(buffer_->gridOffsetX());
+    ui_->spinOY->setValue(buffer_->gridOffsetY());
 }
 
 void GridLockTool::fitToBrush()
@@ -67,58 +67,32 @@ void GridLockTool::fitToBrush()
     Brush *brush = qobject_cast<Brush *>(buffer_->pen());
     if (!brush)
         return;
-    if (spinW_) spinW_->setValue(brush->image().width());
-    if (spinH_) spinH_->setValue(brush->image().height());
+    if (ui_) {
+        ui_->spinW->setValue(brush->image().width());
+        ui_->spinH->setValue(brush->image().height());
+    }
     buffer_->setGridSpacing(brush->image().width(), brush->image().height());
 }
 
 QWidget *GridLockTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Grid Settings");
-
-    QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(8);
-    vbox->setContentsMargins(6, 6, 6, 6);
-
-    QFormLayout *form = new QFormLayout;
-    form->setSpacing(4);
-
-    spinW_ = new QSpinBox(w);
-    spinW_->setRange(1, 1024);
-    spinH_ = new QSpinBox(w);
-    spinH_->setRange(1, 1024);
-    spinOX_ = new QSpinBox(w);
-    spinOX_->setRange(0, 1023);
-    spinOY_ = new QSpinBox(w);
-    spinOY_->setRange(0, 1023);
-
+    ui_ = new Ui::GridLockToolOptions;
+    ui_->setupUi(w);
     syncSpinboxes();
-
-    form->addRow("Grid W:", spinW_);
-    form->addRow("Grid H:", spinH_);
-    form->addRow("Offset X:", spinOX_);
-    form->addRow("Offset Y:", spinOY_);
-    vbox->addLayout(form);
-
-    QPushButton *fitBtn = new QPushButton("Fit to Brush", w);
-    vbox->addWidget(fitBtn);
-    vbox->addStretch();
-
-    connect(spinW_, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    connect(ui_->spinW, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         if (buffer_) buffer_->setGridSpacing(v, buffer_->gridH());
     });
-    connect(spinH_, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    connect(ui_->spinH, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         if (buffer_) buffer_->setGridSpacing(buffer_->gridW(), v);
     });
-    connect(spinOX_, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    connect(ui_->spinOX, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         if (buffer_) buffer_->setGridOffset(v, buffer_->gridOffsetY());
     });
-    connect(spinOY_, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    connect(ui_->spinOY, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         if (buffer_) buffer_->setGridOffset(buffer_->gridOffsetX(), v);
     });
-    connect(fitBtn, &QPushButton::clicked, this, &GridLockTool::fitToBrush);
-
+    connect(ui_->fitBtn, &QPushButton::clicked, this, &GridLockTool::fitToBrush);
     return w;
 }
 

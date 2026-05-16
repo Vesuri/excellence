@@ -5,6 +5,8 @@
 #include <QTimer>
 #include "tool.h"
 
+namespace Ui { class AirToolOptions; }
+
 class AirTool : public Tool
 {
     Q_OBJECT
@@ -45,6 +47,8 @@ private:
     int nozzleRadius_;  // pixels
     int flow_;          // 0–100
     int focus_;         // 0–100 (100 = all at center)
+
+    Ui::AirToolOptions *ui_ = nullptr;
 
     static AirTool instance;
     static const char *icons[];

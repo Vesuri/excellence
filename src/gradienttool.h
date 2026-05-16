@@ -11,6 +11,8 @@
 #include "gradientmarkerbox.h"
 #include "gradientrange.h"
 
+namespace Ui { class GradientToolOptions; }
+
 class GradientTool : public Tool
 {
     Q_OBJECT
@@ -42,14 +44,7 @@ private:
     GradientTool();
     void updateTimer();
 
-    GradientMarkerBox *markerBox_ = nullptr;
-    QLabel *colorsLabel_ = nullptr;
-    QSpinBox *spreadSpin_ = nullptr;
-    QCheckBox *randomCheck_ = nullptr;
-    QCheckBox *hardEdgesCheck_ = nullptr;
-    QSlider *ditherSlider_ = nullptr;
-    QPushButton *cycleButton_ = nullptr;
-    QSlider *speedSlider_ = nullptr;
+    Ui::GradientToolOptions *ui_ = nullptr;
     QTimer *cycleTimer_ = nullptr;
     double cycleAccumulators_[kGradientRangeCount] = {};
     bool cyclingEnabled_ = false;

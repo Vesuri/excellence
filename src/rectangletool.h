@@ -7,6 +7,8 @@
 
 class UndoBuffer;
 
+namespace Ui { class RectangleToolOptions; }
+
 class RectangleTool : public Tool
 {
     Q_OBJECT
@@ -49,6 +51,8 @@ private:
     UndoBuffer *undoBuffer;
     GradientRubberBand rubberBand_;
     QRect pendingFillRect_;
+
+    Ui::RectangleToolOptions *ui_ = nullptr;
 
     static RectangleTool instance;
     static const char* icons[];

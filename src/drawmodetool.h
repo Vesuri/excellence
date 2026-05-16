@@ -11,6 +11,8 @@
 class QCheckBox;
 class QRadioButton;
 
+namespace Ui { class DrawModeToolOptions; }
+
 class DrawModeTool : public Tool
 {
     Q_OBJECT
@@ -44,10 +46,7 @@ private:
 
     Buffer::PaintMode previousMode_;
     bool fillModeSelected_ = false;
-    QWidget *fillGroupWidget_ = nullptr;
-    QRadioButton *brushModeBtn_ = nullptr;
-    QCheckBox *replaceModeBtn_ = nullptr;
-    QRadioButton *randomModeBtn_ = nullptr;
+    Ui::DrawModeToolOptions *ui_ = nullptr;
     QList<QRadioButton *> generalModeBtns_;    // disabled when restrictToColorAndRandom
     QList<QRadioButton *> fillSensitiveBtns_;  // disabled when restrictToColorAndRandom or hasFill
     QList<QPair<QRadioButton *, GradientFillMode>> fillModeBtns_;

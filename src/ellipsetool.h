@@ -6,6 +6,8 @@
 #include "undobuffer.h"
 #include "gradientrubberband.h"
 
+namespace Ui { class EllipseToolOptions; }
+
 class EllipseTool : public Tool
 {
     Q_OBJECT
@@ -56,6 +58,8 @@ private:
     UndoBuffer *undoBuffer_;
     GradientRubberBand rubberBand_;
     double pendingAngle_ = 0.0;
+
+    Ui::EllipseToolOptions *ui_ = nullptr;
 
     static EllipseTool instance;
     static const char *icons[];

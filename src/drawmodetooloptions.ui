@@ -1,0 +1,690 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DrawModeToolOptions</class>
+ <widget class="QWidget" name="DrawModeToolOptions">
+  <property name="windowTitle">
+   <string>Draw Mode</string>
+  </property>
+  <layout class="QHBoxLayout" name="mainRow">
+   <property name="spacing">
+    <number>4</number>
+   </property>
+   <property name="leftMargin"><number>4</number></property>
+   <property name="topMargin"><number>4</number></property>
+   <property name="rightMargin"><number>4</number></property>
+   <property name="bottomMargin"><number>4</number></property>
+   <item>
+    <layout class="QVBoxLayout" name="col1">
+     <property name="spacing">
+      <number>8</number>
+     </property>
+     <item>
+      <widget class="QRadioButton" name="brushModeBtn">
+       <property name="toolTip">
+        <string>Brush draw mode</string>
+       </property>
+       <property name="text">
+        <string>Brush</string>
+       </property>
+       <attribute name="buttonGroup">
+        <string notr="true">modeGroup</string>
+       </attribute>
+      </widget>
+     </item>
+     <item>
+      <widget class="QFrame" name="sep_brush">
+       <property name="frameShape">
+        <enum>QFrame::HLine</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="stretchStub">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Brush fill mode</string>
+       </property>
+       <property name="text">
+        <string>Stretch</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="patternStub">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Brush fill mode</string>
+       </property>
+       <property name="text">
+        <string>Pattern</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="shapeStub">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Brush fill mode</string>
+       </property>
+       <property name="text">
+        <string>Shape</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="perspectiveStub">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="toolTip">
+        <string>Brush fill mode</string>
+       </property>
+       <property name="text">
+        <string>Perspective</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="vSpacer1">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QFrame" name="sep_replace">
+       <property name="frameShape">
+        <enum>QFrame::HLine</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="replaceModeBtn">
+       <property name="toolTip">
+        <string>Stamp full bounding rect including transparent pixels</string>
+       </property>
+       <property name="text">
+        <string>Replace</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="vsep1">
+     <property name="frameShape">
+      <enum>QFrame::VLine</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="middleVBox">
+     <property name="spacing">
+      <number>2</number>
+     </property>
+     <item>
+      <layout class="QHBoxLayout" name="modeCols">
+       <property name="spacing">
+        <number>8</number>
+       </property>
+       <item>
+        <layout class="QVBoxLayout" name="col2">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="colorBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Color</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="tintBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Tint</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="colorizeBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Colorize</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="brightenBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Brighten</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="darkenBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Darken</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="stencilStub">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Stencil</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="col3">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="mixBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Mix</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="smoothBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Smooth</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="smearBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Smear</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="avgSmearBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Avg Smear</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="rangeBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Range</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="cycleBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Cycle</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="col4">
+         <property name="spacing">
+          <number>8</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="randomModeBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Random</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="dither1Btn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Dither 1</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="dither2Btn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Dither 2</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="negativeBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Negative</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="halferiteStub">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Halferite</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="transpBtn">
+           <property name="toolTip">
+            <string>General draw mode</string>
+           </property>
+           <property name="text">
+            <string>Transparent</string>
+           </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="vSpacer2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QFrame" name="sep_amount">
+       <property name="frameShape">
+        <enum>QFrame::HLine</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Sunken</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="amountRow">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_amount">
+         <property name="text">
+          <string>Amount:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="amountSlider">
+         <property name="toolTip">
+          <string>Dither or dark/brite</string>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="amountSpin">
+         <property name="minimumSize">
+          <size>
+           <width>48</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>48</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="mixingRow">
+       <property name="spacing">
+        <number>4</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label_mixing">
+         <property name="text">
+          <string>Mixing:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="rgbMixBtn">
+         <property name="toolTip">
+          <string>Transparent: blend in RGB space</string>
+         </property>
+         <property name="text">
+          <string>RGB</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">mixGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="hsvMixBtn">
+         <property name="toolTip">
+          <string>Transparent: blend in HSV space (e.g. Blue 50% over Green → Cyan)</string>
+         </property>
+         <property name="text">
+          <string>HSV</string>
+         </property>
+         <attribute name="buttonGroup">
+          <string notr="true">mixGroup</string>
+         </attribute>
+        </widget>
+       </item>
+       <item>
+        <spacer name="hSpacer_mixing">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="vsep2">
+     <property name="frameShape">
+      <enum>QFrame::VLine</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QWidget" name="fillGroupWidget">
+     <layout class="QVBoxLayout" name="fillGroupLayout">
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="leftMargin"><number>0</number></property>
+      <property name="topMargin"><number>0</number></property>
+      <property name="rightMargin"><number>0</number></property>
+      <property name="bottomMargin"><number>0</number></property>
+      <item>
+       <widget class="QRadioButton" name="fillHorizontal">
+        <property name="toolTip">
+         <string>Gradient fill mode</string>
+        </property>
+        <property name="text">
+         <string>Horizontal</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">modeGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="fillVertical">
+        <property name="toolTip">
+         <string>Gradient fill mode</string>
+        </property>
+        <property name="text">
+         <string>Vertical</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">modeGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="fillLinear">
+        <property name="toolTip">
+         <string>Gradient fill mode</string>
+        </property>
+        <property name="text">
+         <string>Linear</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">modeGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="fillHighlight">
+        <property name="toolTip">
+         <string>Gradient fill mode</string>
+        </property>
+        <property name="text">
+         <string>Highlight</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">modeGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="fillSpherical">
+        <property name="toolTip">
+         <string>Gradient fill mode</string>
+        </property>
+        <property name="text">
+         <string>Spherical</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">modeGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="fillRadial">
+        <property name="toolTip">
+         <string>Gradient fill mode</string>
+        </property>
+        <property name="text">
+         <string>Radial</string>
+        </property>
+        <attribute name="buttonGroup">
+         <string notr="true">modeGroup</string>
+        </attribute>
+       </widget>
+      </item>
+      <item>
+       <spacer name="vSpacer3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QFrame" name="sep_fill">
+        <property name="frameShape">
+         <enum>QFrame::HLine</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Sunken</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="conformCheck">
+        <property name="toolTip">
+         <string>Scale gradient to the bounding rect of the filled area</string>
+        </property>
+        <property name="text">
+         <string>Conform</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="centerCheck">
+        <property name="toolTip">
+         <string>Originate radial/spherical/highlight fills from the area center</string>
+        </property>
+        <property name="text">
+         <string>Center</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+ <buttongroups>
+  <buttongroup name="modeGroup"/>
+  <buttongroup name="mixGroup"/>
+ </buttongroups>
+</ui>

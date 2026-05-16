@@ -3,7 +3,7 @@
 
 #include "tool.h"
 
-class QSpinBox;
+namespace Ui { class GridLockToolOptions; }
 
 class GridLockTool : public Tool
 {
@@ -30,10 +30,7 @@ private slots:
 private:
     void syncSpinboxes();
 
-    QSpinBox *spinW_;
-    QSpinBox *spinH_;
-    QSpinBox *spinOX_;
-    QSpinBox *spinOY_;
+    Ui::GridLockToolOptions *ui_ = nullptr;
 
     static GridLockTool instance;
 };

@@ -91,7 +91,18 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     bufferview.ui \
-    propertiesdialog.ui
+    propertiesdialog.ui \
+    airtooloptions.ui \
+    ellipsetooloptions.ui \
+    rectangletooloptions.ui \
+    zoomtooloptions.ui \
+    segmenttooloptions.ui \
+    gridlocktooloptions.ui \
+    mirrortooloptions.ui \
+    pentiptooloptions.ui \
+    brushtooloptions.ui \
+    drawmodetooloptions.ui \
+    gradienttooloptions.ui
 
 RESOURCES += \
     icons/icons.qrc

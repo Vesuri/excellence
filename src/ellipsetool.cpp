@@ -2,6 +2,7 @@
 #include <QRadioButton>
 #include <QCheckBox>
 #include <QVBoxLayout>
+#include "ui_ellipsetooloptions.h"
 #include <QGuiApplication>
 #include <QtCore/qmath.h>
 #include <cmath>
@@ -363,24 +364,13 @@ QRect EllipseTool::hover(const QPoint &point)
 QWidget* EllipseTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Ellipse");
-    QVBoxLayout *layout = new QVBoxLayout(w);
-    layout->setSpacing(8);
-    layout->setContentsMargins(6, 6, 6, 6);
-
-    QRadioButton *cornerBtn = new QRadioButton("Corner to Corner");
-    QRadioButton *centerBtn = new QRadioButton("Center to Corner");
-    cornerBtn->setChecked(anchorMode_ == CornerToCorner);
-    centerBtn->setChecked(anchorMode_ == CenterToCorner);
-    connect(centerBtn, &QRadioButton::toggled, this, &EllipseTool::setAnchorMode);
-
-    QCheckBox *rotateBox = new QCheckBox("Rotate");
-    rotateBox->setChecked(rotateMode_);
-    connect(rotateBox, &QCheckBox::toggled, this, &EllipseTool::setRotateMode);
-
-    layout->addWidget(cornerBtn);
-    layout->addWidget(centerBtn);
-    layout->addWidget(rotateBox);
+    ui_ = new Ui::EllipseToolOptions;
+    ui_->setupUi(w);
+    ui_->cornerBtn->setChecked(anchorMode_ == CornerToCorner);
+    ui_->centerBtn->setChecked(anchorMode_ == CenterToCorner);
+    ui_->rotateBox->setChecked(rotateMode_);
+    connect(ui_->centerBtn, &QRadioButton::toggled, this, &EllipseTool::setAnchorMode);
+    connect(ui_->rotateBox, &QCheckBox::toggled, this, &EllipseTool::setRotateMode);
     return w;
 }
 

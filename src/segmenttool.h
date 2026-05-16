@@ -3,8 +3,7 @@
 
 #include "tool.h"
 
-class QRadioButton;
-class QSpinBox;
+namespace Ui { class SegmentToolOptions; }
 
 class SegmentTool : public Tool
 {
@@ -31,9 +30,7 @@ private slots:
     void syncWidgets();
 
 private:
-    QRadioButton *radioDistance_;
-    QRadioButton *radioPoints_;
-    QSpinBox *spinValue_;
+    Ui::SegmentToolOptions *ui_ = nullptr;
 };
 
 #endif // SEGMENTTOOL_H

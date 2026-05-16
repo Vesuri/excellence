@@ -15,6 +15,7 @@
 #include "drawmodetool.h"
 #include "gradientrange.h"
 #include "pentip.h"
+#include "ui_drawmodetooloptions.h"
 
 DrawModeTool DrawModeTool::instance;
 
@@ -42,7 +43,7 @@ void DrawModeTool::setBuffer(Buffer *buffer)
         connect(buffer_, &Buffer::penChanged, this, &DrawModeTool::onPenChanged);
     }
     applyMode();
-    if (replaceModeBtn_) replaceModeBtn_->setChecked(buffer_ && buffer_->replaceMode());
+    if (ui_) ui_->replaceModeBtn->setChecked(buffer_ && buffer_->replaceMode());
 }
 
 void DrawModeTool::onToolChanged(Tool *)
@@ -75,7 +76,7 @@ void DrawModeTool::onPenChanged(Pen *)
         buffer_->setPaintMode(Buffer::Color);
     if (buffer_ && !qobject_cast<Brush *>(buffer_->pen()) && buffer_->replaceMode()) {
         buffer_->setReplaceMode(false);
-        if (replaceModeBtn_) replaceModeBtn_->setChecked(false);
+        if (ui_) ui_->replaceModeBtn->setChecked(false);
     }
 }
 
@@ -89,18 +90,16 @@ void DrawModeTool::updateAvailability()
     bool restricted = tool && tool->restrictToColorAndRandom();
     bool allowsBrushBtn = !tool || tool->allowsBrushModeButton();
 
-    if (brushModeBtn_)
-        brushModeBtn_->setEnabled(brushActive && allowsBrushBtn);
-    if (replaceModeBtn_)
-        replaceModeBtn_->setEnabled(brushActive);
-    if (randomModeBtn_)
-        randomModeBtn_->setEnabled(restricted);
+    if (ui_) {
+        ui_->brushModeBtn->setEnabled(brushActive && allowsBrushBtn);
+        ui_->replaceModeBtn->setEnabled(brushActive);
+        ui_->randomModeBtn->setEnabled(restricted);
+        ui_->fillGroupWidget->setEnabled(hasFill);
+    }
     for (auto *btn : generalModeBtns_)
         btn->setEnabled(!restricted);
     for (auto *btn : fillSensitiveBtns_)
         btn->setEnabled(!restricted && !hasFill);
-    if (fillGroupWidget_)
-        fillGroupWidget_->setEnabled(hasFill);
 
     // Sync radio-button selection with fill availability.
     if (!hasFill && fillModeSelected_) {
@@ -150,7 +149,7 @@ void DrawModeTool::applyMode()
     drawModeActive = active;
     if (active)
         buffer_->setPaintMode(previousMode_);
-    else if (brushModeBtn_ && brushModeBtn_->isChecked())
+    else if (ui_ && ui_->brushModeBtn->isChecked())
         buffer_->setPaintMode(Buffer::BrushMode);
     else
         buffer_->setPaintMode(Buffer::Color);
@@ -176,244 +175,113 @@ void DrawModeTool::activate()
 QWidget *DrawModeTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Draw Mode");
+    ui_ = new Ui::DrawModeToolOptions;
+    ui_->setupUi(w);
 
-    QButtonGroup *modeGroup = new QButtonGroup(w);
-    modeGroup->setExclusive(true);
+    // Set initial state
+    ui_->brushModeBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::BrushMode);
+    ui_->colorBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Color);
+    ui_->tintBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Tint);
+    ui_->colorizeBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Colorize);
+    ui_->brightenBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Brighten);
+    ui_->darkenBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Darken);
+    ui_->mixBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Mix);
+    ui_->smoothBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Smooth);
+    ui_->smearBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Smear);
+    ui_->avgSmearBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::AverageSmear);
+    ui_->rangeBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Range);
+    ui_->cycleBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Cycle);
+    ui_->randomModeBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Random);
+    ui_->dither1Btn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Dither1);
+    ui_->dither2Btn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Dither2);
+    ui_->negativeBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Negative);
+    ui_->transpBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Transparent);
 
-    auto makeMode = [&](const char *label, Buffer::PaintMode mode, const char *tooltip = nullptr) -> QRadioButton * {
-        QRadioButton *btn = new QRadioButton(label, w);
-        if (tooltip) btn->setToolTip(tooltip);
-        btn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == mode);
-        modeGroup->addButton(btn);
+    ui_->fillHorizontal->setChecked(fillModeSelected_ && activeGradientFillMode == FillHorizontal);
+    ui_->fillVertical->setChecked(fillModeSelected_ && activeGradientFillMode == FillVertical);
+    ui_->fillLinear->setChecked(fillModeSelected_ && activeGradientFillMode == FillLinear);
+    ui_->fillHighlight->setChecked(fillModeSelected_ && activeGradientFillMode == FillHighlight);
+    ui_->fillSpherical->setChecked(fillModeSelected_ && activeGradientFillMode == FillSpherical);
+    ui_->fillRadial->setChecked(fillModeSelected_ && activeGradientFillMode == FillRadial);
+
+    ui_->replaceModeBtn->setChecked(buffer_ && buffer_->replaceMode());
+    ui_->amountSlider->setValue(buffer_ ? buffer_->drawModeAmount() : 0);
+    ui_->amountSpin->setValue(buffer_ ? buffer_->drawModeAmount() : 0);
+    ui_->rgbMixBtn->setChecked(buffer_ && !buffer_->transparentMixHSV());
+    ui_->hsvMixBtn->setChecked(buffer_ && buffer_->transparentMixHSV());
+    ui_->conformCheck->setChecked(conformFill);
+    ui_->centerCheck->setChecked(centerFill);
+
+    ui_->fillGroupWidget->setEnabled(buffer_ && buffer_->tool() && buffer_->tool()->hasFill());
+
+    // Build lists
+    generalModeBtns_.clear();
+    generalModeBtns_ << ui_->tintBtn << ui_->colorizeBtn << ui_->brightenBtn << ui_->darkenBtn
+                     << ui_->smoothBtn << ui_->rangeBtn << ui_->dither1Btn << ui_->dither2Btn
+                     << ui_->negativeBtn << ui_->transpBtn;
+    fillSensitiveBtns_.clear();
+    fillSensitiveBtns_ << ui_->mixBtn << ui_->smearBtn << ui_->avgSmearBtn << ui_->cycleBtn;
+    fillModeBtns_.clear();
+    fillModeBtns_ = {
+        {ui_->fillHorizontal, FillHorizontal},
+        {ui_->fillVertical,   FillVertical},
+        {ui_->fillLinear,     FillLinear},
+        {ui_->fillHighlight,  FillHighlight},
+        {ui_->fillSpherical,  FillSpherical},
+        {ui_->fillRadial,     FillRadial},
+    };
+
+    // Connect mode buttons
+    auto connectMode = [&](QRadioButton *btn, Buffer::PaintMode mode) {
         connect(btn, &QRadioButton::clicked, [this, mode]() {
             fillModeSelected_ = false;
-            if (isSelectableMode(mode))
-                previousMode_ = mode;
+            if (isSelectableMode(mode)) previousMode_ = mode;
             button_->setChecked(isSelectableMode(mode));
             applyMode();
         });
         connect(this, &DrawModeTool::activeModeChanged, btn, [this, btn, mode](Buffer::PaintMode active) {
-            if (!fillModeSelected_)
-                btn->setChecked(active == mode);
+            if (!fillModeSelected_) btn->setChecked(active == mode);
         });
-        return btn;
     };
+    connectMode(ui_->brushModeBtn,  Buffer::BrushMode);
+    connectMode(ui_->colorBtn,      Buffer::Color);
+    connectMode(ui_->tintBtn,       Buffer::Tint);
+    connectMode(ui_->colorizeBtn,   Buffer::Colorize);
+    connectMode(ui_->brightenBtn,   Buffer::Brighten);
+    connectMode(ui_->darkenBtn,     Buffer::Darken);
+    connectMode(ui_->mixBtn,        Buffer::Mix);
+    connectMode(ui_->smoothBtn,     Buffer::Smooth);
+    connectMode(ui_->smearBtn,      Buffer::Smear);
+    connectMode(ui_->avgSmearBtn,   Buffer::AverageSmear);
+    connectMode(ui_->rangeBtn,      Buffer::Range);
+    connectMode(ui_->cycleBtn,      Buffer::Cycle);
+    connectMode(ui_->randomModeBtn, Buffer::Random);
+    connectMode(ui_->dither1Btn,    Buffer::Dither1);
+    connectMode(ui_->dither2Btn,    Buffer::Dither2);
+    connectMode(ui_->negativeBtn,   Buffer::Negative);
+    connectMode(ui_->transpBtn,     Buffer::Transparent);
 
-    auto makeStub = [&](const char *label, const char *tooltip = nullptr) -> QRadioButton * {
-        QRadioButton *btn = new QRadioButton(label, w);
-        if (tooltip) btn->setToolTip(tooltip);
-        btn->setEnabled(false);
-        return btn;
-    };
-
-    auto addHSep = [&](QVBoxLayout *col) {
-        QFrame *sep = new QFrame(w);
-        sep->setFrameShape(QFrame::HLine);
-        sep->setFrameShadow(QFrame::Sunken);
-        col->addWidget(sep);
-    };
-
-    auto addVSep = [&](QHBoxLayout *row) {
-        QFrame *sep = new QFrame(w);
-        sep->setFrameShape(QFrame::VLine);
-        sep->setFrameShadow(QFrame::Sunken);
-        row->addWidget(sep);
-    };
-
-    QHBoxLayout *mainRow = new QHBoxLayout(w);
-    mainRow->setSpacing(4);
-    mainRow->setContentsMargins(4, 4, 4, 4);
-    mainRow->setAlignment(Qt::AlignTop);
-
-    // ── Col 1: Brush | sep | transforms | sep | Replace ──────────────
-    QVBoxLayout *col1 = new QVBoxLayout;
-    col1->setSpacing(8);
-    brushModeBtn_ = makeMode("Brush",       Buffer::BrushMode, "Brush draw mode");
-    col1->addWidget(brushModeBtn_);
-    addHSep(col1);
-    col1->addWidget(makeStub("Stretch",    "Brush fill mode"));
-    col1->addWidget(makeStub("Pattern",    "Brush fill mode"));
-    col1->addWidget(makeStub("Shape",      "Brush fill mode"));
-    col1->addWidget(makeStub("Perspective","Brush fill mode"));
-    col1->addStretch();
-    addHSep(col1);
-    replaceModeBtn_ = new QCheckBox("Replace", w);
-    replaceModeBtn_->setToolTip("Stamp full bounding rect including transparent pixels");
-    replaceModeBtn_->setChecked(buffer_ && buffer_->replaceMode());
-    connect(replaceModeBtn_, &QCheckBox::toggled, [this](bool on) {
-        if (buffer_) buffer_->setReplaceMode(on);
-    });
-    col1->addWidget(replaceModeBtn_);
-    mainRow->addLayout(col1);
-
-    addVSep(mainRow);
-
-    // ── Middle: cols 2-4 side by side + Amount at bottom ─────────────
-    QVBoxLayout *middleVBox = new QVBoxLayout;
-    middleVBox->setSpacing(2);
-
-    QHBoxLayout *modeCols = new QHBoxLayout;
-    modeCols->setSpacing(8);
-    modeCols->setAlignment(Qt::AlignTop);
-
-    // Col 2
-    QVBoxLayout *col2 = new QVBoxLayout;
-    col2->setSpacing(8);
-    col2->setAlignment(Qt::AlignTop);
-    static constexpr const char *kGeneral = "General draw mode";
-    col2->addWidget(makeMode("Color",    Buffer::Color,       kGeneral));
-    auto *tintBtn      = makeMode("Tint",     Buffer::Tint,         kGeneral);
-    auto *colorizeBtn  = makeMode("Colorize", Buffer::Colorize,     kGeneral);
-    auto *brightenBtn  = makeMode("Brighten", Buffer::Brighten,     kGeneral);
-    auto *darkenBtn    = makeMode("Darken",   Buffer::Darken,       kGeneral);
-    col2->addWidget(tintBtn);
-    col2->addWidget(colorizeBtn);
-    col2->addWidget(brightenBtn);
-    col2->addWidget(darkenBtn);
-    col2->addWidget(makeStub("Stencil",                        kGeneral));
-    generalModeBtns_ << tintBtn << colorizeBtn << brightenBtn << darkenBtn;
-    modeCols->addLayout(col2);
-
-    // Col 3
-    QVBoxLayout *col3 = new QVBoxLayout;
-    col3->setSpacing(8);
-    col3->setAlignment(Qt::AlignTop);
-    auto *mixBtn       = makeMode("Mix",       Buffer::Mix,          kGeneral);
-    auto *smoothBtn    = makeMode("Smooth",    Buffer::Smooth,       kGeneral);
-    auto *smearBtn     = makeMode("Smear",     Buffer::Smear,        kGeneral);
-    auto *avgSmearBtn  = makeMode("Avg Smear", Buffer::AverageSmear, kGeneral);
-    auto *rangeBtn     = makeMode("Range",     Buffer::Range,        kGeneral);
-    auto *cycleBtn     = makeMode("Cycle",     Buffer::Cycle,        kGeneral);
-    col3->addWidget(mixBtn);
-    col3->addWidget(smoothBtn);
-    col3->addWidget(smearBtn);
-    col3->addWidget(avgSmearBtn);
-    col3->addWidget(rangeBtn);
-    col3->addWidget(cycleBtn);
-    generalModeBtns_ << smoothBtn << rangeBtn;
-    fillSensitiveBtns_ << mixBtn << smearBtn << avgSmearBtn << cycleBtn;
-    modeCols->addLayout(col3);
-
-    // Col 4
-    QVBoxLayout *col4 = new QVBoxLayout;
-    col4->setSpacing(8);
-    col4->setAlignment(Qt::AlignTop);
-    randomModeBtn_ = makeMode("Random",      Buffer::Random,      kGeneral);
-    auto *dither1Btn   = makeMode("Dither 1",    Buffer::Dither1,     kGeneral);
-    auto *dither2Btn   = makeMode("Dither 2",    Buffer::Dither2,     kGeneral);
-    auto *negativeBtn  = makeMode("Negative",    Buffer::Negative,    kGeneral);
-    auto *transpBtn    = makeMode("Transparent", Buffer::Transparent, kGeneral);
-    col4->addWidget(randomModeBtn_);
-    col4->addWidget(dither1Btn);
-    col4->addWidget(dither2Btn);
-    col4->addWidget(negativeBtn);
-    col4->addWidget(makeStub("Halferite",                        kGeneral));
-    col4->addWidget(transpBtn);
-    generalModeBtns_ << dither1Btn << dither2Btn << negativeBtn << transpBtn;
-    modeCols->addLayout(col4);
-
-    middleVBox->addLayout(modeCols);
-    middleVBox->addStretch();
-    {
-        QFrame *sep = new QFrame(w);
-        sep->setFrameShape(QFrame::HLine);
-        sep->setFrameShadow(QFrame::Sunken);
-        middleVBox->addWidget(sep);
-    }
-
-    QHBoxLayout *amountRow = new QHBoxLayout;
-    amountRow->setSpacing(4);
-    amountRow->addWidget(new QLabel("Amount:", w));
-    QSlider *slider = new QSlider(Qt::Horizontal, w);
-    slider->setToolTip("Dither or dark/brite");
-    slider->setRange(0, 100);
-    slider->setValue(buffer_->drawModeAmount());
-    QSpinBox *spin = new QSpinBox(w);
-    spin->setRange(0, 100);
-    spin->setValue(buffer_->drawModeAmount());
-    spin->setFixedWidth(48);
-    connect(slider, &QSlider::valueChanged, spin, &QSpinBox::setValue);
-    connect(spin, QOverload<int>::of(&QSpinBox::valueChanged), slider, &QSlider::setValue);
-    connect(slider, &QSlider::valueChanged, [this](int v) { buffer_->setDrawModeAmount(v); });
-    amountRow->addWidget(slider, 1);
-    amountRow->addWidget(spin);
-    middleVBox->addLayout(amountRow);
-
-    QHBoxLayout *mixingRow = new QHBoxLayout;
-    mixingRow->setSpacing(4);
-    mixingRow->addWidget(new QLabel("Mixing:", w));
-    QRadioButton *rgbMixBtn = new QRadioButton("RGB", w);
-    QRadioButton *hsvMixBtn = new QRadioButton("HSV", w);
-    QButtonGroup *mixGroup = new QButtonGroup(w);
-    mixGroup->addButton(rgbMixBtn);
-    mixGroup->addButton(hsvMixBtn);
-    rgbMixBtn->setChecked(!buffer_->transparentMixHSV());
-    hsvMixBtn->setChecked(buffer_->transparentMixHSV());
-    rgbMixBtn->setToolTip("Transparent: blend in RGB space");
-    hsvMixBtn->setToolTip("Transparent: blend in HSV space (e.g. Blue 50% over Green → Cyan)");
-    connect(rgbMixBtn, &QRadioButton::clicked, [this]() { buffer_->setTransparentMixHSV(false); });
-    connect(hsvMixBtn, &QRadioButton::clicked, [this]() { buffer_->setTransparentMixHSV(true); });
-    mixingRow->addWidget(rgbMixBtn);
-    mixingRow->addWidget(hsvMixBtn);
-    mixingRow->addStretch();
-    middleVBox->addLayout(mixingRow);
-
-    mainRow->addLayout(middleVBox);
-
-    addVSep(mainRow);
-
-    // ── Col 5: Gradient fill | sep | Conform / Center stubs ──────────
-    static const struct { const char *label; GradientFillMode mode; } kFill[] = {
-        {"Horizontal", FillHorizontal},
-        {"Vertical",   FillVertical},
-        {"Linear",     FillLinear},
-        {"Highlight",  FillHighlight},
-        {"Spherical",  FillSpherical},
-        {"Radial",     FillRadial},
-    };
-    QWidget *col5 = new QWidget(w);
-    fillGroupWidget_ = col5;
-    col5->setEnabled(buffer_ && buffer_->tool() && buffer_->tool()->hasFill());
-    QVBoxLayout *col5vb = new QVBoxLayout(col5);
-    col5vb->setSpacing(8);
-    col5vb->setContentsMargins(0, 0, 0, 0);
-    for (const auto &f : kFill) {
-        QRadioButton *btn = new QRadioButton(f.label, col5);
-        btn->setToolTip("Gradient fill mode");
-        btn->setChecked(fillModeSelected_ && activeGradientFillMode == f.mode);
-        modeGroup->addButton(btn);
-        GradientFillMode fm = f.mode;
-        fillModeBtns_.append({btn, fm});
-        connect(btn, &QRadioButton::clicked, [this, fm]() {
+    for (auto &fb : fillModeBtns_) {
+        connect(fb.first, &QRadioButton::clicked, [this, fm = fb.second]() {
             fillModeSelected_ = true;
             activeGradientFillMode = fm;
             button_->setChecked(true);
             applyMode();
         });
-        col5vb->addWidget(btn);
     }
-    col5vb->addStretch();
-    {
-        QFrame *sep = new QFrame(col5);
-        sep->setFrameShape(QFrame::HLine);
-        sep->setFrameShadow(QFrame::Sunken);
-        col5vb->addWidget(sep);
-    }
-    auto addFillCheck = [&](const char *label, const char *tip, bool &flag) {
-        QCheckBox *chk = new QCheckBox(label, col5);
-        chk->setToolTip(tip);
-        chk->setChecked(flag);
-        connect(chk, &QCheckBox::toggled, [&flag](bool v) { flag = v; });
-        col5vb->addWidget(chk);
-    };
-    addFillCheck("Conform", "Scale gradient to the bounding rect of the filled area", conformFill);
-    addFillCheck("Center",  "Originate radial/spherical/highlight fills from the area center", centerFill);
 
-    mainRow->addWidget(col5);
+    connect(ui_->replaceModeBtn, &QCheckBox::toggled, [this](bool on) {
+        if (buffer_) buffer_->setReplaceMode(on);
+    });
+    connect(ui_->amountSlider, &QSlider::valueChanged, ui_->amountSpin, &QSpinBox::setValue);
+    connect(ui_->amountSpin, QOverload<int>::of(&QSpinBox::valueChanged), ui_->amountSlider, &QSlider::setValue);
+    connect(ui_->amountSlider, &QSlider::valueChanged, [this](int v) { buffer_->setDrawModeAmount(v); });
+    connect(ui_->rgbMixBtn, &QRadioButton::clicked, [this]() { buffer_->setTransparentMixHSV(false); });
+    connect(ui_->hsvMixBtn, &QRadioButton::clicked, [this]() { buffer_->setTransparentMixHSV(true); });
+    connect(ui_->conformCheck, &QCheckBox::toggled, [](bool v) { conformFill = v; });
+    connect(ui_->centerCheck,  &QCheckBox::toggled, [](bool v) { centerFill = v; });
 
     updateAvailability();
-
     return w;
 }
 

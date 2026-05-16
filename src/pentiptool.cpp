@@ -11,6 +11,7 @@
 #include "pentip.h"
 #include "pentiptool.h"
 #include "undobuffer.h"
+#include "ui_pentiptooloptions.h"
 
 PenTipTool PenTipTool::instance;
 
@@ -270,13 +271,9 @@ void PenTipTool::activate()
 QWidget *PenTipTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    w->setWindowTitle("Pen Tip");
+    ui_ = new Ui::PenTipToolOptions;
+    ui_->setupUi(w);
 
-    QHBoxLayout *hbox = new QHBoxLayout(w);
-    hbox->setSpacing(2);
-    hbox->setContentsMargins(4, 4, 4, 4);
-
-    // Fixed-size preset buttons
     struct Preset { PenTip::Shape shape; int pw; int ph; };
     const Preset presets[] = {
         { PenTip::Circle, 1,  1  },
@@ -292,13 +289,16 @@ QWidget *PenTipTool::createOptionsWidget()
         { PenTip::Square, 1,  13 },
         { PenTip::Square, 18, 1  },
     };
-
-    for (const auto &preset : presets) {
-        QToolButton *btn = new QToolButton(w);
-        btn->setIcon(QIcon(renderTip(preset.shape, preset.pw, preset.ph)));
-        PenTip::Shape shape = preset.shape;
-        int pw = preset.pw, ph = preset.ph;
-        connect(btn, &QToolButton::clicked, [this, shape, pw, ph]() {
+    QToolButton *btns[] = {
+        ui_->preset1, ui_->preset2, ui_->preset3, ui_->preset4,
+        ui_->preset5, ui_->preset6, ui_->preset7, ui_->preset8,
+        ui_->preset9, ui_->preset10, ui_->preset11, ui_->preset12
+    };
+    for (int i = 0; i < 12; ++i) {
+        btns[i]->setIcon(QIcon(renderTip(presets[i].shape, presets[i].pw, presets[i].ph)));
+        PenTip::Shape shape = presets[i].shape;
+        int pw = presets[i].pw, ph = presets[i].ph;
+        connect(btns[i], &QToolButton::clicked, [this, shape, pw, ph]() {
             PenTip *tip = qobject_cast<PenTip *>(buffer_->pen());
             if (!tip) {
                 tip = buffer_->penTip();
@@ -309,30 +309,11 @@ QWidget *PenTipTool::createOptionsWidget()
             tip->setShape(shape);
             updateButtonIcon();
         });
-        hbox->addWidget(btn);
     }
-
-    // Separator before the interactive sizers
-    QFrame *sep = new QFrame(w);
-    sep->setFrameShape(QFrame::VLine);
-    sep->setFrameShadow(QFrame::Sunken);
-    hbox->addWidget(sep);
-
-    // Interactive circle sizer button
-    QToolButton *circleBtn = new QToolButton(w);
-    circleBtn->setIcon(QIcon(renderTip(PenTip::Circle, 9, 9)));
-    circleBtn->setToolTip("Size Circle Pen Tip – drag from centre on canvas");
-    connect(circleBtn, &QToolButton::clicked, [this]() { activateSizing(SizingCircle); });
-    hbox->addWidget(circleBtn);
-
-    // Interactive rect sizer button
-    QToolButton *rectBtn = new QToolButton(w);
-    rectBtn->setIcon(QIcon(renderTip(PenTip::Square, 8, 8)));
-    rectBtn->setToolTip("Size Rectangle Pen Tip – drag from bottom-right corner on canvas");
-    connect(rectBtn, &QToolButton::clicked, [this]() { activateSizing(SizingRect); });
-    hbox->addWidget(rectBtn);
-
-    hbox->addStretch();
+    ui_->circleBtn->setIcon(QIcon(renderTip(PenTip::Circle, 9, 9)));
+    ui_->rectBtn->setIcon(QIcon(renderTip(PenTip::Square, 8, 8)));
+    connect(ui_->circleBtn, &QToolButton::clicked, [this]() { activateSizing(SizingCircle); });
+    connect(ui_->rectBtn, &QToolButton::clicked, [this]() { activateSizing(SizingRect); });
     return w;
 }
 

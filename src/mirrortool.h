@@ -3,8 +3,7 @@
 
 #include "tool.h"
 
-class QCheckBox;
-class QSpinBox;
+namespace Ui { class MirrorToolOptions; }
 
 class MirrorTool : public Tool
 {
@@ -33,10 +32,7 @@ private slots:
     void syncWidgets();
 
 private:
-    QCheckBox *checkX_;
-    QCheckBox *checkY_;
-    QSpinBox  *spinCX_;
-    QSpinBox  *spinCY_;
+    Ui::MirrorToolOptions *ui_ = nullptr;
 };
 
 #endif // MIRRORTOOL_H

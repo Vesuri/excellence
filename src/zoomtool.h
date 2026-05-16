@@ -3,6 +3,8 @@
 
 #include "tool.h"
 
+namespace Ui { class ZoomToolOptions; }
+
 class ZoomTool : public Tool
 {
     Q_OBJECT
@@ -27,6 +29,8 @@ protected:
 private:
     bool placeMagnifierMode_;
     int magnifierZoom_;
+
+    Ui::ZoomToolOptions *ui_ = nullptr;
 
     static ZoomTool instance;
 };
