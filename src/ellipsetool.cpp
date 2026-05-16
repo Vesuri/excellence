@@ -255,6 +255,8 @@ QWidget* EllipseTool::createOptionsWidget()
     QWidget *w = new QWidget;
     w->setWindowTitle("Ellipse");
     QVBoxLayout *layout = new QVBoxLayout(w);
+    layout->setSpacing(4);
+    layout->setContentsMargins(6, 6, 6, 6);
 
     QRadioButton *cornerBtn = new QRadioButton("Corner to Corner");
     QRadioButton *centerBtn = new QRadioButton("Center to Corner");
