@@ -240,7 +240,7 @@ QRect EllipseTool::move(const QPoint &point)
 {
     if (rotateMode_ && phase_ == 2 && mouseButton_ == Qt::NoButton) {
         rotationAngle_ = qAtan2((double)(point.y() - cy_), (double)(point.x() - cx_));
-        return drawEllipseShape(rotationAngle_);
+        return drawEllipseShape(rotationAngle_, true);
     }
 
     if (mouseButton_ == Qt::NoButton) {
@@ -265,7 +265,7 @@ QRect EllipseTool::move(const QPoint &point)
 
     QRect changedRect = ellipseBoundingRect(0.0);
     undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-    drawEllipseShape(0.0);
+    drawEllipseShape(0.0, true);
     return changedRect;
 }
 
