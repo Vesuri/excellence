@@ -323,24 +323,9 @@ QRect LineTool::polygonFill()
 
 QRect LineTool::applyPolygonGradient(const QList<QPoint> &verts, const QPoint &gradFrom, const QPoint &gradTo)
 {
-    QRect r = GradientRenderer::applyPolygonGradient(buffer_->image(), verts,
+    return GradientRenderer::applyPolygonGradient(buffer_->image(), verts,
         static_cast<int>(buffer_->paintColor()), &gradientRanges[activeGradientRange],
         activeGradientFillMode, gradFrom, gradTo, conformFill);
-
-    // polygonFillScanline may miss boundary pixels; re-apply gradient to every edge.
-    QRect polyBbox;
-    for (const QPoint &v : verts) polyBbox = polyBbox.united(QRect(v, v));
-    QRect conformRect = conformFill ? polyBbox : QRect();
-    const GradientRange *range = &gradientRanges[activeGradientRange];
-    QImage &image = buffer_->image();
-    auto applyGrad = [&](const QPoint &p) {
-        if (!image.rect().contains(p)) return;
-        float t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo, conformRect);
-        image.setPixel(p, static_cast<uint>(GradientRenderer::colorIndex(t, p.x(), p.y(), range, image)));
-    };
-    for (int i = 0; i < verts.size(); i++)
-        Algorithms::line(verts[i], verts[(i + 1) % verts.size()], applyGrad);
-    return r.united(polyBbox.intersected(image.rect()));
 }
 
 // Flat-fills `vertices_` with the foreground colour and enters the rubber band phase.

@@ -167,26 +167,9 @@ QString DrawTool::status() const
 
 QRect DrawTool::applyPolygonGradient(const QList<QPoint> &path, const QPoint &gradFrom, const QPoint &gradTo)
 {
-    QRect r = GradientRenderer::applyPolygonGradient(buffer_->image(), path,
+    return GradientRenderer::applyPolygonGradient(buffer_->image(), path,
         static_cast<int>(buffer_->paintColor()), &gradientRanges[activeGradientRange],
         activeGradientFillMode, gradFrom, gradTo, conformFill);
-
-    // polygonFillScanline may miss boundary pixels; re-apply gradient to every edge.
-    QRect polyBbox;
-    for (const QPoint &p : path) polyBbox = polyBbox.united(QRect(p, p));
-    QRect conformRect = conformFill ? polyBbox : QRect();
-    const GradientRange *range = &gradientRanges[activeGradientRange];
-    QImage &image = buffer_->image();
-    auto applyGrad = [&](const QPoint &p) {
-        if (!image.rect().contains(p)) return;
-        float t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo, conformRect);
-        image.setPixel(p, static_cast<uint>(GradientRenderer::colorIndex(t, p.x(), p.y(), range, image)));
-    };
-    for (int i = 0; i + 1 < path.size(); i++)
-        Algorithms::line(path[i], path[i + 1], applyGrad);
-    if (path.size() >= 2)
-        Algorithms::line(path.last(), path.first(), applyGrad);
-    return r.united(polyBbox.intersected(image.rect()));
 }
 
 QRect DrawTool::polygonFill(int fillColor, const QPoint &to)

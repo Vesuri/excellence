@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <climits>
 #include <cmath>
+#include "algorithms.h"
 
 namespace GradientRenderer {
 
@@ -293,8 +294,25 @@ QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
     QRect polyBbox;
     for (const QPoint &p : polygon) polyBbox = polyBbox.united(QRect(p, p));
     QRect conformRect = conform ? polyBbox : QRect();
-    return polygonFillScanline(image, polygon, fillColor, true, range,
-                               mode, gradFrom, gradTo, conformRect);
+    QRect r = polygonFillScanline(image, polygon, fillColor, true, range,
+                                  mode, gradFrom, gradTo, conformRect);
+
+    // Scanline fill may miss boundary pixels due to integer edge-intersection rounding.
+    // Re-apply gradient to every polygon edge. For H/V conform, per-row/-column
+    // normalization can't be replicated cheaply here, so use QRect() (absolute canvas
+    // coordinates) to avoid the wrong full-bbox t-value that polyBbox would give.
+    if (polygon.size() >= 3) {
+        const bool hvMode = mode == FillHorizontal || mode == FillVertical;
+        QRect edgeConformRect = (conform && !hvMode) ? polyBbox : QRect();
+        auto applyGrad = [&](const QPoint &p) {
+            if (!image.rect().contains(p)) return;
+            float t = computeT(p.x(), p.y(), mode, gradFrom, gradTo, edgeConformRect);
+            image.setPixel(p, static_cast<uint>(colorIndex(t, p.x(), p.y(), range, image)));
+        };
+        for (int i = 0; i < polygon.size(); i++)
+            Algorithms::line(polygon[i], polygon[(i + 1) % polygon.size()], applyGrad);
+    }
+    return r.united(polyBbox.intersected(image.rect()));
 }
 
 } // namespace GradientRenderer
