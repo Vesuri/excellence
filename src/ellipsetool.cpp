@@ -214,7 +214,7 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
                 }
             }
             if (activeGradientFillMode == FillSpherical)
-                t = 1.0f - sqrtf(1.0f - t * t);
+                t = sphericalT(t);
         } else {
             QRect pixConform = conformRect;
             if (hConform) {

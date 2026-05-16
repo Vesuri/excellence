@@ -1,7 +1,6 @@
 #include <QImage>
 #include <QRect>
 #include <QGridLayout>
-#include <cmath>
 #include <QRadioButton>
 #include <QVBoxLayout>
 #include "ui_rectangletool.h"
@@ -207,7 +206,7 @@ QRect RectangleTool::applyGradientRect(const QRect &fillRect, const QPoint &grad
             if (useShapeConform) {
                 t = GradientRenderer::highlightTPolygon(x, y, gradFrom, rectPoly);
                 if (activeGradientFillMode == FillSpherical)
-                    t = 1.0f - sqrtf(1.0f - t * t);
+                    t = sphericalT(t);
             } else {
                 t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, conformRect);
             }

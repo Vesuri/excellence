@@ -159,7 +159,7 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
                     t = distB > 0.5f ? qBound(0.0f, distP / distB, 1.0f) : 1.0f;
                 }
                 if (activeGradientFillMode == FillSpherical)
-                    t = 1.0f - sqrtf(1.0f - t * t);
+                    t = sphericalT(t);
                 int ci = GradientRenderer::colorIndex(t, x, y, range, image);
                 image.setPixel(x, y, static_cast<uint>(ci));
             }

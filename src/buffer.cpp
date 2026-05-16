@@ -457,14 +457,17 @@ void Buffer::undo()
 
 void Buffer::mergeLastUndo()
 {
-    // Pop the last undo entry (the pre-fill drawn before a rubber band was started),
-    // apply it to restore the canvas to the state before that fill, then update
-    // preModificationImage so Buffer::release() will produce a single undo entry
-    // that covers both the pre-fill and the subsequent gradient application.
     if (undoBuffers.isEmpty()) return;
     UndoBuffer *last = undoBuffers.takeLast();
+    // Patch preModificationImage with the original pixels stored in this entry
+    // (cheaper than re-copying the entire image), then restore the canvas.
+    const QImage &orig = last->image();
+    const QPoint pos = last->pos();
+    for (int y = 0; y < orig.height(); y++)
+        for (int x = 0; x < orig.width(); x++)
+            preModificationImage.setPixel(pos.x() + x, pos.y() + y,
+                                          static_cast<uint>(orig.pixelIndex(x, y)));
     last->apply(this);
-    preModificationImage = image_.copy();
     delete last;
 }
 

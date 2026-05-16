@@ -211,7 +211,7 @@ float computeT(int px, int py,
         float raw = qBound(0.0f, sqrtf(rx * rx + ry * ry) / radius, 1.0f);
         // Hemisphere geometry: slow near center, rapidly accelerating toward edges,
         // matching the curvature of a sphere's surface falling away from the viewer.
-        return 1.0f - sqrtf(1.0f - raw * raw);
+        return sphericalT(raw);
     }
     case FillHighlight: {
         // Shape tools compute highlight t via highlightTPolygon/ellipse; this is a
@@ -297,7 +297,7 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
                             || (conform && gradientFillIsRadial(fillMode))) {
                         t = highlightTPolygon(x, y, gradFrom, polygon);
                         if (fillMode == FillSpherical)
-                            t = 1.0f - sqrtf(1.0f - t * t);
+                            t = sphericalT(t);
                     } else {
                         QRect pixConform = conformRect;
                         if (hConform)

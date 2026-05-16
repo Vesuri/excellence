@@ -5,7 +5,11 @@
 #include <QList>
 #include <QPoint>
 #include <QRect>
+#include <cmath>
 #include "gradientrange.h"
+
+// Hemisphere curve: slow near center, rapid near the boundary.
+inline float sphericalT(float t) { return 1.0f - sqrtf(1.0f - t * t); }
 
 namespace GradientRenderer {
     // Returns the palette index of the closest color to `target` by squared RGB distance.
