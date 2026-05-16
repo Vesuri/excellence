@@ -33,6 +33,16 @@ void DrawTool::setDrawMode(const DrawMode &drawMode)
     button_->setToolTip(tips[drawMode]);
 }
 
+QString DrawTool::name() const
+{
+    switch (drawMode) {
+    case Dotted:        return "Draw";
+    case ConnectedDraw: return "Connected Draw";
+    case FilledShape:   return "Filled Shape";
+    }
+    return QString();
+}
+
 void DrawTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();

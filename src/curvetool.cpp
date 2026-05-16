@@ -42,6 +42,11 @@ QRect CurveTool::doubleClick(const QPoint &point)
     return QRect();
 }
 
+QString CurveTool::name() const
+{
+    return curveMode_ == Quadratic ? "Elliptical Curve" : "Bezier Curve";
+}
+
 void CurveTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();

@@ -169,6 +169,11 @@ void BrushTool::cancel()
     polygon_.clear();
 }
 
+QString BrushTool::name() const
+{
+    return mode_ == Freehand ? "Carve Brush" : "Cut Brush";
+}
+
 void BrushTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();

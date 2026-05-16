@@ -43,6 +43,16 @@ void AirTool::setMode(SprayMode mode)
     button_->setToolTip(tips[mode]);
 }
 
+QString AirTool::name() const
+{
+    switch (sprayMode_) {
+    case FineSpray:     return "Fine Spray Airbrush";
+    case Splatter:      return "Splatter";
+    case ShapeAirbrush: return "Shape Airbrush";
+    }
+    return QString();
+}
+
 void AirTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();

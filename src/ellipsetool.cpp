@@ -61,6 +61,11 @@ void EllipseTool::setDrawMode(DrawMode mode)
         : "Ellipse – Filled [C]  Ctrl: circle\nRight-click: anchor options");
 }
 
+QString EllipseTool::name() const
+{
+    return drawMode_ == FilledEllipse ? "Filled Ellipse" : "Ellipse";
+}
+
 void EllipseTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();

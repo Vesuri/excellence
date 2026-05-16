@@ -19,6 +19,16 @@ LineTool::LineTool(QObject *parent) : Tool(parent),
 {
 }
 
+QString LineTool::name() const
+{
+    switch (mode_) {
+    case Line:           return "Line";
+    case ConnectedLines: return "Connected Lines";
+    case FilledPolygon:  return "Filled Lines";
+    }
+    return QString();
+}
+
 void LineTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();

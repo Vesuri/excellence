@@ -36,6 +36,11 @@ void RectangleTool::setDrawMode(const DrawMode &drawMode)
     button_->setToolTip(tips[drawMode]);
 }
 
+QString RectangleTool::name() const
+{
+    return drawMode == FilledRectangle ? "Filled Rectangle" : "Rectangle";
+}
+
 void RectangleTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();
