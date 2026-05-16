@@ -4,6 +4,7 @@
 #include <QString>
 #include <QVector>
 #include <QRect>
+#include <cstdint>
 #include <utility>
 #include "buffer.h"
 
@@ -86,6 +87,19 @@ extern GradientFillMode activeGradientFillMode;
 extern bool drawModeActive;
 extern bool conformFill;
 extern bool centerFill;
+
+// Applies random dither to a gradient slot position. The noise displacement is
+// proportional to span and ditherAmt (0–100), bounded to [minSlot, maxSlot].
+inline float applyRandomDither(float slotPos, float span, int ditherAmt,
+                                int pixelX, int pixelY,
+                                float minSlot, float maxSlot)
+{
+    uint32_t h = uint32_t(pixelX) * 2246822519u ^ uint32_t(pixelY) * 3266489917u;
+    h = (h ^ (h >> 17)) * 0x45d9f3bu;
+    h ^= h >> 16;
+    float noise = (h & 0xFFu) / 256.0f - 0.5f;
+    return qBound(minSlot, slotPos + noise * span * (ditherAmt / 400.0f), maxSlot);
+}
 
 inline bool gradientFillIsRadial(GradientFillMode mode)
 {

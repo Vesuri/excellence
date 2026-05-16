@@ -39,9 +39,6 @@ private:
     int slotAt(int x) const;
     int slotX(int slot) const;
     QColor colorForIndex(int colorIndex) const;
-    struct DitherPair { int idx1; int idx2; float blend; };
-    DitherPair ditherPair(const QColor &ideal) const;
-    QColor interpolatedColor(float slotPos, int pixelX, int pixelY) const;
     void saveSlotState(int slot);
 
     GradientRange *range_ = nullptr;

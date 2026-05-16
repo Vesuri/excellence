@@ -45,12 +45,6 @@ static DitherPair ditherPair(const QColor &ideal, const QImage &image)
     return {idx1, idx2, blend};
 }
 
-static QColor colorAt(int idx, const QImage &image)
-{
-    if (idx < 0 || idx >= image.colorCount()) return Qt::white;
-    return QColor(image.color(idx));
-}
-
 int nearestColorIndex(QRgb target, const QImage &image)
 {
     return ditherPair(QColor(target), image).idx1;
@@ -71,15 +65,9 @@ int colorIndex(float t, int pixelX, int pixelY,
     float span    = float(markers.last().slot - markers.first().slot);
     float slotPos = markers.first().slot + t * span;
 
-    if (isRandom && ditherAmt > 0) {
-        uint32_t h = uint32_t(pixelX) * 2246822519u ^ uint32_t(pixelY) * 3266489917u;
-        h = (h ^ (h >> 17)) * 0x45d9f3bu;
-        h ^= h >> 16;
-        float noise = (h & 0xFFu) / 256.0f - 0.5f;
-        slotPos = qBound(float(markers.first().slot),
-                         slotPos + noise * span * (ditherAmt / 100.0f),
-                         float(markers.last().slot));
-    }
+    if (isRandom && ditherAmt > 0)
+        slotPos = applyRandomDither(slotPos, span, ditherAmt, pixelX, pixelY,
+                                    float(markers.first().slot), float(markers.last().slot));
 
     if (slotPos <= markers.first().slot)
         return markers.first().colorIndex;
@@ -92,18 +80,9 @@ int colorIndex(float t, int pixelX, int pixelY,
                 return markers[i].colorIndex;
 
             float seg_t = (slotPos - markers[i].slot) / float(markers[i + 1].slot - markers[i].slot);
-            QColor c1 = colorAt(markers[i].colorIndex, image);
-            QColor c2 = colorAt(markers[i + 1].colorIndex, image);
-            QColor ideal(
-                qRound(c1.red()   + seg_t * (c2.red()   - c1.red())),
-                qRound(c1.green() + seg_t * (c2.green() - c1.green())),
-                qRound(c1.blue()  + seg_t * (c2.blue()  - c1.blue()))
-            );
 
             if (isRandom)
-                return ditherPair(ideal, image).idx1;
-
-            DitherPair dp = ditherPair(ideal, image);
+                return seg_t < 0.5f ? markers[i].colorIndex : markers[i + 1].colorIndex;
 
             // clang-format off
             static const int bayer16[16][16] = {
@@ -127,7 +106,7 @@ int colorIndex(float t, int pixelX, int pixelY,
             // clang-format on
 
             float threshold = (bayer16[pixelY % 16][pixelX % 16] + 0.5f) / 256.0f;
-            return dp.blend > threshold ? dp.idx2 : dp.idx1;
+            return seg_t > threshold ? markers[i + 1].colorIndex : markers[i].colorIndex;
         }
     }
     return markers.last().colorIndex;
