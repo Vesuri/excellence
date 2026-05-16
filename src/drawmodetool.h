@@ -8,6 +8,7 @@
 #include "gradientrange.h"
 #include "tool.h"
 
+class QCheckBox;
 class QRadioButton;
 
 class DrawModeTool : public Tool
@@ -45,7 +46,7 @@ private:
     bool fillModeSelected_ = false;
     QWidget *fillGroupWidget_ = nullptr;
     QRadioButton *brushModeBtn_ = nullptr;
-    QRadioButton *replaceModeBtn_ = nullptr;
+    QCheckBox *replaceModeBtn_ = nullptr;
     QRadioButton *randomModeBtn_ = nullptr;
     QList<QRadioButton *> generalModeBtns_;    // disabled when restrictToColorAndRandom
     QList<QRadioButton *> fillSensitiveBtns_;  // disabled when restrictToColorAndRandom or hasFill

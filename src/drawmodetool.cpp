@@ -37,6 +37,7 @@ void DrawModeTool::setBuffer(Buffer *buffer)
         connect(buffer_, &Buffer::penChanged, this, &DrawModeTool::onPenChanged);
     }
     applyMode();
+    if (replaceModeBtn_) replaceModeBtn_->setChecked(buffer_ && buffer_->replaceMode());
 }
 
 void DrawModeTool::onToolChanged(Tool *)
@@ -68,6 +69,10 @@ void DrawModeTool::onPenChanged(Pen *)
     if (buffer_ && !isModeAvailable(buffer_->paintMode())) {
         selectedMode_ = Buffer::Color;
         buffer_->setPaintMode(Buffer::Color);
+    }
+    if (buffer_ && !qobject_cast<Brush *>(buffer_->pen()) && buffer_->replaceMode()) {
+        buffer_->setReplaceMode(false);
+        if (replaceModeBtn_) replaceModeBtn_->setChecked(false);
     }
 }
 
@@ -127,7 +132,6 @@ bool DrawModeTool::isModeAvailable(Buffer::PaintMode mode) const
     switch (mode) {
     case Buffer::Color:      return true;
     case Buffer::BrushMode:   return brushActive && allowsBrushBtn;
-    case Buffer::Replace:     return brushActive;
     case Buffer::Random:      return restricted;
     case Buffer::Mix:
     case Buffer::Smear:
@@ -227,7 +231,12 @@ QWidget *DrawModeTool::createOptionsWidget()
     col1->addWidget(makeStub("Perspective","Brush fill mode"));
     col1->addStretch();
     addHSep(col1);
-    replaceModeBtn_ = makeMode("Replace",  Buffer::Replace, "Replace draw brush");
+    replaceModeBtn_ = new QCheckBox("Replace", w);
+    replaceModeBtn_->setToolTip("Stamp full bounding rect including transparent pixels");
+    replaceModeBtn_->setChecked(buffer_ && buffer_->replaceMode());
+    connect(replaceModeBtn_, &QCheckBox::toggled, [this](bool on) {
+        if (buffer_) buffer_->setReplaceMode(on);
+    });
     col1->addWidget(replaceModeBtn_);
     mainRow->addLayout(col1);
 

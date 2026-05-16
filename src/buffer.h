@@ -17,7 +17,7 @@ class Buffer : public QObject
 {
     Q_OBJECT
 public:
-    enum PaintMode { Color, Replace, Smear, Smooth, Range, AverageSmear, Cycle, Random,
+    enum PaintMode { Color, Smear, Smooth, Range, AverageSmear, Cycle, Random,
                      Tint, Colorize, Brighten, Darken, Mix, Negative,
                      Dither1, Dither2, Transparent, BrushMode };
 
@@ -51,6 +51,8 @@ public:
     void setColor(unsigned colorIndex, const QColor &color);
     void setPaintMode(PaintMode mode);
     PaintMode paintMode() const;
+    void setReplaceMode(bool on) { replaceMode_ = on; }
+    bool replaceMode() const { return replaceMode_; }
     const QImage &brushStamp() const;
     int brushTransparentIndex() const;
     void setSmearDirection(const QPoint &dir);
@@ -141,6 +143,7 @@ private:
     unsigned paintColor_;
     unsigned eraseColor_;
     PaintMode paintMode_;
+    bool replaceMode_;
     QPoint smearDirection_;
     int cycleIndex_;
     int lastCycleColor_;

@@ -276,7 +276,6 @@ void Pen::applyPixelMode(const QPoint &p, Buffer *buffer,
     unsigned eraseC = isErase ? paintColor : eraseColor;
     switch (mode) {
     case Buffer::Color:
-    case Buffer::Replace:
         if (buffer->image().rect().contains(p))
             buffer->image().setPixel(p, paintC);
         break;
@@ -300,6 +299,6 @@ void Pen::applyPixelMode(const QPoint &p, Buffer *buffer,
     case Buffer::Dither1:      ditherPixel(p, buffer, paintC, eraseC, false); break;
     case Buffer::Dither2:      ditherPixel(p, buffer, paintC, eraseC, true); break;
     case Buffer::Transparent:  transparentPixel(p, buffer, paintC); break;
-    default: break; // BrushMode, Cycle, Random: callers handle these before calling applyPixelMode
+    default: break; // Brush, Cycle, Random: callers handle these before calling applyPixelMode
     }
 }

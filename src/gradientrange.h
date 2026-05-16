@@ -105,7 +105,6 @@ inline QString paintModeName(Buffer::PaintMode mode)
 {
     switch (mode) {
     case Buffer::Color:       return "Color";
-    case Buffer::Replace:      return "Replace";
     case Buffer::Smear:        return "Smear";
     case Buffer::Smooth:       return "Smooth";
     case Buffer::Range:        return "Range";
