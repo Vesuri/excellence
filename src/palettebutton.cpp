@@ -26,14 +26,13 @@ void PaletteButton::paintEvent(QPaintEvent *)
     painter.setFont(f);
     painter.drawText(r, Qt::AlignCenter, QString::number(paletteIndex_));
 
-    painter.setClipping(false);
     if (isEraseColor_) {
         painter.setPen(QColor(0x33, 0x75, 0xe6));
-        painter.drawRect(r.adjusted(-1, -1, 1, 1));
+        painter.drawRect(r.adjusted(0, 0, -1, -1));
     }
     if (isPaintColor_) {
         painter.setPen(Qt::white);
-        painter.drawRect(r.adjusted(-1, -1, 1, 1));
+        painter.drawRect(r.adjusted(0, 0, -1, -1));
     }
 }
 
