@@ -82,6 +82,10 @@ QRect DrawTool::move(const QPoint &point)
         }
         return QRect();
     } else {
+        // pathPoints_ is empty after a rubber band confirmation (press cleared it but didn't
+        // re-append the start point). Don't begin a new shape until the next press.
+        if (pathPoints_.isEmpty())
+            return QRect();
         QRect changedRect;
         buffer_->setSmearDirection(point - previousPoint);
         Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });

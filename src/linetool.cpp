@@ -182,6 +182,10 @@ QRect LineTool::move(const QPoint &point)
 
     // Connected lines / filled polygon
     if (!active_) {
+        // Only paint the hover cursor when no button is held. Button-held + !active means
+        // we're between a rubber band confirmation and the next press — suppress drawing.
+        if (mouseButton_ != Qt::NoButton)
+            return QRect();
         Pen *p = mode_ == FilledPolygon ? buffer_->toolPen() : buffer_->pen();
         return p->paint(point, buffer_);
     }
