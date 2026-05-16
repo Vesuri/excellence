@@ -9,7 +9,7 @@
 #include <QVBoxLayout>
 #include "buffer.h"
 #include "gradienttool.h"
-#include "ui_gradienttooloptions.h"
+#include "ui_gradienttool.h"
 
 GradientTool GradientTool::instance;
 

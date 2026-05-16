@@ -15,7 +15,7 @@
 #include "drawmodetool.h"
 #include "gradientrange.h"
 #include "pentip.h"
-#include "ui_drawmodetooloptions.h"
+#include "ui_drawmodetool.h"
 
 DrawModeTool DrawModeTool::instance;
 

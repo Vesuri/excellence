@@ -2,7 +2,7 @@
 #include <QRadioButton>
 #include <QCheckBox>
 #include <QVBoxLayout>
-#include "ui_ellipsetooloptions.h"
+#include "ui_ellipsetool.h"
 #include <QGuiApplication>
 #include <QtCore/qmath.h>
 #include <cmath>

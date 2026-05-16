@@ -6,7 +6,7 @@
 #include <QWidget>
 #include "buffer.h"
 #include "mirrortool.h"
-#include "ui_mirrortooloptions.h"
+#include "ui_mirrortool.h"
 
 MirrorTool MirrorTool::instance;
 

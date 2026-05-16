@@ -92,17 +92,17 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     bufferview.ui \
     propertiesdialog.ui \
-    airtooloptions.ui \
-    ellipsetooloptions.ui \
-    rectangletooloptions.ui \
-    zoomtooloptions.ui \
-    segmenttooloptions.ui \
-    gridlocktooloptions.ui \
-    mirrortooloptions.ui \
-    pentiptooloptions.ui \
-    brushtooloptions.ui \
-    drawmodetooloptions.ui \
-    gradienttooloptions.ui
+    airtool.ui \
+    ellipsetool.ui \
+    rectangletool.ui \
+    zoomtool.ui \
+    segmenttool.ui \
+    gridlocktool.ui \
+    mirrortool.ui \
+    pentiptool.ui \
+    brushtool.ui \
+    drawmodetool.ui \
+    gradienttool.ui
 
 RESOURCES += \
     icons/icons.qrc

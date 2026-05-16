@@ -8,7 +8,7 @@
 #include "brush.h"
 #include "buffer.h"
 #include "gridlocktool.h"
-#include "ui_gridlocktooloptions.h"
+#include "ui_gridlocktool.h"
 
 GridLockTool GridLockTool::instance;
 

@@ -7,7 +7,7 @@
 #include <QWidget>
 #include "buffer.h"
 #include "zoomtool.h"
-#include "ui_zoomtooloptions.h"
+#include "ui_zoomtool.h"
 
 ZoomTool ZoomTool::instance;
 

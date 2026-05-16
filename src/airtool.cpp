@@ -5,7 +5,7 @@
 #include <QSpinBox>
 #include <QSlider>
 #include <QRandomGenerator>
-#include "ui_airtooloptions.h"
+#include "ui_airtool.h"
 #include <QtCore/qmath.h>
 #include <cmath>
 #include "pen.h"

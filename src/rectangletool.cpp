@@ -3,7 +3,7 @@
 #include <QGridLayout>
 #include <QRadioButton>
 #include <QVBoxLayout>
-#include "ui_rectangletooloptions.h"
+#include "ui_rectangletool.h"
 #include "pen.h"
 #include "buffer.h"
 #include "undobuffer.h"

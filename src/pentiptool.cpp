@@ -11,7 +11,7 @@
 #include "pentip.h"
 #include "pentiptool.h"
 #include "undobuffer.h"
-#include "ui_pentiptooloptions.h"
+#include "ui_pentiptool.h"
 
 PenTipTool PenTipTool::instance;
 

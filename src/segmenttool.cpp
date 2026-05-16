@@ -6,7 +6,7 @@
 #include <QWidget>
 #include "buffer.h"
 #include "segmenttool.h"
-#include "ui_segmenttooloptions.h"
+#include "ui_segmenttool.h"
 
 SegmentTool SegmentTool::instance;
 

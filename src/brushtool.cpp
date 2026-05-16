@@ -16,7 +16,7 @@
 #include "undobuffer.h"
 #include "algorithms.h"
 #include "brushtool.h"
-#include "ui_brushtooloptions.h"
+#include "ui_brushtool.h"
 
 // ── BrushWellButton ──────────────────────────────────────────────────────────
 
