@@ -591,30 +591,6 @@ void BufferView::applyTransform()
     updateWindowTitle();
 }
 
-static QString paintModeName(Buffer::PaintMode mode)
-{
-    switch (mode) {
-    case Buffer::Normal:       return "Color";
-    case Buffer::Replace:      return "Replace";
-    case Buffer::Smear:        return "Smear";
-    case Buffer::Smooth:       return "Smooth";
-    case Buffer::Range:        return "Range";
-    case Buffer::AverageSmear: return "Avg Smear";
-    case Buffer::Cycle:        return "Cycle";
-    case Buffer::Random:       return "Random";
-    case Buffer::Tint:         return "Tint";
-    case Buffer::Colorize:     return "Colorize";
-    case Buffer::Brighten:     return "Brighten";
-    case Buffer::Darken:       return "Darken";
-    case Buffer::Mix:          return "Mix";
-    case Buffer::Negative:     return "Negative";
-    case Buffer::Dither1:      return "Dither 1";
-    case Buffer::Dither2:      return "Dither 2";
-    case Buffer::Transparent:  return "Transparent";
-    case Buffer::BrushMode:    return "Brush";
-    }
-    return QString();
-}
 
 void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
 {
@@ -635,12 +611,7 @@ void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
     if (buffer->tool())
         title += " | " + buffer->tool()->name();
 
-    if (!drawModeActive)
-        title += " | Color";
-    else if (buffer->paintMode() == Buffer::Normal)
-        title += " | " + gradientFillModeName(activeGradientFillMode);
-    else
-        title += " | " + paintModeName(buffer->paintMode());
+    title += " | " + effectiveDrawModeName(buffer->paintMode());
 
     title += QString(" | %1/%2").arg(buffer->paintColor()).arg(buffer->eraseColor());
 

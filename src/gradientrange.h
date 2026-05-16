@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QVector>
+#include "buffer.h"
 
 struct GradientMarker {
     int slot = 0;
@@ -89,14 +90,49 @@ inline bool gradientFillIsRadial(GradientFillMode mode)
 inline QString gradientFillModeName(GradientFillMode mode)
 {
     switch (mode) {
+    case FillFlat:       return "Color";
     case FillHorizontal: return "Horizontal";
     case FillVertical:   return "Vertical";
     case FillLinear:     return "Linear";
     case FillRadial:     return "Radial";
     case FillSpherical:  return "Spherical";
     case FillHighlight:  return "Highlight";
-    default:             return "Color";
     }
+    return {};
+}
+
+inline QString paintModeName(Buffer::PaintMode mode)
+{
+    switch (mode) {
+    case Buffer::Normal:       return "Color";
+    case Buffer::Replace:      return "Replace";
+    case Buffer::Smear:        return "Smear";
+    case Buffer::Smooth:       return "Smooth";
+    case Buffer::Range:        return "Range";
+    case Buffer::AverageSmear: return "Avg Smear";
+    case Buffer::Cycle:        return "Cycle";
+    case Buffer::Random:       return "Random";
+    case Buffer::Tint:         return "Tint";
+    case Buffer::Colorize:     return "Colorize";
+    case Buffer::Brighten:     return "Brighten";
+    case Buffer::Darken:       return "Darken";
+    case Buffer::Mix:          return "Mix";
+    case Buffer::Negative:     return "Negative";
+    case Buffer::Dither1:      return "Dither 1";
+    case Buffer::Dither2:      return "Dither 2";
+    case Buffer::Transparent:  return "Transparent";
+    case Buffer::BrushMode:    return "Brush";
+    }
+    return {};
+}
+
+inline QString effectiveDrawModeName(Buffer::PaintMode paintMode)
+{
+    if (!drawModeActive)
+        return "Color";
+    if (paintMode == Buffer::Normal)
+        return gradientFillModeName(activeGradientFillMode);
+    return paintModeName(paintMode);
 }
 
 // Returns true when draw mode is on, a gradient fill mode is selected, and the

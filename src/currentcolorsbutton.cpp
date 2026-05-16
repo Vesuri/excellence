@@ -47,6 +47,8 @@ void CurrentColorsButton::mousePressEvent(QMouseEvent *e)
 
 void CurrentColorsButton::setPaintColor(unsigned colorIndex, const QColor &color)
 {
+    if (paintColor_ == color && paintIndex_ == static_cast<int>(colorIndex))
+        return;
     paintColor_ = color;
     paintIndex_ = static_cast<int>(colorIndex);
     update();
@@ -54,6 +56,8 @@ void CurrentColorsButton::setPaintColor(unsigned colorIndex, const QColor &color
 
 void CurrentColorsButton::setEraseColor(unsigned colorIndex, const QColor &color)
 {
+    if (eraseColor_ == color && eraseIndex_ == static_cast<int>(colorIndex))
+        return;
     eraseColor_ = color;
     eraseIndex_ = static_cast<int>(colorIndex);
     update();
