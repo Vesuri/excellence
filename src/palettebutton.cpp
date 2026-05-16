@@ -13,12 +13,27 @@ PaletteButton::PaletteButton(QWidget *parent) : QAbstractButton(parent),
     setAcceptDrops(false);
 }
 
-void PaletteButton::paintEvent(QPaintEvent *event)
+void PaletteButton::paintEvent(QPaintEvent *)
 {
-    QPainter painter;
-    painter.begin(this);
-    painter.fillRect(event->rect(), color);
-    painter.end();
+    QPainter painter(this);
+    const QRect r = rect();
+    painter.fillRect(r, color);
+
+    int luma = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
+    painter.setPen(luma > 128 ? Qt::black : Qt::white);
+    QFont f = painter.font();
+    f.setPixelSize(9);
+    painter.setFont(f);
+    painter.drawText(r, Qt::AlignCenter, QString::number(paletteIndex_));
+
+    if (isEraseColor_) {
+        painter.setPen(QColor(0x33, 0x75, 0xe6));
+        painter.drawRect(r.adjusted(0, 0, -1, -1));
+    }
+    if (isPaintColor_) {
+        painter.setPen(Qt::white);
+        painter.drawRect(r.adjusted(0, 0, -1, -1));
+    }
 }
 
 void PaletteButton::mousePressEvent(QMouseEvent *event)
@@ -85,6 +100,19 @@ void PaletteButton::setPaletteIndex(unsigned paletteIndex)
 void PaletteButton::setColor(const QColor &color)
 {
     this->color = color;
+    update();
+}
 
+void PaletteButton::setIsPaintColor(bool isPaintColor)
+{
+    if (isPaintColor_ == isPaintColor) return;
+    isPaintColor_ = isPaintColor;
+    update();
+}
+
+void PaletteButton::setIsEraseColor(bool isEraseColor)
+{
+    if (isEraseColor_ == isEraseColor) return;
+    isEraseColor_ = isEraseColor;
     update();
 }

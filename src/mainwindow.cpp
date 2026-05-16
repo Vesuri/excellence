@@ -282,6 +282,8 @@ void MainWindow::setBuffer(Buffer *newBuffer)
 
     updatePalette();
     connect(buffer, SIGNAL(paletteModified()), this, SLOT(updatePalette()));
+    connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updatePalette()));
+    connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updatePalette()));
     paletteRestorePoint_ = buffer->image().colorTable();
     paletteUndoSnapshot_ = paletteRestorePoint_;
     connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), penTip, SLOT(setPaintColor(unsigned)));
@@ -303,9 +305,13 @@ void MainWindow::setBuffer(Buffer *newBuffer)
 
 void MainWindow::updatePalette()
 {
+    unsigned paintIdx = buffer->paintColor();
+    unsigned eraseIdx = buffer->eraseColor();
     for (int i = 0; i < buffer->image().colorCount(); i++) {
         PaletteButton *button = static_cast<PaletteButton *>(ui->paletteLayout->itemAt(i)->widget());
         button->setColor(QColor(buffer->image().color(i)));
+        button->setIsPaintColor(static_cast<unsigned>(i) == paintIdx);
+        button->setIsEraseColor(static_cast<unsigned>(i) == eraseIdx);
     }
 }
 

@@ -14,6 +14,8 @@ public:
     unsigned paletteIndex() const;
     void setPaletteIndex(unsigned paletteIndex);
     void setColor(const QColor &color);
+    void setIsPaintColor(bool isPaintColor);
+    void setIsEraseColor(bool isEraseColor);
 
     void paintEvent(QPaintEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
@@ -29,6 +31,8 @@ private:
     QColor color;
     bool paintButtonDown;
     bool eraseButtonDown;
+    bool isPaintColor_ = false;
+    bool isEraseColor_ = false;
     QPoint dragStartPos_;
 };
 
