@@ -4,6 +4,7 @@
 #include <QList>
 #include <QPoint>
 #include "tool.h"
+#include "gradientrubberband.h"
 
 class DrawTool : public Tool
 {
@@ -21,6 +22,8 @@ public:
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
+    void cancel() override;
+    QString status() const override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
@@ -30,6 +33,7 @@ protected:
 private:
     QRect draw(const QPoint &point);
     QRect polygonFill(int fillColor, const QPoint &to);
+    QRect applyPolygonGradient(const QList<QPoint> &path, const QPoint &gradFrom, const QPoint &gradTo);
 
     DrawMode drawMode;
     QPoint startingPoint;
@@ -37,6 +41,8 @@ private:
     QPoint lastStampedPoint;
     QRect drawnBounds_;
     QList<QPoint> pathPoints_;
+    GradientRubberBand rubberBand_;
+    QList<QPoint> pendingPathPoints_;
 
     static DrawTool instance;
     static const char* icons[];

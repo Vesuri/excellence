@@ -127,7 +127,7 @@ int colorIndex(float t, int pixelX, int pixelY,
     return markers.last().colorIndex;
 }
 
-static float conformRadius(const QRect &rect, const QPoint &from)
+float conformRadius(const QRect &rect, const QPoint &from)
 {
     float maxDist = 1.0f;
     const QPoint corners[] = { rect.topLeft(), rect.topRight(), rect.bottomLeft(), rect.bottomRight() };

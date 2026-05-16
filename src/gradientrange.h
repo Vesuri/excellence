@@ -1,6 +1,7 @@
 #ifndef GRADIENTRANGE_H
 #define GRADIENTRANGE_H
 
+#include <QString>
 #include <QVector>
 
 struct GradientMarker {
@@ -83,6 +84,19 @@ extern bool centerFill;
 inline bool gradientFillIsRadial(GradientFillMode mode)
 {
     return mode == FillRadial || mode == FillSpherical || mode == FillHighlight;
+}
+
+inline QString gradientFillModeName(GradientFillMode mode)
+{
+    switch (mode) {
+    case FillHorizontal: return "Horizontal";
+    case FillVertical:   return "Vertical";
+    case FillLinear:     return "Linear";
+    case FillRadial:     return "Radial";
+    case FillSpherical:  return "Spherical";
+    case FillHighlight:  return "Highlight";
+    default:             return "Color";
+    }
 }
 
 // Returns true when draw mode is on, a gradient fill mode is selected, and the

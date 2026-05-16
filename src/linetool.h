@@ -4,6 +4,7 @@
 #include <QList>
 #include <QPoint>
 #include "tool.h"
+#include "gradientrubberband.h"
 
 class UndoBuffer;
 
@@ -38,6 +39,7 @@ private:
     QRect paintPixel(const QPoint &point);
     QRect lineBoundingRect(const QPoint &from, const QPoint &to) const;
     QRect polygonFill();
+    QRect applyPolygonGradient(const QList<QPoint> &verts, const QPoint &gradFrom, const QPoint &gradTo);
 
     Mode mode_;
 
@@ -52,6 +54,9 @@ private:
     QPoint lastPoint_;
     QList<QPoint> vertices_;
     UndoBuffer *dragUndoBuffer_;
+
+    GradientRubberBand rubberBand_;
+    QList<QPoint> pendingVertices_;
 
     static LineTool instance;
 };

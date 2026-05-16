@@ -22,6 +22,7 @@
 #include "cleartool.h"
 #include "buffer.h"
 #include "bufferview.h"
+#include "gradientrange.h"
 #include "gridlocktool.h"
 #include "gradienttool.h"
 #include "mirrortool.h"
@@ -593,7 +594,7 @@ void BufferView::applyTransform()
 static QString paintModeName(Buffer::PaintMode mode)
 {
     switch (mode) {
-    case Buffer::Normal:       return "Normal";
+    case Buffer::Normal:       return "Color";
     case Buffer::Replace:      return "Replace";
     case Buffer::Smear:        return "Smear";
     case Buffer::Smooth:       return "Smooth";
@@ -607,8 +608,8 @@ static QString paintModeName(Buffer::PaintMode mode)
     case Buffer::Darken:       return "Darken";
     case Buffer::Mix:          return "Mix";
     case Buffer::Negative:     return "Negative";
-    case Buffer::Dither1:      return "Dither1";
-    case Buffer::Dither2:      return "Dither2";
+    case Buffer::Dither1:      return "Dither 1";
+    case Buffer::Dither2:      return "Dither 2";
     case Buffer::Transparent:  return "Transparent";
     case Buffer::BrushMode:    return "Brush";
     }
@@ -634,7 +635,12 @@ void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
     if (buffer->tool())
         title += " | " + buffer->tool()->name();
 
-    title += " | " + paintModeName(buffer->paintMode());
+    if (!drawModeActive)
+        title += " | Color";
+    else if (buffer->paintMode() == Buffer::Normal)
+        title += " | " + gradientFillModeName(activeGradientFillMode);
+    else
+        title += " | " + paintModeName(buffer->paintMode());
 
     title += QString(" | %1/%2").arg(buffer->paintColor()).arg(buffer->eraseColor());
 

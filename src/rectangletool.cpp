@@ -44,6 +44,13 @@ void RectangleTool::setBuffer(Buffer *buffer)
 
 QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
+    if (rubberBand_.pending) {
+        QPoint savedFrom = rubberBand_.from;
+        QRect savedFill = pendingFillRect_;
+        rubberBand_.clear();
+        return applyGradientRect(savedFill, savedFrom, point);
+    }
+
     startPoint = point;
 
     QRect rect = changes(point);
@@ -53,6 +60,8 @@ QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 
 QRect RectangleTool::hover(const QPoint &point)
 {
+    if (rubberBand_.pending)
+        return rubberBand_.hoverRect(point, buffer_->image().rect());
     Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
     return p->rect(point);
 }
@@ -60,6 +69,8 @@ QRect RectangleTool::hover(const QPoint &point)
 QRect RectangleTool::move(const QPoint &point)
 {
     if (mouseButton_ == Qt::NoButton) {
+        if (rubberBand_.pending)
+            return rubberBand_.draw(point, buffer_->image());
         Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
         return p->paint(point, buffer_);
     }
@@ -83,7 +94,12 @@ QRect RectangleTool::move(const QPoint &point)
                && gradientFillActive()) {
         changedRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-        drawGradientRect(changedRect, point);
+        if (activeGradientFillMode == FillLinear) {
+            // Show flat fill during drag; gradient direction chosen via rubber band after release.
+            Algorithms::fillRectangle(p0, p1, drawLambda);
+        } else {
+            drawGradientRect(changedRect, point);
+        }
     } else {
         Algorithms::fillRectangle(p0, p1, changesLambda);
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
@@ -108,7 +124,17 @@ QRect RectangleTool::release(const QPoint &point)
         Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &pt) { changedRect = changedRect.united(this->draw(pt)); });
     } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
                && gradientFillActive()) {
-        changedRect = drawGradientRect(QRect(p0, p1).normalized().intersected(buffer_->image().rect()), point);
+        QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
+        if (activeGradientFillMode == FillLinear) {
+            // Flat fill now; rubber band selects gradient direction.
+            Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &pt) {
+                changedRect = changedRect.united(draw(pt));
+            });
+            pendingFillRect_ = fillRect;
+            rubberBand_.start(fillRect.center());
+        } else {
+            changedRect = drawGradientRect(fillRect, point);
+        }
     } else {
         Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &pt) { changedRect = changedRect.united(this->draw(pt)); });
     }
@@ -153,21 +179,40 @@ void RectangleTool::setAnchorMode(bool centerToCorner)
     anchorMode_ = centerToCorner ? CenterToCorner : CornerToCorner;
 }
 
-QRect RectangleTool::drawGradientRect(const QRect &fillRect, const QPoint &current)
+QRect RectangleTool::applyGradientRect(const QRect &fillRect, const QPoint &gradFrom, const QPoint &gradTo)
 {
     QImage &image = buffer_->image();
     const GradientRange *range = &gradientRanges[activeGradientRange];
-    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
-    QPoint from = (centerFill && isRadial) ? fillRect.center() : startPoint;
     QRect conformRect = conformFill ? fillRect : QRect();
     for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
         for (int x = fillRect.left(); x <= fillRect.right(); x++) {
-            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, from, current, conformRect);
+            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, conformRect);
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
         }
     }
     return fillRect;
+}
+
+QRect RectangleTool::drawGradientRect(const QRect &fillRect, const QPoint &current)
+{
+    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
+    QPoint from = (centerFill && isRadial) ? fillRect.center() : startPoint;
+    return applyGradientRect(fillRect, from, current);
+}
+
+void RectangleTool::cancel()
+{
+    if (rubberBand_.pending) {
+        rubberBand_.clear();
+        buffer_->clearHoverPreview();
+        buffer_->undo();
+    }
+}
+
+QString RectangleTool::status() const
+{
+    return rubberBand_.status();
 }
 
 QRect RectangleTool::changes(const QPoint &point)

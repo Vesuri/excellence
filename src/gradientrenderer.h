@@ -13,6 +13,9 @@ namespace GradientRenderer {
     int colorIndex(float t, int pixelX, int pixelY,
                    const GradientRange *range, const QImage &image);
 
+    // Returns the maximum distance from `from` to any corner of `rect`.
+    float conformRadius(const QRect &rect, const QPoint &from);
+
     // Computes the t value (0..1) for a pixel based on the fill mode.
     // For Horizontal/Vertical, from/to define the start and end of the gradient span.
     // conformRect: when valid, scales the gradient to the fill bounding rect instead of

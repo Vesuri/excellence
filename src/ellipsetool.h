@@ -4,6 +4,7 @@
 #include <QPoint>
 #include "tool.h"
 #include "undobuffer.h"
+#include "gradientrubberband.h"
 
 class EllipseTool : public Tool
 {
@@ -23,6 +24,7 @@ public:
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
     void cancel() override;
+    QString status() const override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
@@ -39,6 +41,7 @@ private:
     void cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const;
     void computeEllipseParams(const QPoint &p0, const QPoint &p1);
     QRect drawEllipseShape(double angle, bool applyGradient = false);
+    QRect applyGradientEllipse(double angle, const QPoint &gradFrom, const QPoint &gradTo);
     QRect ellipseBoundingRect(double angle) const;
     QRect draw(const QPoint &point);
 
@@ -51,6 +54,8 @@ private:
     int cx_, cy_, rx_, ry_;
     double rotationAngle_;
     UndoBuffer *undoBuffer_;
+    GradientRubberBand rubberBand_;
+    double pendingAngle_ = 0.0;
 
     static EllipseTool instance;
     static const char *icons[];

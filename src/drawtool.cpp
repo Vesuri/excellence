@@ -42,6 +42,18 @@ void DrawTool::setBuffer(Buffer *buffer)
 
 QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
+    if (rubberBand_.pending) {
+        QPoint savedFrom = rubberBand_.from;
+        QList<QPoint> savedPath = pendingPathPoints_;
+        rubberBand_.clear();
+        // Reset draw state so the subsequent release() produces a no-op shape
+        // instead of splicing the confirmation click into the previous polygon.
+        startingPoint = point;
+        previousPoint = point;
+        pathPoints_.clear();
+        return applyPolygonGradient(savedPath, savedFrom, point);
+    }
+
     startingPoint = point;
     previousPoint = point;
     lastStampedPoint = point;
@@ -57,6 +69,8 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 QRect DrawTool::move(const QPoint &point)
 {
     if (mouseButton_ == Qt::NoButton) {
+        if (rubberBand_.pending)
+            return rubberBand_.draw(point, buffer_->image());
         return draw(point);
     } else if (drawMode == Dotted) {
         QPoint delta = point - lastStampedPoint;
@@ -81,6 +95,8 @@ QRect DrawTool::move(const QPoint &point)
 
 QRect DrawTool::hover(const QPoint &point)
 {
+    if (rubberBand_.pending)
+        return rubberBand_.hoverRect(point, buffer_->image().rect());
     Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
     return p->rect(point);
 }
@@ -101,7 +117,19 @@ QRect DrawTool::release(const QPoint &point)
         int fillColor = static_cast<int>(mouseButton_ == Qt::RightButton
                                          ? buffer_->eraseColor()
                                          : buffer_->paintColor());
-        changedRect = changedRect.united(polygonFill(fillColor, point));
+        if (mouseButton_ == Qt::LeftButton && gradientFillActive() && activeGradientFillMode == FillLinear
+            && pathPoints_.size() >= 3) {
+            // Flat fill, then rubber band for direction.
+            QRect polyBbox;
+            for (const QPoint &p : pathPoints_) polyBbox = polyBbox.united(QRect(p, p));
+            changedRect = changedRect.united(GradientRenderer::polygonFillScanline(
+                buffer_->image(), pathPoints_, fillColor, false, nullptr,
+                FillFlat, QPoint(), QPoint(), QRect()));
+            pendingPathPoints_ = pathPoints_;
+            rubberBand_.start(polyBbox.center());
+        } else {
+            changedRect = changedRect.united(polygonFill(fillColor, point));
+        }
         return changedRect;
     }
 }
@@ -114,6 +142,32 @@ QRect DrawTool::draw(const QPoint &point)
     } else {
         return p->paint(point, buffer_);
     }
+}
+
+void DrawTool::cancel()
+{
+    if (rubberBand_.pending) {
+        rubberBand_.clear();
+        pendingPathPoints_.clear();
+        buffer_->clearHoverPreview();
+        buffer_->undo();
+    }
+}
+
+QString DrawTool::status() const
+{
+    return rubberBand_.status();
+}
+
+QRect DrawTool::applyPolygonGradient(const QList<QPoint> &path, const QPoint &gradFrom, const QPoint &gradTo)
+{
+    const GradientRange *range = &gradientRanges[activeGradientRange];
+    QRect polyBbox;
+    for (const QPoint &p : path) polyBbox = polyBbox.united(QRect(p, p));
+    QRect conformRect = conformFill ? polyBbox : QRect();
+    return GradientRenderer::polygonFillScanline(buffer_->image(), path,
+        static_cast<int>(buffer_->paintColor()), true, range,
+        activeGradientFillMode, gradFrom, gradTo, conformRect);
 }
 
 QRect DrawTool::polygonFill(int fillColor, const QPoint &to)

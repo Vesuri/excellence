@@ -4,6 +4,8 @@
 #include <QVBoxLayout>
 #include <QGuiApplication>
 #include <QtCore/qmath.h>
+#include <cmath>
+#include <climits>
 #include "pen.h"
 #include "buffer.h"
 #include "algorithms.h"
@@ -35,6 +37,12 @@ void EllipseTool::resetState()
 
 void EllipseTool::cancel()
 {
+    if (rubberBand_.pending) {
+        rubberBand_.clear();
+        buffer_->clearHoverPreview();
+        buffer_->undo();
+        return;
+    }
     if (phase_ == 0) return;
     if (undoBuffer_) {
         undoBuffer_->apply(buffer_);
@@ -214,10 +222,24 @@ QRect EllipseTool::draw(const QPoint &point)
 
 QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
+    if (rubberBand_.pending) {
+        QPoint savedFrom = rubberBand_.from;
+        double savedAngle = pendingAngle_;
+        rubberBand_.clear();
+        return applyGradientEllipse(savedAngle, savedFrom, point);
+    }
+
     if (rotateMode_ && phase_ == 2) {
         if (mouseButton_ == Qt::RightButton) {
             resetState();
             return QRect();
+        }
+        if (!erasing_ && gradientFillActive() && activeGradientFillMode == FillLinear) {
+            QRect r = drawEllipseShape(rotationAngle_, false);
+            pendingAngle_ = rotationAngle_;
+            rubberBand_.start(QPoint(cx_, cy_));
+            resetState();
+            return r;
         }
         QRect r = drawEllipseShape(rotationAngle_, true);
         resetState();
@@ -238,6 +260,12 @@ QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 
 QRect EllipseTool::move(const QPoint &point)
 {
+    if (rubberBand_.pending) {
+        if (mouseButton_ == Qt::NoButton)
+            return rubberBand_.draw(point, buffer_->image());
+        return {};
+    }
+
     if (rotateMode_ && phase_ == 2 && mouseButton_ == Qt::NoButton) {
         rotationAngle_ = qAtan2((double)(point.y() - cy_), (double)(point.x() - cx_));
         return drawEllipseShape(rotationAngle_, true);
@@ -265,7 +293,9 @@ QRect EllipseTool::move(const QPoint &point)
 
     QRect changedRect = ellipseBoundingRect(0.0);
     undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-    drawEllipseShape(0.0, true);
+    // Use flat fill during drag for linear gradient; gradient applied after rubber band.
+    bool useGradient = !(activeGradientFillMode == FillLinear && gradientFillActive() && !erasing_);
+    drawEllipseShape(0.0, useGradient);
     return changedRect;
 }
 
@@ -291,6 +321,15 @@ QRect EllipseTool::release(const QPoint &point)
         return QRect();
     }
 
+    if (!erasing_ && gradientFillActive() && activeGradientFillMode == FillLinear
+        && drawMode_ == FilledEllipse) {
+        QRect r = drawEllipseShape(0.0, false);  // flat fill
+        pendingAngle_ = 0.0;
+        rubberBand_.start(QPoint(cx_, cy_));
+        resetState();  // clears phase_, undoBuffer_, but cx_/cy_/rx_/ry_ are not members of resetState
+        return r;
+    }
+
     QRect r = drawEllipseShape(0.0, true);
     resetState();
     return r;
@@ -300,6 +339,8 @@ QRect EllipseTool::release(const QPoint &point)
 
 QRect EllipseTool::hover(const QPoint &point)
 {
+    if (rubberBand_.pending)
+        return rubberBand_.hoverRect(point, buffer_->image().rect());
     if (phase_ == 0) {
         Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
         return p->rect(point);
@@ -346,6 +387,79 @@ void EllipseTool::setRotateMode(bool rotate)
 {
     rotateMode_ = rotate;
     if (!rotate) resetState();
+}
+
+QString EllipseTool::status() const
+{
+    return rubberBand_.status();
+}
+
+QRect EllipseTool::applyGradientEllipse(double angle, const QPoint &gradFrom, const QPoint &gradTo)
+{
+    QImage &image = buffer_->image();
+    const GradientRange *range = &gradientRanges[activeGradientRange];
+    QRect ellipseBbox = QRect(cx_ - rx_, cy_ - ry_, 2 * rx_ + 1, 2 * ry_ + 1);
+    QRect conformRect = conformFill ? ellipseBbox : QRect();
+    const bool hConform = conformFill && activeGradientFillMode == FillHorizontal;
+    const bool vConform = conformFill && activeGradientFillMode == FillVertical;
+    const double cosA = std::cos(angle), sinA = std::sin(angle);
+    const double rx2 = double(rx_) * rx_, ry2 = double(ry_) * ry_;
+
+    int xBound = 0;
+    QVector<int> colY0, colY1;
+    if (vConform) {
+        xBound = int(std::ceil(std::sqrt(rx2 * cosA * cosA + ry2 * sinA * sinA))) + 1;
+        colY0.fill(INT_MAX, 2 * xBound + 1);
+        colY1.fill(INT_MIN, 2 * xBound + 1);
+        for (int dx = -xBound; dx <= xBound; dx++) {
+            double A = sinA * sinA / rx2 + cosA * cosA / ry2;
+            double B = 2.0 * dx * cosA * sinA * (1.0 / rx2 - 1.0 / ry2);
+            double C = double(dx) * dx * (cosA * cosA / rx2 + sinA * sinA / ry2) - 1.0;
+            double disc = B * B - 4.0 * A * C;
+            if (disc < 0) continue;
+            double sqrtD = std::sqrt(disc);
+            int y1 = cy_ + qRound((-B - sqrtD) / (2.0 * A));
+            int y2 = cy_ + qRound((-B + sqrtD) / (2.0 * A));
+            if (y1 > y2) qSwap(y1, y2);
+            colY0[dx + xBound] = y1;
+            colY1[dx + xBound] = y2;
+        }
+    }
+
+    int lastY = INT_MIN;
+    int rowX0 = 0, rowX1 = 0;
+    QRect changedRect;
+    Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, [&](const QPoint &p) {
+        QRect pixConform = conformRect;
+        if (hConform) {
+            if (p.y() != lastY) {
+                lastY = p.y();
+                int dy = p.y() - cy_;
+                double A = cosA * cosA / rx2 + sinA * sinA / ry2;
+                double B = 2.0 * dy * cosA * sinA * (1.0 / rx2 - 1.0 / ry2);
+                double C = double(dy) * dy * (sinA * sinA / rx2 + cosA * cosA / ry2) - 1.0;
+                double disc = B * B - 4.0 * A * C;
+                if (disc >= 0) {
+                    double sqrtD = std::sqrt(disc);
+                    rowX0 = cx_ + qRound((-B - sqrtD) / (2.0 * A));
+                    rowX1 = cx_ + qRound((-B + sqrtD) / (2.0 * A));
+                    if (rowX0 > rowX1) qSwap(rowX0, rowX1);
+                } else {
+                    rowX0 = rowX1 = p.x();
+                }
+            }
+            pixConform = QRect(rowX0, p.y(), rowX1 - rowX0 + 1, 1);
+        } else if (vConform) {
+            int dxi = p.x() - cx_ + xBound;
+            if (dxi >= 0 && dxi < colY0.size() && colY0[dxi] <= colY1[dxi])
+                pixConform = QRect(p.x(), colY0[dxi], 1, colY1[dxi] - colY0[dxi] + 1);
+        }
+        float t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo, pixConform);
+        int ci = GradientRenderer::colorIndex(t, p.x(), p.y(), range, image);
+        image.setPixel(p.x(), p.y(), static_cast<uint>(ci));
+        changedRect = changedRect.united(QRect(p, p));
+    });
+    return changedRect;
 }
 
 // ── Tool registration ──────────────────────────────────────────────────────

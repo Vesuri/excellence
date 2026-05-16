@@ -414,6 +414,9 @@ void Buffer::release(const QPoint &point)
 void Buffer::doubleClick(const QPoint &point)
 {
     if (!tool_) return;
+    // Save pre-modification state so the subsequent release() can create a valid undo entry.
+    if (preModificationImage.isNull())
+        preModificationImage = image_.copy();
     QRect area = tool_->doubleClick(snapToGrid(point));
     modifiedArea = modifiedArea.united(area);
     emit modified(area);

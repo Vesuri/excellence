@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QStatusBar>
 #include "currentcolorsbutton.h"
+#include "gradientrange.h"
 #include <QInputDialog>
 #include <QKeyEvent>
 #include <QLineEdit>
@@ -33,7 +34,7 @@
 static QString paintModeLabel(Buffer::PaintMode mode)
 {
     switch (mode) {
-    case Buffer::Normal:       return "Normal";
+    case Buffer::Normal:       return "Color";
     case Buffer::Replace:      return "Replace";
     case Buffer::Smear:        return "Smear";
     case Buffer::Smooth:       return "Smooth";
@@ -47,8 +48,8 @@ static QString paintModeLabel(Buffer::PaintMode mode)
     case Buffer::Darken:       return "Darken";
     case Buffer::Mix:          return "Mix";
     case Buffer::Negative:     return "Negative";
-    case Buffer::Dither1:      return "Dither1";
-    case Buffer::Dither2:      return "Dither2";
+    case Buffer::Dither1:      return "Dither 1";
+    case Buffer::Dither2:      return "Dither 2";
     case Buffer::Transparent:  return "Transparent";
     case Buffer::BrushMode:    return "Brush";
     }
@@ -892,7 +893,13 @@ void MainWindow::updateStatusBarStatic()
 
     Tool *tool = buffer->tool();
     statusToolLabel_->setText(tool ? tool->name() : QString());
-    statusModeLabel_->setText(paintModeLabel(buffer->paintMode()));
+    Buffer::PaintMode pm = buffer->paintMode();
+    if (!drawModeActive)
+        statusModeLabel_->setText("Color");
+    else if (pm == Buffer::Normal)
+        statusModeLabel_->setText(gradientFillModeName(activeGradientFillMode));
+    else
+        statusModeLabel_->setText(paintModeLabel(pm));
 
     auto colorAt = [this](unsigned index) {
         return QColor(buffer->image().color(static_cast<int>(index)));

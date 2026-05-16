@@ -3,6 +3,7 @@
 
 #include <QPoint>
 #include "tool.h"
+#include "gradientrubberband.h"
 
 class UndoBuffer;
 
@@ -23,6 +24,8 @@ public:
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
+    void cancel() override;
+    QString status() const override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
@@ -36,6 +39,7 @@ private slots:
 private:
     QRect changes(const QPoint &point);
     QRect draw(const QPoint &point);
+    QRect applyGradientRect(const QRect &fillRect, const QPoint &gradFrom, const QPoint &gradTo);
     QRect drawGradientRect(const QRect &fillRect, const QPoint &current);
     void cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const;
 
@@ -43,6 +47,8 @@ private:
     AnchorMode anchorMode_;
     QPoint startPoint;
     UndoBuffer *undoBuffer;
+    GradientRubberBand rubberBand_;
+    QRect pendingFillRect_;
 
     static RectangleTool instance;
     static const char* icons[];
