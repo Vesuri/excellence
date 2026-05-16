@@ -61,9 +61,8 @@ QWidget *ZoomTool::createOptionsWidget()
     });
     if (buffer_) {
         connect(buffer_, &Buffer::pixelGridChanged, ui_->gridCheck, [this](bool enabled) {
-            bool blocked = ui_->gridCheck->blockSignals(true);
+            QSignalBlocker b(ui_->gridCheck);
             ui_->gridCheck->setChecked(enabled);
-            ui_->gridCheck->blockSignals(blocked);
         });
     }
     connect(ui_->zoomSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {

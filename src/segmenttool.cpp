@@ -52,15 +52,9 @@ void SegmentTool::syncButtonState()
 void SegmentTool::syncWidgets()
 {
     if (!buffer_ || !ui_) return;
-    ui_->radioDistance->blockSignals(true);
-    ui_->radioDistance->setChecked(buffer_->segmentByDistance());
-    ui_->radioDistance->blockSignals(false);
-    ui_->radioPoints->blockSignals(true);
-    ui_->radioPoints->setChecked(!buffer_->segmentByDistance());
-    ui_->radioPoints->blockSignals(false);
-    ui_->spinValue->blockSignals(true);
-    ui_->spinValue->setValue(buffer_->segmentValue());
-    ui_->spinValue->blockSignals(false);
+    { QSignalBlocker b(ui_->radioDistance); ui_->radioDistance->setChecked(buffer_->segmentByDistance()); }
+    { QSignalBlocker b(ui_->radioPoints);   ui_->radioPoints->setChecked(!buffer_->segmentByDistance()); }
+    { QSignalBlocker b(ui_->spinValue);     ui_->spinValue->setValue(buffer_->segmentValue()); }
 }
 
 QWidget *SegmentTool::createOptionsWidget()

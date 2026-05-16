@@ -294,7 +294,9 @@ QWidget *PenTipTool::createOptionsWidget()
         ui_->preset5, ui_->preset6, ui_->preset7, ui_->preset8,
         ui_->preset9, ui_->preset10, ui_->preset11, ui_->preset12
     };
-    for (int i = 0; i < 12; ++i) {
+    static_assert(sizeof(btns) / sizeof(btns[0]) == sizeof(presets) / sizeof(presets[0]),
+                  "preset/button count mismatch");
+    for (int i = 0; i < (int)(sizeof(presets) / sizeof(presets[0])); ++i) {
         btns[i]->setIcon(QIcon(renderTip(presets[i].shape, presets[i].pw, presets[i].ph)));
         PenTip::Shape shape = presets[i].shape;
         int pw = presets[i].pw, ph = presets[i].ph;

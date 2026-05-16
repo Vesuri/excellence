@@ -74,32 +74,19 @@ void GradientTool::refreshPanel()
     ui_->markerBox->setRange(range);
     if (buffer_) ui_->markerBox->setBuffer(buffer_);
 
-    ui_->spreadSpin->blockSignals(true);
-    ui_->spreadSpin->setValue(range->spread());
-    ui_->spreadSpin->blockSignals(false);
+    { QSignalBlocker b(ui_->spreadSpin);    ui_->spreadSpin->setValue(range->spread()); }
 
     ui_->colorsLabel->setText(QString("Colors: %1").arg(range->colorCount()));
 
-    ui_->randomCheck->blockSignals(true);
-    ui_->randomCheck->setChecked(range->random());
-    ui_->randomCheck->blockSignals(false);
-
-    ui_->hardEdgesCheck->blockSignals(true);
-    ui_->hardEdgesCheck->setChecked(range->hardEdges());
-    ui_->hardEdgesCheck->blockSignals(false);
-
-    ui_->ditherSlider->blockSignals(true);
-    ui_->ditherSlider->setValue(range->ditherAmount());
-    ui_->ditherSlider->setEnabled(range->random());
-    ui_->ditherSlider->blockSignals(false);
-
-    ui_->cycleButton->blockSignals(true);
-    ui_->cycleButton->setChecked(range->cycling());
-    ui_->cycleButton->blockSignals(false);
-
-    ui_->speedSlider->blockSignals(true);
-    ui_->speedSlider->setValue(range->cycleSpeed());
-    ui_->speedSlider->blockSignals(false);
+    { QSignalBlocker b(ui_->randomCheck);   ui_->randomCheck->setChecked(range->random()); }
+    { QSignalBlocker b(ui_->hardEdgesCheck); ui_->hardEdgesCheck->setChecked(range->hardEdges()); }
+    {
+        QSignalBlocker b(ui_->ditherSlider);
+        ui_->ditherSlider->setValue(range->ditherAmount());
+        ui_->ditherSlider->setEnabled(range->random());
+    }
+    { QSignalBlocker b(ui_->cycleButton);   ui_->cycleButton->setChecked(range->cycling()); }
+    { QSignalBlocker b(ui_->speedSlider);   ui_->speedSlider->setValue(range->cycleSpeed()); }
 }
 
 void GradientTool::onRangeChanged()

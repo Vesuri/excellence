@@ -65,18 +65,10 @@ void MirrorTool::syncButtonState()
 void MirrorTool::syncWidgets()
 {
     if (!buffer_ || !ui_) return;
-    ui_->checkX->blockSignals(true);
-    ui_->checkX->setChecked(buffer_->mirrorX());
-    ui_->checkX->blockSignals(false);
-    ui_->checkY->blockSignals(true);
-    ui_->checkY->setChecked(buffer_->mirrorY());
-    ui_->checkY->blockSignals(false);
-    ui_->spinCX->blockSignals(true);
-    ui_->spinCX->setValue(buffer_->mirrorCenterX());
-    ui_->spinCX->blockSignals(false);
-    ui_->spinCY->blockSignals(true);
-    ui_->spinCY->setValue(buffer_->mirrorCenterY());
-    ui_->spinCY->blockSignals(false);
+    { QSignalBlocker b(ui_->checkX);  ui_->checkX->setChecked(buffer_->mirrorX()); }
+    { QSignalBlocker b(ui_->checkY);  ui_->checkY->setChecked(buffer_->mirrorY()); }
+    { QSignalBlocker b(ui_->spinCX);  ui_->spinCX->setValue(buffer_->mirrorCenterX()); }
+    { QSignalBlocker b(ui_->spinCY);  ui_->spinCY->setValue(buffer_->mirrorCenterY()); }
 }
 
 QWidget *MirrorTool::createOptionsWidget()
