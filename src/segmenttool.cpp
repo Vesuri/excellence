@@ -75,7 +75,7 @@ QWidget *SegmentTool::createOptionsWidget()
     w->setWindowTitle("Segment Draw");
 
     QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(4);
+    vbox->setSpacing(8);
     vbox->setContentsMargins(6, 6, 6, 6);
 
     radioDistance_ = new QRadioButton("Distance", w);

@@ -95,7 +95,7 @@ QWidget *MirrorTool::createOptionsWidget()
     w->setWindowTitle("Mirror Draw");
 
     QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(4);
+    vbox->setSpacing(8);
     vbox->setContentsMargins(6, 6, 6, 6);
 
     checkX_ = new QCheckBox("Mirror X", w);

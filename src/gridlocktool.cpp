@@ -78,7 +78,7 @@ QWidget *GridLockTool::createOptionsWidget()
     w->setWindowTitle("Grid Settings");
 
     QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(4);
+    vbox->setSpacing(8);
     vbox->setContentsMargins(6, 6, 6, 6);
 
     QFormLayout *form = new QFormLayout;

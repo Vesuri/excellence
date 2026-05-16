@@ -54,7 +54,7 @@ QWidget *ZoomTool::createOptionsWidget()
     w->setWindowTitle("Zoom Options");
 
     QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(4);
+    vbox->setSpacing(8);
     vbox->setContentsMargins(6, 6, 6, 6);
 
     QCheckBox *gridCheck = new QCheckBox("Show Pixel Grid [P]", w);

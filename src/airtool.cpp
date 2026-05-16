@@ -182,11 +182,12 @@ QWidget* AirTool::createOptionsWidget()
     QWidget *w = new QWidget;
     w->setWindowTitle("Airbrush");
     QVBoxLayout *vl = new QVBoxLayout(w);
-    vl->setSpacing(4);
+    vl->setSpacing(8);
     vl->setContentsMargins(6, 6, 6, 6);
 
     auto addRow = [&](const QString &label, QWidget *ctrl) {
         QHBoxLayout *hl = new QHBoxLayout;
+        hl->setSpacing(6);
         hl->addWidget(new QLabel(label));
         hl->addWidget(ctrl);
         vl->addLayout(hl);

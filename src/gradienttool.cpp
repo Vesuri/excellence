@@ -177,7 +177,7 @@ QWidget *GradientTool::createOptionsWidget()
     w->setWindowFlags(Qt::Tool);
 
     QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(4);
+    vbox->setSpacing(8);
     vbox->setContentsMargins(6, 6, 6, 6);
 
     // Range selector (1-8 buttons)
@@ -207,6 +207,7 @@ QWidget *GradientTool::createOptionsWidget()
 
     // COLORS label, SPREAD spinbox
     QHBoxLayout *infoRow = new QHBoxLayout;
+    infoRow->setSpacing(6);
     colorsLabel_ = new QLabel(QString("Colors: %1").arg(range->colorCount()), w);
     infoRow->addWidget(colorsLabel_);
 
@@ -226,6 +227,7 @@ QWidget *GradientTool::createOptionsWidget()
 
     // Dither controls
     QHBoxLayout *ditherRow = new QHBoxLayout;
+    ditherRow->setSpacing(6);
     randomCheck_ = new QCheckBox("Random", w);
     randomCheck_->setChecked(range->random());
     connect(randomCheck_, &QCheckBox::toggled, [this](bool v) {
@@ -260,6 +262,7 @@ QWidget *GradientTool::createOptionsWidget()
 
     // Cycle controls
     QHBoxLayout *cycleRow = new QHBoxLayout;
+    cycleRow->setSpacing(6);
     cycleButton_ = new QPushButton("Cycle", w);
     cycleButton_->setCheckable(true);
     cycleButton_->setChecked(range->cycling());

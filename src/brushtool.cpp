@@ -336,6 +336,7 @@ QWidget *BrushTool::createOptionsWidget()
     // ── Dimensions + Tile Cut ──────────────────────────────────────────────
     {
         QHBoxLayout *dimRow = new QHBoxLayout;
+        dimRow->setSpacing(6);
         Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
         QString dimText = brush
             ? QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height())
@@ -378,6 +379,7 @@ QWidget *BrushTool::createOptionsWidget()
 
     // ── Handle section ─────────────────────────────────────────────────────
     QHBoxLayout *handleRow = new QHBoxLayout;
+    handleRow->setSpacing(6);
 
     // Preset buttons arranged as a 3x2 grid (TL, TR / C / BL, BR)
     QGridLayout *presetGrid = new QGridLayout;
