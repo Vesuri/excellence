@@ -291,8 +291,13 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
             for (int x = x1; x <= x2; x++) {
                 if (useGradient) {
                     float t;
-                    if (fillMode == FillHighlight) {
+                    // Highlight, and Radial/Spherical with conform: normalize per-direction
+                    // to actual polygon boundary using ray-polygon intersection.
+                    if (fillMode == FillHighlight
+                            || (conform && gradientFillIsRadial(fillMode))) {
                         t = highlightTPolygon(x, y, gradFrom, polygon);
+                        if (fillMode == FillSpherical)
+                            t = 1.0f - sqrtf(1.0f - t * t);
                     } else {
                         QRect pixConform = conformRect;
                         if (hConform)
@@ -334,12 +339,18 @@ QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
     // coordinates) to avoid the wrong full-bbox t-value that polyBbox would give.
     if (polygon.size() >= 3) {
         const bool hvMode = mode == FillHorizontal || mode == FillVertical;
-        QRect edgeConformRect = (conform && !hvMode) ? polyBbox : QRect();
+        const bool shapeConform = mode == FillHighlight || (conform && gradientFillIsRadial(mode));
+        QRect edgeConformRect = (conform && !hvMode && !shapeConform) ? polyBbox : QRect();
         auto applyGrad = [&](const QPoint &p) {
             if (!image.rect().contains(p)) return;
-            float t = (mode == FillHighlight)
-                ? highlightTPolygon(p.x(), p.y(), gradFrom, polygon)
-                : computeT(p.x(), p.y(), mode, gradFrom, gradTo, edgeConformRect);
+            float t;
+            if (shapeConform) {
+                t = highlightTPolygon(p.x(), p.y(), gradFrom, polygon);
+                if (mode == FillSpherical)
+                    t = 1.0f - sqrtf(1.0f - t * t);
+            } else {
+                t = computeT(p.x(), p.y(), mode, gradFrom, gradTo, edgeConformRect);
+            }
             image.setPixel(p, static_cast<uint>(colorIndex(t, p.x(), p.y(), range, image)));
         };
         for (int i = 0; i < polygon.size(); i++)

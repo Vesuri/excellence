@@ -1,6 +1,7 @@
 #include <QImage>
 #include <QRect>
 #include <QGridLayout>
+#include <cmath>
 #include <QRadioButton>
 #include <QVBoxLayout>
 #include "ui_rectangletool.h"
@@ -190,16 +191,23 @@ QRect RectangleTool::applyGradientRect(const QRect &fillRect, const QPoint &grad
     QImage &image = buffer_->image();
     const GradientRange *range = &gradientRanges[activeGradientRange];
     const bool isHighlight = activeGradientFillMode == FillHighlight;
+    // Radial/Spherical with conform also normalize per-direction to the actual shape boundary.
+    const bool useShapeConform = isHighlight || (conformFill && gradientFillIsRadial(activeGradientFillMode));
     QList<QPoint> rectPoly;
-    if (isHighlight)
+    if (useShapeConform)
         rectPoly = {fillRect.topLeft(), fillRect.topRight(),
                     fillRect.bottomRight(), fillRect.bottomLeft()};
-    QRect conformRect = (conformFill && !isHighlight) ? fillRect : QRect();
+    QRect conformRect = (conformFill && !useShapeConform) ? fillRect : QRect();
     for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
         for (int x = fillRect.left(); x <= fillRect.right(); x++) {
-            float t = isHighlight
-                ? GradientRenderer::highlightTPolygon(x, y, gradFrom, rectPoly)
-                : GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, conformRect);
+            float t;
+            if (useShapeConform) {
+                t = GradientRenderer::highlightTPolygon(x, y, gradFrom, rectPoly);
+                if (activeGradientFillMode == FillSpherical)
+                    t = 1.0f - sqrtf(1.0f - t * t);
+            } else {
+                t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, conformRect);
+            }
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
         }

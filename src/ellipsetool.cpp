@@ -177,8 +177,10 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
         }
     }
 
-    // For FillHighlight: precompute rotated-frame origin offsets for ray-ellipse intersection.
+    // Highlight, and Radial/Spherical with conform: normalize t per-direction to the actual
+    // ellipse boundary via ray-ellipse intersection in the ellipse's rotated frame.
     const bool isHighlight = activeGradientFillMode == FillHighlight;
+    const bool useShapeConform = isHighlight || (conformFill && gradientFillIsRadial(activeGradientFillMode));
     const float fU0 = float(gradFrom.x() - cx_) * float(cosA) + float(gradFrom.y() - cy_) * float(sinA);
     const float fV0 = -float(gradFrom.x() - cx_) * float(sinA) + float(gradFrom.y() - cy_) * float(cosA);
     const float fRx2 = float(rx_) * float(rx_), fRy2 = float(ry_) * float(ry_);
@@ -187,7 +189,7 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
     int rowX0 = 0, rowX1 = 0;
     Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, [&](const QPoint &p) {
         float t;
-        if (isHighlight) {
+        if (useShapeConform) {
             // Ray: gradFrom + t*(P - gradFrom). P is at t=1.
             // Transform ray into ellipse frame, solve quadratic for boundary intersection.
             float pdx = float(p.x() - gradFrom.x());
@@ -211,6 +213,8 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
                     t = maxT > 0.5f ? qBound(0.0f, 1.0f / maxT, 1.0f) : 1.0f;
                 }
             }
+            if (activeGradientFillMode == FillSpherical)
+                t = 1.0f - sqrtf(1.0f - t * t);
         } else {
             QRect pixConform = conformRect;
             if (hConform) {

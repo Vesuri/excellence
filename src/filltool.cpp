@@ -128,9 +128,10 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
     QImage &image = buffer_->image();
     const GradientRange *range = &gradientRanges[activeGradientRange];
 
-    if (activeGradientFillMode == FillHighlight) {
-        // Ray-march from gradFrom through each pixel outward to find where the ray
-        // exits the filled region. t = dist(center, pixel) / dist(center, exit).
+    // Highlight, and Radial/Spherical with conform: normalize per-direction to the actual
+    // shape boundary. t = dist(center, pixel) / dist(center, boundary in that direction).
+    if (activeGradientFillMode == FillHighlight
+            || (conformFill && gradientFillIsRadial(activeGradientFillMode))) {
         for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
             for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
                 if (!visited_[y * visitedW_ + x]) continue;
@@ -157,6 +158,8 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
                     float distB = sqrtf(dBx * dBx + dBy * dBy);
                     t = distB > 0.5f ? qBound(0.0f, distP / distB, 1.0f) : 1.0f;
                 }
+                if (activeGradientFillMode == FillSpherical)
+                    t = 1.0f - sqrtf(1.0f - t * t);
                 int ci = GradientRenderer::colorIndex(t, x, y, range, image);
                 image.setPixel(x, y, static_cast<uint>(ci));
             }
