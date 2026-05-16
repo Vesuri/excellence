@@ -142,8 +142,8 @@ void DrawModeTool::applyMode()
     if (!buffer_)
         return;
     bool active = button_->isChecked();
-    buffer_->setPaintMode(active ? selectedMode_ : Buffer::Normal);
     drawModeActive = active;
+    buffer_->setPaintMode(active ? selectedMode_ : Buffer::Normal);
 }
 
 
