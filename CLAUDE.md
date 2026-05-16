@@ -29,7 +29,7 @@ There are no automated tests; testing is manual UI interaction.
 
 All tools inherit from `Tool` (two subtypes: `Modify` and `Zoom`). The active tool is set on `BufferView` and receives mouse press/move/release events.
 
-Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`, `PickColorTool`, `GradientTool`, `GridLockTool`, `MirrorTool`.
+Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `EllipseTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`, `PickColorTool`, `GradientTool`, `GridLockTool`, `MirrorTool`, `SegmentTool`, `PenTipTool`, `DrawModeTool`.
 
 When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism: `hover()` returns the rect to save/restore, and `move()` with `mouseButton_ == Qt::NoButton` draws the preview.
 
@@ -42,6 +42,10 @@ When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may
 **Tool-managed undo buffer for drag preview** — When a tool needs to show a live preview while a mouse button is held down (the Buffer's built-in hover/move undo only runs with `mouseButton_ == Qt::NoButton`), the tool holds its own `UndoBuffer *undoBuffer_` member. Pattern: save area in `press()`, then in each `move()` call: `undoBuffer_->apply(buffer_)`, `delete undoBuffer_`, recompute the save rect, allocate a new `UndoBuffer`, draw the preview. On `release()`: `undoBuffer_->apply(buffer_)`, `delete undoBuffer_`, draw the permanent result. See `LineTool`, `CurveTool`.
 
 **Tool cancel** — `Tool` has a virtual `cancel()` (no-op default). Multi-step tools override it to restore the canvas from their `undoBuffer_` and reset state. Called on `Escape` key in `BufferView::keyPressEvent`. Tools that implement `cancel()`: `CurveTool`, `LineTool` (both Line and connected-line modes), `EllipseTool`, `BrushTool`.
+
+**setBuffer and tool-change connection** — Tools that show a checked/active state must connect to `buffer_->toolChanged(Tool*)` to keep their button in sync. Use the base-class helpers `connectToolChecked()` and `disconnectToolChecked()` in `setBuffer()` — call `disconnectToolChecked()` before `Tool::setBuffer(buffer)`, then `connectToolChecked()` after. Tools that also need state reset on buffer switch (e.g. `CurveTool`, `LineTool`) call their reset method between the two. See any drawing tool's `setBuffer()` for the pattern.
+
+**Tool option windows** — `createOptionsWidget()` creates a floating `Qt::Tool` window opened by right-clicking the toolbar button. Conventions: outer layout uses `setSpacing(8)` and `setContentsMargins(6, 6, 6, 6)`; `QFormLayout` sub-layouts use `setSpacing(4)`; `QHBoxLayout` sub-layouts use `setSpacing(6)`; compact button grids (`QGridLayout`) use `setSpacing(2)`.
 
 **UndoBuffer bounds safety** — `UndoBuffer::apply()` uses `pos_` with no bounds check. Any rect saved into an `UndoBuffer` (including `hover()` return values) must be clipped to `buffer_->image().rect()` before use, otherwise `setPixel` will be called with out-of-bounds coordinates.
 
@@ -81,7 +85,10 @@ Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on 
 
 `Algorithms` (`algorithms.{h,cpp}`) contains:
 - Bresenham-style `line()`, `rectangle()`, `fillRectangle()`, `ellipse()`, `fillEllipse()` — used by multiple tools
-- `floodFill(QImage&, seed, targetColor, fillColor)` — scanline flood fill returning the changed rect; shared by `DrawTool` (FilledShape) and `LineTool` (FilledPolygon mode)
+- `floodFill(QImage&, seed, targetColor, fillColor)` — scanline flood fill; defined but used internally only by `FillTool` (via its own flood-fill logic)
+
+`GradientRenderer` (`gradientrenderer.{h,cpp}`) contains:
+- `polygonFillScanline(image, polygon, fillColor, useGradient, range, fillMode, gradFrom, gradTo)` — scanline polygon fill with optional gradient support; shared by `DrawTool` (FilledShape mode) and `LineTool` (FilledPolygon mode). Callers compute the gradient endpoints and pass them in; the function handles both flat and gradient fills in one pass.
 
 ### Palette Quantization
 
@@ -98,6 +105,30 @@ Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on 
 ### Image Menu
 
 `mainwindow.cpp` implements image-level operations under the Image menu. Actions are declared in `mainwindow.ui` and connected in `MainWindow::MainWindow()`. Adding a new Image menu item requires: (1) a `<action>` element in `mainwindow.ui`, (2) a `<addaction>` entry in `menuImage`, (3) a slot in `mainwindow.h`, and (4) a `connect()` + implementation in `mainwindow.cpp`.
+
+### Keyboard Shortcuts
+
+All canvas-level keyboard shortcuts are handled in `BufferView::handleKey()` (`bufferview.cpp`). When adding a new shortcut, add a `case Qt::Key_X:` there. Check for modifier keys with `event->modifiers() & Qt::ShiftModifier` etc.
+
+Currently wired tool-activation keys (plain key activates; repeated press cycles mode where applicable):
+
+| Key | Tool / Action |
+|-----|---------------|
+| `D` | DrawTool (cycles Dotted → Connected → FilledShape) |
+| `W` | LineTool (cycles Line → Connected Lines → Filled Polygon) |
+| `Q` | CurveTool (cycles Quadratic ↔ Bézier) |
+| `R` / `Shift+R` | RectangleTool (Outline / Filled) |
+| `C` / `Shift+C` | EllipseTool (Outline / Filled) |
+| `F` | FillTool |
+| `A` / `Shift+A` | AirTool / open options |
+| `T` | TextTool |
+| `B` | BrushTool (cycles Rectangle ↔ Freehand) |
+| `,` | PickColorTool (persistent) |
+| `Alt` (held) | PickColorTool (temporary; restores on release) |
+
+Other canvas shortcuts: `S` show page, `N`/`Shift+N` center/pan, `M`/`Shift+M` magnifier, `P` pixel grid, `G` grid lock, `/` mirror, `Tab` gradient cycle, `K`/`Shift+K` clear, `[`/`]` cycle palette color, `U`/`Shift+U`/`Alt+U` undo/redo, `Alt+R` flip gradient range, `Alt+J`/`Alt+Shift+J` next/prev gradient range, `J` swap buffers, arrow keys scroll, `+`/`-` zoom.
+
+Brush transform shortcuts are menu actions in `mainwindow.ui`: `x` flip H, `y` flip V, `z` rotate 90° CW, `H`/`h` double/halve, `o` outline, `Shift+O` trim, `Shift+B` restore.
 
 ## Project documents
 
