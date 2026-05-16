@@ -270,8 +270,6 @@ void MainWindow::setBuffer(Buffer *newBuffer)
         connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(runPaletteActionForEraseColor(unsigned)));
         button->setPaletteIndex(static_cast<unsigned>(i));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
-        button->setAttribute(Qt::WA_Hover);
-        button->installEventFilter(this);
         ui->paletteLayout->addWidget(button, row, column);
         column++;
         if (column >= paletteButtonPerRow) {
@@ -854,16 +852,6 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
             }
         }
         break;
-    case QEvent::HoverEnter: {
-        PaletteButton *paletteButton = qobject_cast<PaletteButton *>(watched);
-        if (paletteButton) {
-            updateWindowTitle(paletteButton->paletteIndex());
-        }
-        break;
-    }
-    case QEvent::HoverLeave:
-        updateWindowTitle();
-        break;
     default:
         break;
     }
@@ -917,7 +905,7 @@ void MainWindow::updateCursorStatus(QPoint point, bool valid)
     }
 }
 
-void MainWindow::updateWindowTitle(int paletteIndex)
+void MainWindow::updateWindowTitle()
 {
     QString windowTitle;
 
@@ -943,10 +931,6 @@ void MainWindow::updateWindowTitle(int paletteIndex)
     default:
         windowTitle = buffer && buffer->isDirty() ? "*Excellence" : "Excellence";
         break;
-    }
-
-    if (paletteIndex >= 0) {
-        windowTitle.append(paletteMode == Pick ? QString(" %1").arg(paletteIndex) : QString(" %1->%2").arg(buffer->paintColor()).arg(paletteIndex));
     }
 
     setWindowTitle(windowTitle);
