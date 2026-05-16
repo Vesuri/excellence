@@ -22,6 +22,7 @@
 #include "cleartool.h"
 #include "buffer.h"
 #include "bufferview.h"
+#include "drawmodetool.h"
 #include "gradientrange.h"
 #include "gridlocktool.h"
 #include "gradienttool.h"

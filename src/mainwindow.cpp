@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QStatusBar>
 #include "currentcolorsbutton.h"
+#include "drawmodetool.h"
 #include "gradientrange.h"
 #include <QInputDialog>
 #include <QKeyEvent>

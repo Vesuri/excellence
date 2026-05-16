@@ -53,4 +53,13 @@ private:
     static DrawModeTool instance;
 };
 
+inline QString effectiveDrawModeName(Buffer::PaintMode paintMode)
+{
+    if (!drawModeActive)
+        return "Color";
+    if (paintMode == Buffer::Color)
+        return gradientFillModeName(activeGradientFillMode);
+    return paintModeName(paintMode);
+}
+
 #endif // DRAWMODETOOL_H

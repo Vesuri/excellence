@@ -6,6 +6,7 @@
 #include <QRect>
 #include <QImage>
 #include <QList>
+#include <QString>
 
 class Tool;
 class UndoBuffer;
@@ -166,5 +167,29 @@ private:
     QPoint segmentLastVisited_;
     QList<QPoint> segmentPath_;
 };
+
+inline QString paintModeName(Buffer::PaintMode mode)
+{
+    switch (mode) {
+    case Buffer::Color:       return "Color";
+    case Buffer::Smear:       return "Smear";
+    case Buffer::Smooth:      return "Smooth";
+    case Buffer::Range:       return "Range";
+    case Buffer::AverageSmear: return "Avg Smear";
+    case Buffer::Cycle:       return "Cycle";
+    case Buffer::Random:      return "Random";
+    case Buffer::Tint:        return "Tint";
+    case Buffer::Colorize:    return "Colorize";
+    case Buffer::Brighten:    return "Brighten";
+    case Buffer::Darken:      return "Darken";
+    case Buffer::Mix:         return "Mix";
+    case Buffer::Negative:    return "Negative";
+    case Buffer::Dither1:     return "Dither 1";
+    case Buffer::Dither2:     return "Dither 2";
+    case Buffer::Transparent: return "Transparent";
+    case Buffer::BrushMode:   return "Brush";
+    }
+    return {};
+}
 
 #endif // BUFFER_H
