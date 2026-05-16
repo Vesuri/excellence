@@ -30,7 +30,7 @@ protected:
     QWidget *createOptionsWidget() override;
 
 signals:
-    void selectedModeChanged(Buffer::PaintMode mode);
+    void previousModeChanged(Buffer::PaintMode mode);
 
 private slots:
     void onToolChanged(Tool *tool);
@@ -42,7 +42,7 @@ private:
     void updateAvailability();
     bool isModeAvailable(Buffer::PaintMode mode) const;
 
-    Buffer::PaintMode selectedMode_;
+    Buffer::PaintMode previousMode_;
     bool fillModeSelected_ = false;
     QWidget *fillGroupWidget_ = nullptr;
     QRadioButton *brushModeBtn_ = nullptr;
