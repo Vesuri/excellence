@@ -209,7 +209,9 @@ float computeT(int px, int py,
         float rx = float(px - from.x());
         float ry = float(py - from.y());
         float raw = qBound(0.0f, sqrtf(rx * rx + ry * ry) / radius, 1.0f);
-        return sinf(raw * float(M_PI) / 2.0f);
+        // Hemisphere geometry: slow near center, rapidly accelerating toward edges,
+        // matching the curvature of a sphere's surface falling away from the viewer.
+        return 1.0f - sqrtf(1.0f - raw * raw);
     }
     case FillHighlight: {
         // Shape tools compute highlight t via highlightTPolygon/ellipse; this is a
