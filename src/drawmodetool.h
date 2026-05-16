@@ -30,7 +30,7 @@ protected:
     QWidget *createOptionsWidget() override;
 
 signals:
-    void previousModeChanged(Buffer::PaintMode mode);
+    void activeModeChanged(Buffer::PaintMode mode);
 
 private slots:
     void onToolChanged(Tool *tool);

@@ -65,7 +65,7 @@ void DrawModeTool::onPaintModeChanged(Buffer::PaintMode mode)
         drawModeActive = false;
     }
     if (!fillModeSelected_)
-        emit previousModeChanged(previousMode_);
+        emit activeModeChanged(mode);
 }
 
 void DrawModeTool::onPenChanged(Pen *)
@@ -105,7 +105,7 @@ void DrawModeTool::updateAvailability()
     // Sync radio-button selection with fill availability.
     if (!hasFill && fillModeSelected_) {
         fillModeSelected_ = false;
-        emit previousModeChanged(previousMode_);
+        emit activeModeChanged(buffer_->paintMode());
     } else if (hasFill && !fillModeSelected_ && activeGradientFillMode != FillFlat) {
         fillModeSelected_ = true;
         for (auto &fb : fillModeBtns_) {
@@ -184,7 +184,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     auto makeMode = [&](const char *label, Buffer::PaintMode mode, const char *tooltip = nullptr) -> QRadioButton * {
         QRadioButton *btn = new QRadioButton(label, w);
         if (tooltip) btn->setToolTip(tooltip);
-        btn->setChecked(!fillModeSelected_ && previousMode_ == mode);
+        btn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == mode);
         modeGroup->addButton(btn);
         connect(btn, &QRadioButton::clicked, [this, mode]() {
             fillModeSelected_ = false;
@@ -193,7 +193,7 @@ QWidget *DrawModeTool::createOptionsWidget()
             button_->setChecked(isSelectableMode(mode));
             applyMode();
         });
-        connect(this, &DrawModeTool::previousModeChanged, btn, [this, btn, mode](Buffer::PaintMode active) {
+        connect(this, &DrawModeTool::activeModeChanged, btn, [this, btn, mode](Buffer::PaintMode active) {
             if (!fillModeSelected_)
                 btn->setChecked(active == mode);
         });
