@@ -197,9 +197,11 @@ void GradientMarkerBox::paintEvent(QPaintEvent *)
     // Preview bar
     int previewY = kMarkerRowHeight + 2;
     if (range_ && !range_->markers().isEmpty()) {
+        float firstSlot = range_->markers().first().slot;
+        float lastSlot  = range_->markers().last().slot;
         for (int y = 0; y < kPreviewHeight; y++) {
             for (int x = 0; x < W; x++) {
-                float slotPos = float(x) / W * (kSlotCount - 1);
+                float slotPos = firstSlot + float(x) / W * (lastSlot - firstSlot);
                 p.fillRect(x, previewY + y, 1, 1, interpolatedColor(slotPos, x, y));
             }
         }
