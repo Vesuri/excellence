@@ -195,14 +195,16 @@ QRect FillTool::applyGradientFill(const QPoint &endPoint)
     // For V conform: pre-scan to collect per-column y ranges.
     QVector<int> colY0, colY1;
     if (vConform) {
-        colY0.fill(INT_MAX, visitedW_);
-        colY1.fill(INT_MIN, visitedW_);
+        const int vw = visitedRect_.width();
+        colY0.fill(INT_MAX, vw);
+        colY1.fill(INT_MIN, vw);
         for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
             for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
                 if (y < 0 || y >= visitedH_ || x < 0 || x >= visitedW_) continue;
                 if (!visited_[y * visitedW_ + x]) continue;
-                colY0[x] = qMin(colY0[x], y);
-                colY1[x] = qMax(colY1[x], y);
+                const int xi = x - visitedRect_.left();
+                colY0[xi] = qMin(colY0[xi], y);
+                colY1[xi] = qMax(colY1[xi], y);
             }
         }
     }
@@ -225,8 +227,11 @@ QRect FillTool::applyGradientFill(const QPoint &endPoint)
             QRect pixConform;
             if (hConform && rowX0 <= rowX1)
                 pixConform = QRect(rowX0, y, rowX1 - rowX0 + 1, 1);
-            else if (vConform && x < colY0.size() && colY0[x] <= colY1[x])
-                pixConform = QRect(x, colY0[x], 1, colY1[x] - colY0[x] + 1);
+            else if (vConform) {
+                const int xi = x - visitedRect_.left();
+                if (xi >= 0 && xi < colY0.size() && colY0[xi] <= colY1[xi])
+                    pixConform = QRect(x, colY0[xi], 1, colY1[xi] - colY0[xi] + 1);
+            }
             else if (conformFill)
                 pixConform = visitedRect_;
             float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, pixConform);
