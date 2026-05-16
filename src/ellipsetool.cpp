@@ -235,6 +235,11 @@ QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         QPoint savedFrom = rubberBand_.from;
         double savedAngle = pendingAngle_;
         rubberBand_.clear();
+        if (gradientFillIsRadial(activeGradientFillMode)) {
+            QRect ellipseBbox = QRect(cx_ - rx_, cy_ - ry_, 2 * rx_ + 1, 2 * ry_ + 1);
+            float r = GradientRenderer::conformRadius(ellipseBbox, point);
+            return drawEllipseGradientPixels(savedAngle, point, point + QPoint(qRound(r), 0));
+        }
         return drawEllipseGradientPixels(savedAngle, savedFrom, point);
     }
 
@@ -243,12 +248,16 @@ QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
             resetState();
             return QRect();
         }
-        if (!erasing_ && gradientFillActive() && activeGradientFillMode == FillLinear) {
-            QRect r = drawEllipseShape(rotationAngle_, false);
-            pendingAngle_ = rotationAngle_;
-            rubberBand_.start(QPoint(cx_, cy_));
-            resetState();
-            return r;
+        if (!erasing_ && gradientFillActive()) {
+            bool needsRubberBand = activeGradientFillMode == FillLinear
+                                || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+            if (needsRubberBand) {
+                QRect r = drawEllipseShape(rotationAngle_, false);
+                pendingAngle_ = rotationAngle_;
+                rubberBand_.start(QPoint(cx_, cy_));
+                resetState();
+                return r;
+            }
         }
         QRect r = drawEllipseShape(rotationAngle_, true);
         resetState();
@@ -302,8 +311,11 @@ QRect EllipseTool::move(const QPoint &point)
 
     QRect changedRect = ellipseBoundingRect(0.0);
     undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-    // Use flat fill during drag for linear gradient; gradient applied after rubber band.
-    bool useGradient = !(activeGradientFillMode == FillLinear && gradientFillActive() && !erasing_);
+    // Use flat fill during drag when a rubber band will be needed after release.
+    bool needsRubberBand = gradientFillActive() && !erasing_
+        && (activeGradientFillMode == FillLinear
+            || (gradientFillIsRadial(activeGradientFillMode) && !centerFill));
+    bool useGradient = !needsRubberBand;
     drawEllipseShape(0.0, useGradient);
     return changedRect;
 }
@@ -330,13 +342,16 @@ QRect EllipseTool::release(const QPoint &point)
         return QRect();
     }
 
-    if (!erasing_ && gradientFillActive() && activeGradientFillMode == FillLinear
-        && drawMode_ == FilledEllipse) {
-        QRect r = drawEllipseShape(0.0, false);  // flat fill
-        pendingAngle_ = 0.0;
-        rubberBand_.start(QPoint(cx_, cy_));
-        resetState();
-        return r;
+    if (!erasing_ && gradientFillActive() && drawMode_ == FilledEllipse) {
+        bool needsRubberBand = activeGradientFillMode == FillLinear
+                            || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+        if (needsRubberBand) {
+            QRect r = drawEllipseShape(0.0, false);  // flat fill
+            pendingAngle_ = 0.0;
+            rubberBand_.start(QPoint(cx_, cy_));
+            resetState();
+            return r;
+        }
     }
 
     QRect r = drawEllipseShape(0.0, true);

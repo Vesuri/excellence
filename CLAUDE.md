@@ -93,6 +93,26 @@ Note: Line(3) cycles between Line, Connected Lines, and Filled Polygon modes on 
 
 **`Algorithms::fillEllipse` row-order guarantee** — pixels are delivered strictly top-to-bottom, left-to-right within each row (the outer loop is `for dy in -yBound..yBound`, inner is a left-to-right `line()` call). Code that accumulates per-row state inside the callback (e.g. `EllipseTool`'s conform logic that re-solves the quadratic once per new y) can rely on this.
 
+### Gradient Fill — Five Tools
+
+Five tools support gradient fills, each with its own implementation. When modifying gradient fill behavior, all five must be kept in sync:
+
+| Tool | File | Trigger |
+|------|------|---------|
+| `FillTool` | `filltool.cpp` | Flood fill from a click point |
+| `DrawTool` (FilledShape mode) | `drawtool.cpp` | Polygon traced by freehand drag |
+| `LineTool` (FilledPolygon mode) | `linetool.cpp` | Polygon closed by double-click or right-click |
+| `RectangleTool` (FilledRectangle mode) | `rectangletool.cpp` | Rectangle drag |
+| `EllipseTool` (FilledEllipse mode) | `ellipsetool.cpp` | Ellipse drag |
+
+**Rubber band for direction/center selection** — Linear mode always shows a rubber band after the shape is drawn so the user can pick the gradient direction. Radial/Spherical/Highlight modes do the same when `centerFill` is false (center not auto-selected). In both cases the pattern is:
+1. Draw the shape with a flat foreground-color fill (so the user sees the area).
+2. Store the shape data and start `rubberBand_` anchored at the shape's center.
+3. On the next click (`press()` when `rubberBand_.pending`): for Linear, pass `(rubberBand_.from, clickPoint)` as `(gradFrom, gradTo)`; for Radial/Spherical/Highlight, use `clickPoint` as `gradFrom` and compute `gradTo = clickPoint + QPoint(qRound(conformRadius(bbox, clickPoint)), 0)`.
+4. Cancel (Escape) calls `buffer_->undo()` to restore the canvas before the flat fill.
+
+When `centerFill` is true for Radial/Spherical/Highlight, no rubber band is shown — the gradient center is the shape's bounding box center and the fill is applied immediately on release/close.
+
 ### Gradient Fill Controls
 
 `gradientrange.h` exports two global flags alongside `activeGradientFillMode`:

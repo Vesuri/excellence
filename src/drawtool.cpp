@@ -51,6 +51,12 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         startingPoint = point;
         previousPoint = point;
         pathPoints_.clear();
+        if (gradientFillIsRadial(activeGradientFillMode)) {
+            QRect polyBbox;
+            for (const QPoint &p : savedPath) polyBbox = polyBbox.united(QRect(p, p));
+            float r = GradientRenderer::conformRadius(polyBbox, point);
+            return applyPolygonGradient(savedPath, point, point + QPoint(qRound(r), 0));
+        }
         return applyPolygonGradient(savedPath, savedFrom, point);
     }
 
@@ -123,9 +129,12 @@ QRect DrawTool::release(const QPoint &point)
         int fillColor = static_cast<int>(mouseButton_ == Qt::RightButton
                                          ? buffer_->eraseColor()
                                          : buffer_->paintColor());
-        if (mouseButton_ == Qt::LeftButton && gradientFillActive() && activeGradientFillMode == FillLinear
-            && pathPoints_.size() >= 3) {
-            // Flat fill, then rubber band for direction.
+        bool needsRubberBand = mouseButton_ == Qt::LeftButton && gradientFillActive()
+            && pathPoints_.size() >= 3
+            && (activeGradientFillMode == FillLinear
+                || (gradientFillIsRadial(activeGradientFillMode) && !centerFill));
+        if (needsRubberBand) {
+            // Flat fill, then rubber band for direction/center selection.
             QRect polyBbox;
             for (const QPoint &p : pathPoints_) polyBbox = polyBbox.united(QRect(p, p));
             changedRect = changedRect.united(GradientRenderer::polygonFillScanline(

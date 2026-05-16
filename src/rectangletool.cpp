@@ -49,6 +49,10 @@ QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         QPoint savedFrom = rubberBand_.from;
         QRect savedFill = pendingFillRect_;
         rubberBand_.clear();
+        if (gradientFillIsRadial(activeGradientFillMode)) {
+            float r = GradientRenderer::conformRadius(savedFill, point);
+            return applyGradientRect(savedFill, point, point + QPoint(qRound(r), 0));
+        }
         return applyGradientRect(savedFill, savedFrom, point);
     }
 
@@ -95,8 +99,10 @@ QRect RectangleTool::move(const QPoint &point)
                && gradientFillActive()) {
         changedRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-        if (activeGradientFillMode == FillLinear) {
-            // Show flat fill during drag; gradient direction chosen via rubber band after release.
+        bool needsRubberBand = activeGradientFillMode == FillLinear
+                            || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+        if (needsRubberBand) {
+            // Show flat fill during drag; direction/center chosen via rubber band after release.
             Algorithms::fillRectangle(p0, p1, drawLambda);
         } else {
             drawGradientRect(changedRect, point);
@@ -126,8 +132,10 @@ QRect RectangleTool::release(const QPoint &point)
     } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
                && gradientFillActive()) {
         QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
-        if (activeGradientFillMode == FillLinear) {
-            // Flat fill now; rubber band selects gradient direction.
+        bool needsRubberBand = activeGradientFillMode == FillLinear
+                            || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+        if (needsRubberBand) {
+            // Flat fill now; rubber band selects gradient direction/center.
             Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &pt) {
                 changedRect = changedRect.united(draw(pt));
             });

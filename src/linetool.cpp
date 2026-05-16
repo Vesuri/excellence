@@ -78,8 +78,12 @@ QRect LineTool::doubleClick(const QPoint &point)
         Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
             changedRect = changedRect.united(paintPixel(p));
         });
-        if (gradientFillActive() && activeGradientFillMode == FillLinear)
-            return startLinearRubberBand(changedRect);
+        if (gradientFillActive()) {
+            bool needsRubberBand = activeGradientFillMode == FillLinear
+                                || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+            if (needsRubberBand)
+                return startLinearRubberBand(changedRect);
+        }
         changedRect = changedRect.united(polygonFill());
         vertices_.clear();
         return changedRect;
@@ -99,6 +103,12 @@ QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         QPoint savedFrom = rubberBand_.from;
         QList<QPoint> savedVerts = pendingVertices_;
         rubberBand_.clear();
+        if (gradientFillIsRadial(activeGradientFillMode)) {
+            QRect polyBbox;
+            for (const QPoint &v : savedVerts) polyBbox = polyBbox.united(QRect(v, v));
+            float r = GradientRenderer::conformRadius(polyBbox, point);
+            return applyPolygonGradient(savedVerts, point, point + QPoint(qRound(r), 0));
+        }
         return applyPolygonGradient(savedVerts, savedFrom, point);
     }
 
@@ -125,8 +135,12 @@ QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
             Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
                 changedRect = changedRect.united(paintPixel(p));
             });
-            if (gradientFillActive() && activeGradientFillMode == FillLinear)
-                return startLinearRubberBand(changedRect);
+            if (gradientFillActive()) {
+                bool needsRubberBand = activeGradientFillMode == FillLinear
+                                    || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+                if (needsRubberBand)
+                    return startLinearRubberBand(changedRect);
+            }
             changedRect = changedRect.united(polygonFill());
             vertices_.clear();
             return changedRect;
