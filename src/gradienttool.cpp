@@ -9,6 +9,7 @@
 #include <QVBoxLayout>
 #include "buffer.h"
 #include "gradienttool.h"
+#include "ui_gradienttooloptions.h"
 
 GradientTool GradientTool::instance;
 
@@ -61,9 +62,8 @@ void GradientTool::setActiveRange(int index)
 
 void GradientTool::refreshPanel()
 {
-    if (!optionsWidget_) return;
+    if (!optionsWidget_ || !ui_) return;
 
-    // Update range selector button highlights
     for (int i = 0; i < rangeButtons_.size(); i++) {
         rangeButtons_[i]->setDown(i == activeGradientRange);
         rangeButtons_[i]->setFlat(i != activeGradientRange);
@@ -71,62 +71,52 @@ void GradientTool::refreshPanel()
 
     GradientRange *range = &gradientRanges[activeGradientRange];
 
-    if (markerBox_) {
-        markerBox_->setRange(range);
-        if (buffer_)
-            markerBox_->setBuffer(buffer_);
-    }
+    ui_->markerBox->setRange(range);
+    if (buffer_) ui_->markerBox->setBuffer(buffer_);
 
-    if (spreadSpin_) {
-        spreadSpin_->blockSignals(true);
-        spreadSpin_->setValue(range->spread());
-        spreadSpin_->blockSignals(false);
-    }
+    ui_->spreadSpin->blockSignals(true);
+    ui_->spreadSpin->setValue(range->spread());
+    ui_->spreadSpin->blockSignals(false);
 
-    if (colorsLabel_)
-        colorsLabel_->setText(QString("Colors: %1").arg(range->colorCount()));
+    ui_->colorsLabel->setText(QString("Colors: %1").arg(range->colorCount()));
 
-    if (randomCheck_) {
-        randomCheck_->blockSignals(true);
-        randomCheck_->setChecked(range->random());
-        randomCheck_->blockSignals(false);
-    }
-    if (hardEdgesCheck_) {
-        hardEdgesCheck_->blockSignals(true);
-        hardEdgesCheck_->setChecked(range->hardEdges());
-        hardEdgesCheck_->blockSignals(false);
-    }
-    if (ditherSlider_) {
-        ditherSlider_->blockSignals(true);
-        ditherSlider_->setValue(range->ditherAmount());
-        ditherSlider_->setEnabled(range->random());
-        ditherSlider_->blockSignals(false);
-    }
+    ui_->randomCheck->blockSignals(true);
+    ui_->randomCheck->setChecked(range->random());
+    ui_->randomCheck->blockSignals(false);
 
-    if (cycleButton_) {
-        cycleButton_->blockSignals(true);
-        cycleButton_->setChecked(range->cycling());
-        cycleButton_->blockSignals(false);
-    }
-    if (speedSlider_) {
-        speedSlider_->blockSignals(true);
-        speedSlider_->setValue(range->cycleSpeed());
-        speedSlider_->blockSignals(false);
-    }
+    ui_->hardEdgesCheck->blockSignals(true);
+    ui_->hardEdgesCheck->setChecked(range->hardEdges());
+    ui_->hardEdgesCheck->blockSignals(false);
+
+    ui_->ditherSlider->blockSignals(true);
+    ui_->ditherSlider->setValue(range->ditherAmount());
+    ui_->ditherSlider->setEnabled(range->random());
+    ui_->ditherSlider->blockSignals(false);
+
+    ui_->cycleButton->blockSignals(true);
+    ui_->cycleButton->setChecked(range->cycling());
+    ui_->cycleButton->blockSignals(false);
+
+    ui_->speedSlider->blockSignals(true);
+    ui_->speedSlider->setValue(range->cycleSpeed());
+    ui_->speedSlider->blockSignals(false);
 }
 
 void GradientTool::onRangeChanged()
 {
-    if (colorsLabel_)
-        colorsLabel_->setText(
+    if (ui_)
+        ui_->colorsLabel->setText(
             QString("Colors: %1").arg(gradientRanges[activeGradientRange].colorCount()));
 }
 
 void GradientTool::setBuffer(Buffer *buffer)
 {
+    bool firstBuffer = (buffer_ == nullptr);
     Tool::setBuffer(buffer);
-    if (markerBox_)
-        markerBox_->setBuffer(buffer);
+    if (ui_)
+        ui_->markerBox->setBuffer(buffer);
+    if (firstBuffer && buffer)
+        gradientRanges[0].setDefault(buffer->image());
 }
 
 void GradientTool::updateTimer()
@@ -173,150 +163,83 @@ QWidget *GradientTool::createOptionsWidget()
     GradientRange *range = &gradientRanges[activeGradientRange];
 
     QWidget *w = new QWidget;
-    w->setWindowTitle("Gradient Range Editor");
-    w->setWindowFlags(Qt::Tool);
+    ui_ = new Ui::GradientToolOptions;
+    ui_->setupUi(w);
 
-    QVBoxLayout *vbox = new QVBoxLayout(w);
-    vbox->setSpacing(8);
-    vbox->setContentsMargins(6, 6, 6, 6);
-
-    // Range selector (1-8 buttons)
-    QHBoxLayout *rangeRow = new QHBoxLayout;
-    rangeRow->setSpacing(2);
+    // Range selector buttons
+    QPushButton *rangeBtns[] = {
+        ui_->range0, ui_->range1, ui_->range2, ui_->range3,
+        ui_->range4, ui_->range5, ui_->range6, ui_->range7
+    };
     rangeButtons_.clear();
     for (int i = 0; i < kGradientRangeCount; i++) {
-        QPushButton *btn = new QPushButton(QString::number(i + 1), w);
-        btn->setFixedSize(28, 22);
+        QPushButton *btn = rangeBtns[i];
         btn->setFlat(i != activeGradientRange);
         btn->setDown(i == activeGradientRange);
-        int idx = i;
-        connect(btn, &QPushButton::clicked, [this, idx]() { setActiveRange(idx); });
+        connect(btn, &QPushButton::clicked, [this, i]() { setActiveRange(i); });
         rangeButtons_.append(btn);
-        rangeRow->addWidget(btn);
     }
-    rangeRow->addStretch();
-    vbox->addLayout(rangeRow);
 
-    // Marker box + preview
-    markerBox_ = new GradientMarkerBox(w);
-    markerBox_->setRange(range);
-    if (buffer_)
-        markerBox_->setBuffer(buffer_);
-    connect(markerBox_, &GradientMarkerBox::rangeChanged, this, &GradientTool::onRangeChanged);
-    vbox->addWidget(markerBox_);
+    ui_->markerBox->setRange(range);
+    if (buffer_) ui_->markerBox->setBuffer(buffer_);
+    connect(ui_->markerBox, &GradientMarkerBox::rangeChanged, this, &GradientTool::onRangeChanged);
 
-    // COLORS label, SPREAD spinbox
-    QHBoxLayout *infoRow = new QHBoxLayout;
-    infoRow->setSpacing(6);
-    colorsLabel_ = new QLabel(QString("Colors: %1").arg(range->colorCount()), w);
-    infoRow->addWidget(colorsLabel_);
-
-    infoRow->addStretch();
-
-    infoRow->addWidget(new QLabel("Spread:", w));
-    spreadSpin_ = new QSpinBox(w);
-    spreadSpin_->setRange(0, 254);
-    spreadSpin_->setValue(range->spread());
-    spreadSpin_->setFixedWidth(60);
-    connect(spreadSpin_, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+    ui_->colorsLabel->setText(QString("Colors: %1").arg(range->colorCount()));
+    ui_->spreadSpin->setValue(range->spread());
+    connect(ui_->spreadSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         gradientRanges[activeGradientRange].setSpread(v);
         onRangeChanged();
     });
-    infoRow->addWidget(spreadSpin_);
-    vbox->addLayout(infoRow);
 
-    // Dither controls
-    QHBoxLayout *ditherRow = new QHBoxLayout;
-    ditherRow->setSpacing(6);
-    randomCheck_ = new QCheckBox("Random", w);
-    randomCheck_->setChecked(range->random());
-    connect(randomCheck_, &QCheckBox::toggled, [this](bool v) {
+    ui_->randomCheck->setChecked(range->random());
+    connect(ui_->randomCheck, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setRandom(v);
-        if (ditherSlider_) ditherSlider_->setEnabled(v);
-        if (markerBox_) markerBox_->update();
+        if (ui_) ui_->ditherSlider->setEnabled(v);
+        if (ui_) ui_->markerBox->update();
     });
-    ditherRow->addWidget(randomCheck_);
 
-    hardEdgesCheck_ = new QCheckBox("Hard Edges", w);
-    hardEdgesCheck_->setChecked(range->hardEdges());
-    connect(hardEdgesCheck_, &QCheckBox::toggled, [this](bool v) {
+    ui_->hardEdgesCheck->setChecked(range->hardEdges());
+    connect(ui_->hardEdgesCheck, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setHardEdges(v);
-        if (markerBox_) markerBox_->update();
+        if (ui_) ui_->markerBox->update();
     });
-    ditherRow->addWidget(hardEdgesCheck_);
 
-    ditherRow->addStretch();
-    ditherRow->addWidget(new QLabel("Dither:", w));
-
-    ditherSlider_ = new QSlider(Qt::Horizontal, w);
-    ditherSlider_->setRange(0, 100);
-    ditherSlider_->setValue(range->ditherAmount());
-    ditherSlider_->setFixedWidth(80);
-    ditherSlider_->setEnabled(range->random());
-    connect(ditherSlider_, &QSlider::valueChanged, [this](int v) {
+    ui_->ditherSlider->setValue(range->ditherAmount());
+    ui_->ditherSlider->setEnabled(range->random());
+    connect(ui_->ditherSlider, &QSlider::valueChanged, [this](int v) {
         gradientRanges[activeGradientRange].setDitherAmount(v);
-        if (markerBox_) markerBox_->update();
+        if (ui_) ui_->markerBox->update();
     });
-    ditherRow->addWidget(ditherSlider_);
-    vbox->addLayout(ditherRow);
 
-    // Cycle controls
-    QHBoxLayout *cycleRow = new QHBoxLayout;
-    cycleRow->setSpacing(6);
-    cycleButton_ = new QPushButton("Cycle", w);
-    cycleButton_->setCheckable(true);
-    cycleButton_->setChecked(range->cycling());
-    cycleButton_->setFixedHeight(24);
-    connect(cycleButton_, &QPushButton::toggled, [this](bool v) {
+    ui_->cycleButton->setChecked(range->cycling());
+    connect(ui_->cycleButton, &QPushButton::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setCycling(v);
         cycleAccumulators_[activeGradientRange] = 0.0;
         updateTimer();
     });
-    cycleRow->addWidget(cycleButton_);
 
-    cycleRow->addStretch();
-    cycleRow->addWidget(new QLabel("Speed:", w));
-
-    speedSlider_ = new QSlider(Qt::Horizontal, w);
-    speedSlider_->setRange(0, 71);
-    speedSlider_->setValue(range->cycleSpeed());
-    speedSlider_->setFixedWidth(80);
-    connect(speedSlider_, &QSlider::valueChanged, [this](int v) {
+    ui_->speedSlider->setValue(range->cycleSpeed());
+    connect(ui_->speedSlider, &QSlider::valueChanged, [this](int v) {
         gradientRanges[activeGradientRange].setCycleSpeed(v);
         updateTimer();
     });
-    cycleRow->addWidget(speedSlider_);
-    vbox->addLayout(cycleRow);
 
-    // Operation buttons
-    QHBoxLayout *btnRow = new QHBoxLayout;
-    btnRow->setSpacing(4);
-
-    auto makeBtn = [&](const QString &label, auto slot) {
-        QPushButton *btn = new QPushButton(label, w);
-        btn->setFixedHeight(24);
-        connect(btn, &QPushButton::clicked, slot);
-        btnRow->addWidget(btn);
-    };
-
-    makeBtn("Flip", [this]() {
+    connect(ui_->flipBtn, &QPushButton::clicked, [this]() {
         gradientRanges[activeGradientRange].flip();
         refreshPanel();
     });
-    makeBtn("Clear", [this]() {
+    connect(ui_->clearBtn, &QPushButton::clicked, [this]() {
         gradientRanges[activeGradientRange].clear();
         refreshPanel();
     });
-    makeBtn("Undo", [this]() {
+    connect(ui_->undoBtn, &QPushButton::clicked, [this]() {
         gradientRanges[activeGradientRange].undo();
         refreshPanel();
     });
-    makeBtn("Restore", [this]() {
+    connect(ui_->restoreBtn, &QPushButton::clicked, [this]() {
         gradientRanges[activeGradientRange].restore();
         refreshPanel();
     });
-
-    vbox->addLayout(btnRow);
 
     return w;
 }

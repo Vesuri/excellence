@@ -1,4 +1,6 @@
 #include "gradientrange.h"
+#include "gradientrenderer.h"
+#include <QImage>
 #include <algorithm>
 
 GradientRange gradientRanges[kGradientRangeCount];
@@ -7,6 +9,28 @@ GradientFillMode activeGradientFillMode = FillFlat;
 bool drawModeActive = false;
 bool conformFill = false;
 bool centerFill = false;
+
+void GradientRange::setDefault(const QImage &image)
+{
+    static const QRgb targetColors[] = {
+        qRgb(255,   0,   0), qRgb(255, 128,   0), qRgb(255, 255,   0),
+        qRgb(  0, 255,   0), qRgb(  0,   0, 255), qRgb(160,   0, 255)
+    };
+    static const int n = static_cast<int>(sizeof(targetColors) / sizeof(targetColors[0]));
+
+    markers_.clear();
+    for (int i = 0; i < n; i++) {
+        int slot = (i + 1) * (kGradientSlotCount - 1) / (n + 1);
+        markers_.append({slot, GradientRenderer::nearestColorIndex(targetColors[i], image), false});
+    }
+
+    spread_       = 0;
+    random_       = true;
+    hardEdges_    = false;
+    ditherAmount_ = 10;
+    cycling_      = false;
+    cycleSpeed_   = 0;
+}
 
 int GradientRange::colorCount() const
 {

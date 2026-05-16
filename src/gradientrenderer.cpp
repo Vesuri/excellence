@@ -51,6 +51,11 @@ static DitherPair ditherPair(const QColor &ideal, const QImage &image)
     return {idx1, idx2, blend};
 }
 
+int nearestColorIndex(QRgb target, const QImage &image)
+{
+    return ditherPair(QColor(target), image).idx1;
+}
+
 int colorIndex(float t, int pixelX, int pixelY,
                const GradientRange *range, const QImage &image)
 {

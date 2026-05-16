@@ -35,6 +35,8 @@ public:
     int cycleSpeed() const { return cycleSpeed_; }
     void setCycleSpeed(int v) { cycleSpeed_ = qBound(0, v, 71); }
 
+    void setDefault(const QImage &image);
+
     void flip();
     void clear();
     void undo();
@@ -65,6 +67,7 @@ private:
 };
 
 static const int kGradientRangeCount = 8;
+static const int kGradientSlotCount = 128;
 extern GradientRange gradientRanges[kGradientRangeCount];
 extern int activeGradientRange;
 
