@@ -78,12 +78,8 @@ QRect LineTool::doubleClick(const QPoint &point)
         Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
             changedRect = changedRect.united(paintPixel(p));
         });
-        if (gradientFillActive()) {
-            bool needsRubberBand = activeGradientFillMode == FillLinear
-                                || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
-            if (needsRubberBand)
-                return startLinearRubberBand(changedRect);
-        }
+        if (gradientFillActive() && gradientNeedsRubberBand())
+            return startLinearRubberBand(changedRect);
         changedRect = changedRect.united(polygonFill());
         vertices_.clear();
         return changedRect;
@@ -135,12 +131,8 @@ QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
             Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
                 changedRect = changedRect.united(paintPixel(p));
             });
-            if (gradientFillActive()) {
-                bool needsRubberBand = activeGradientFillMode == FillLinear
-                                    || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
-                if (needsRubberBand)
-                    return startLinearRubberBand(changedRect);
-            }
+            if (gradientFillActive() && gradientNeedsRubberBand())
+                return startLinearRubberBand(changedRect);
             changedRect = changedRect.united(polygonFill());
             vertices_.clear();
             return changedRect;

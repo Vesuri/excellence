@@ -99,8 +99,7 @@ QRect RectangleTool::move(const QPoint &point)
                && gradientFillActive()) {
         changedRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-        bool needsRubberBand = activeGradientFillMode == FillLinear
-                            || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+        bool needsRubberBand = gradientNeedsRubberBand();
         if (needsRubberBand) {
             // Show flat fill during drag; direction/center chosen via rubber band after release.
             Algorithms::fillRectangle(p0, p1, drawLambda);
@@ -132,8 +131,7 @@ QRect RectangleTool::release(const QPoint &point)
     } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
                && gradientFillActive()) {
         QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
-        bool needsRubberBand = activeGradientFillMode == FillLinear
-                            || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
+        bool needsRubberBand = gradientNeedsRubberBand();
         if (needsRubberBand) {
             // Flat fill now; rubber band selects gradient direction/center.
             Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &pt) {

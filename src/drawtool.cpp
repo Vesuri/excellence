@@ -130,9 +130,7 @@ QRect DrawTool::release(const QPoint &point)
                                          ? buffer_->eraseColor()
                                          : buffer_->paintColor());
         bool needsRubberBand = mouseButton_ == Qt::LeftButton && gradientFillActive()
-            && pathPoints_.size() >= 3
-            && (activeGradientFillMode == FillLinear
-                || (gradientFillIsRadial(activeGradientFillMode) && !centerFill));
+            && pathPoints_.size() >= 3 && gradientNeedsRubberBand();
         if (needsRubberBand) {
             // Flat fill, then rubber band for direction/center selection.
             QRect polyBbox;

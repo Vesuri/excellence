@@ -133,7 +133,6 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
         // exits the filled region. t = dist(center, pixel) / dist(center, exit).
         for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
             for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
-                if (y < 0 || y >= visitedH_ || x < 0 || x >= visitedW_) continue;
                 if (!visited_[y * visitedW_ + x]) continue;
                 float dx = float(x - gradFrom.x());
                 float dy = float(y - gradFrom.y());

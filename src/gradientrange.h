@@ -98,12 +98,20 @@ inline float applyRandomDither(float slotPos, float span, int ditherAmt,
     h = (h ^ (h >> 17)) * 0x45d9f3bu;
     h ^= h >> 16;
     float noise = (h & 0xFFu) / 256.0f - 0.5f;
-    return qBound(minSlot, slotPos + noise * span * (ditherAmt / 400.0f), maxSlot);
+    return qBound(minSlot, slotPos + noise * span * (ditherAmt / 100.0f), maxSlot);
 }
 
 inline bool gradientFillIsRadial(GradientFillMode mode)
 {
     return mode == FillRadial || mode == FillSpherical || mode == FillHighlight;
+}
+
+// True when the active fill mode requires a rubber band after the shape is drawn
+// so the user can pick the gradient direction (Linear) or center (Radial/etc.).
+inline bool gradientNeedsRubberBand()
+{
+    return activeGradientFillMode == FillLinear
+        || (gradientFillIsRadial(activeGradientFillMode) && !centerFill);
 }
 
 inline QString gradientFillModeName(GradientFillMode mode)
