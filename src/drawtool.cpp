@@ -161,13 +161,9 @@ QString DrawTool::status() const
 
 QRect DrawTool::applyPolygonGradient(const QList<QPoint> &path, const QPoint &gradFrom, const QPoint &gradTo)
 {
-    const GradientRange *range = &gradientRanges[activeGradientRange];
-    QRect polyBbox;
-    for (const QPoint &p : path) polyBbox = polyBbox.united(QRect(p, p));
-    QRect conformRect = conformFill ? polyBbox : QRect();
-    return GradientRenderer::polygonFillScanline(buffer_->image(), path,
-        static_cast<int>(buffer_->paintColor()), true, range,
-        activeGradientFillMode, gradFrom, gradTo, conformRect);
+    return GradientRenderer::applyPolygonGradient(buffer_->image(), path,
+        static_cast<int>(buffer_->paintColor()), &gradientRanges[activeGradientRange],
+        activeGradientFillMode, gradFrom, gradTo, conformFill);
 }
 
 QRect DrawTool::polygonFill(int fillColor, const QPoint &to)

@@ -2,6 +2,7 @@
 #define FILLTOOL_H
 
 #include <QByteArray>
+#include "gradientrubberband.h"
 #include "tool.h"
 
 class FillTool : public Tool
@@ -31,12 +32,11 @@ private:
     QRect applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo);
 
     QPoint startPoint_;
-    QPoint rubberBandFrom_;
+    GradientRubberBand rubberBand_;
     QByteArray visited_;
     int visitedW_ = 0;
     int visitedH_ = 0;
     QRect visitedRect_;
-    bool gradientPending_ = false;
 
     static FillTool instance;
 };

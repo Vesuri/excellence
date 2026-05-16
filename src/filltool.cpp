@@ -1,7 +1,6 @@
 #include <QStack>
 #include <QVector>
 #include <QGridLayout>
-#include "algorithms.h"
 #include "buffer.h"
 #include "filltool.h"
 #include "gradientrange.h"
@@ -237,44 +236,21 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
     return visitedRect_;
 }
 
-// Returns bounding rect of the rubber band line during the direction-selection phase.
 QRect FillTool::hover(const QPoint &point)
 {
-    if (!gradientPending_)
-        return QRect();
-    // Use qMin/qMax rather than QRect(p1,p2).normalized(): normalized() only swaps when
-    // x2 < x1-1, so a cursor exactly 1 pixel left or above produces a zero-width/height
-    // rect that saves nothing, leaving those pixels unrestored (dirty).
-    const int left = qMin(rubberBandFrom_.x(), point.x());
-    const int top  = qMin(rubberBandFrom_.y(), point.y());
-    const int right  = qMax(rubberBandFrom_.x(), point.x());
-    const int bottom = qMax(rubberBandFrom_.y(), point.y());
-    return QRect(left, top, right - left + 1, bottom - top + 1)
-               .intersected(buffer_->image().rect());
+    return rubberBand_.hoverRect(point, buffer_->image().rect());
 }
 
-// Draws the rubber band line preview while no mouse button is held.
 QRect FillTool::move(const QPoint &point)
 {
-    if (!gradientPending_ || mouseButton_ != Qt::NoButton)
+    if (mouseButton_ != Qt::NoButton)
         return QRect();
-
-    QImage &image = buffer_->image();
-    // NOT each pixel's palette index so the line is visible against any background.
-    const int colorMask = image.colorCount() - 1;
-    QRect changed;
-    Algorithms::line(rubberBandFrom_, point, [&](const QPoint &p) {
-        if (image.rect().contains(p)) {
-            image.setPixel(p, static_cast<uint>(image.pixelIndex(p) ^ colorMask));
-            changed = changed.united(QRect(p, QSize(1, 1)));
-        }
-    });
-    return changed;
+    return rubberBand_.draw(point, buffer_->image());
 }
 
 QString FillTool::status() const
 {
-    if (!gradientPending_)
+    if (!rubberBand_.pending)
         return QString();
     if (activeGradientFillMode == FillLinear)
         return "click to set gradient angle";
@@ -283,8 +259,8 @@ QString FillTool::status() const
 
 void FillTool::cancel()
 {
-    if (gradientPending_) {
-        gradientPending_ = false;
+    if (rubberBand_.pending) {
+        rubberBand_.clear();
         visited_.clear();
         buffer_->clearHoverPreview();
         buffer_->undo();
@@ -296,12 +272,12 @@ QRect FillTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     if (!buffer_) return QRect();
 
     // Second click: confirm rubber band direction / center selection.
-    if (gradientPending_) {
-        gradientPending_ = false;
+    if (rubberBand_.pending) {
+        rubberBand_.clear();
 
         if (activeGradientFillMode == FillLinear) {
             // Any mouse button sets the angle and applies the gradient.
-            return applyGradientFill(rubberBandFrom_, point);
+            return applyGradientFill(rubberBand_.from, point);
         } else {
             // Radial/Spherical/Highlight: any click picks the gradient center.
             float r = GradientRenderer::conformRadius(visitedRect_, point);
@@ -347,8 +323,7 @@ QRect FillTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
                 }
             }
         }
-        gradientPending_ = true;
-        rubberBandFrom_ = visitedRect_.center();
+        rubberBand_.start(visitedRect_.center());
         return activeGradientFillMode == FillLinear ? visitedRect_ : QRect();
     }
 

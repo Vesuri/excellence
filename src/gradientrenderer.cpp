@@ -285,4 +285,16 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
     return changedRect;
 }
 
+QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
+                           int fillColor, const GradientRange *range,
+                           GradientFillMode mode, const QPoint &gradFrom,
+                           const QPoint &gradTo, bool conform)
+{
+    QRect polyBbox;
+    for (const QPoint &p : polygon) polyBbox = polyBbox.united(QRect(p, p));
+    QRect conformRect = conform ? polyBbox : QRect();
+    return polygonFillScanline(image, polygon, fillColor, true, range,
+                               mode, gradFrom, gradTo, conformRect);
+}
+
 } // namespace GradientRenderer

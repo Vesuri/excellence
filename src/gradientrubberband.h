@@ -39,9 +39,6 @@ struct GradientRubberBand {
         return changed;
     }
 
-    // Return from press() on cancel to guarantee a repaint of the restored rubber band pixels.
-    QRect cancelRect() const { return { from, QSize(1, 1) }; }
-
     QString status() const { return pending ? "click to set gradient angle" : QString(); }
 };
 

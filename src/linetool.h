@@ -40,6 +40,7 @@ private:
     QRect lineBoundingRect(const QPoint &from, const QPoint &to) const;
     QRect polygonFill();
     QRect applyPolygonGradient(const QList<QPoint> &verts, const QPoint &gradFrom, const QPoint &gradTo);
+    QRect startLinearRubberBand(QRect changedRect);
 
     Mode mode_;
 

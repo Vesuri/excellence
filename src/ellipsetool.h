@@ -41,7 +41,7 @@ private:
     void cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const;
     void computeEllipseParams(const QPoint &p0, const QPoint &p1);
     QRect drawEllipseShape(double angle, bool applyGradient = false);
-    QRect applyGradientEllipse(double angle, const QPoint &gradFrom, const QPoint &gradTo);
+    QRect drawEllipseGradientPixels(double angle, const QPoint &gradFrom, const QPoint &gradTo);
     QRect ellipseBoundingRect(double angle) const;
     QRect draw(const QPoint &point);
 

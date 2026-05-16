@@ -78,18 +78,8 @@ QRect LineTool::doubleClick(const QPoint &point)
         Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
             changedRect = changedRect.united(paintPixel(p));
         });
-        if (gradientFillActive() && activeGradientFillMode == FillLinear) {
-            QRect polyBbox;
-            for (const QPoint &v : vertices_) polyBbox = polyBbox.united(QRect(v, v));
-            pendingVertices_ = vertices_;
-            vertices_.clear();
-            changedRect = changedRect.united(GradientRenderer::polygonFillScanline(
-                buffer_->image(), pendingVertices_,
-                static_cast<int>(buffer_->paintColor()), false, nullptr,
-                FillFlat, QPoint(), QPoint(), QRect()));
-            rubberBand_.start(polyBbox.center());
-            return changedRect;
-        }
+        if (gradientFillActive() && activeGradientFillMode == FillLinear)
+            return startLinearRubberBand(changedRect);
         changedRect = changedRect.united(polygonFill());
         vertices_.clear();
         return changedRect;
@@ -135,18 +125,8 @@ QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
             Algorithms::line(lastPoint_, firstPoint_, [this, &changedRect](const QPoint &p) {
                 changedRect = changedRect.united(paintPixel(p));
             });
-            if (gradientFillActive() && activeGradientFillMode == FillLinear) {
-                QRect polyBbox;
-                for (const QPoint &v : vertices_) polyBbox = polyBbox.united(QRect(v, v));
-                pendingVertices_ = vertices_;
-                vertices_.clear();
-                changedRect = changedRect.united(GradientRenderer::polygonFillScanline(
-                    buffer_->image(), pendingVertices_,
-                    static_cast<int>(buffer_->paintColor()), false, nullptr,
-                    FillFlat, QPoint(), QPoint(), QRect()));
-                rubberBand_.start(polyBbox.center());
-                return changedRect;
-            }
+            if (gradientFillActive() && activeGradientFillMode == FillLinear)
+                return startLinearRubberBand(changedRect);
             changedRect = changedRect.united(polygonFill());
             vertices_.clear();
             return changedRect;
@@ -339,13 +319,25 @@ QRect LineTool::polygonFill()
 
 QRect LineTool::applyPolygonGradient(const QList<QPoint> &verts, const QPoint &gradFrom, const QPoint &gradTo)
 {
-    const GradientRange *range = &gradientRanges[activeGradientRange];
+    return GradientRenderer::applyPolygonGradient(buffer_->image(), verts,
+        static_cast<int>(buffer_->paintColor()), &gradientRanges[activeGradientRange],
+        activeGradientFillMode, gradFrom, gradTo, conformFill);
+}
+
+// Flat-fills `vertices_` with the foreground colour and enters the rubber band phase.
+// Called from both doubleClick() and the right-click close path in press().
+QRect LineTool::startLinearRubberBand(QRect changedRect)
+{
     QRect polyBbox;
-    for (const QPoint &v : verts) polyBbox = polyBbox.united(QRect(v, v));
-    QRect conformRect = conformFill ? polyBbox : QRect();
-    return GradientRenderer::polygonFillScanline(buffer_->image(), verts,
-        static_cast<int>(buffer_->paintColor()), true, range,
-        activeGradientFillMode, gradFrom, gradTo, conformRect);
+    for (const QPoint &v : vertices_) polyBbox = polyBbox.united(QRect(v, v));
+    pendingVertices_ = vertices_;
+    vertices_.clear();
+    changedRect = changedRect.united(GradientRenderer::polygonFillScanline(
+        buffer_->image(), pendingVertices_,
+        static_cast<int>(buffer_->paintColor()), false, nullptr,
+        FillFlat, QPoint(), QPoint(), QRect()));
+    rubberBand_.start(polyBbox.center());
+    return changedRect;
 }
 
 // ── Tool registration / activation ────────────────────────────────────────
