@@ -17,18 +17,21 @@ public:
     void setIsPaintColor(bool isPaintColor);
     void setIsEraseColor(bool isEraseColor);
 
+signals:
+    void paintColorSelected(unsigned paletteIndex);
+    void eraseColorSelected(unsigned paletteIndex);
+
+protected:
     void paintEvent(QPaintEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
     void mouseMoveEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *e) override;
 
-signals:
-    void paintColorSelected(unsigned paletteIndex);
-    void eraseColorSelected(unsigned paletteIndex);
-
 private:
+    void setColorFlag(bool &member, bool value);
+
     unsigned paletteIndex_;
-    QColor color;
+    QColor color_;
     bool paintButtonDown;
     bool eraseButtonDown;
     bool isPaintColor_ = false;

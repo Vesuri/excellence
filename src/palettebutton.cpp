@@ -4,6 +4,7 @@
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
+#include "colorutils.h"
 #include "palettebutton.h"
 
 PaletteButton::PaletteButton(QWidget *parent) : QAbstractButton(parent),
@@ -17,22 +18,22 @@ void PaletteButton::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     const QRect r = rect();
-    painter.fillRect(r, color);
+    painter.fillRect(r, color_);
 
-    int luma = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
-    painter.setPen(luma > 128 ? Qt::black : Qt::white);
+    painter.setPen(contrastColor(color_));
     QFont f = painter.font();
     f.setPixelSize(9);
     painter.setFont(f);
     painter.drawText(r, Qt::AlignCenter, QString::number(paletteIndex_));
 
+    painter.setClipping(false);
     if (isEraseColor_) {
         painter.setPen(QColor(0x33, 0x75, 0xe6));
-        painter.drawRect(r.adjusted(0, 0, -1, -1));
+        painter.drawRect(r.adjusted(-1, -1, 1, 1));
     }
     if (isPaintColor_) {
         painter.setPen(Qt::white);
-        painter.drawRect(r.adjusted(0, 0, -1, -1));
+        painter.drawRect(r.adjusted(-1, -1, 1, 1));
     }
 }
 
@@ -64,7 +65,7 @@ void PaletteButton::mouseMoveEvent(QMouseEvent *event)
     mime->setData("application/x-palette-index", data);
 
     QPixmap pm(12, 12);
-    pm.fill(color);
+    pm.fill(color_);
     drag->setPixmap(pm);
     drag->setMimeData(mime);
     drag->exec(Qt::CopyAction);
@@ -99,20 +100,24 @@ void PaletteButton::setPaletteIndex(unsigned paletteIndex)
 
 void PaletteButton::setColor(const QColor &color)
 {
-    this->color = color;
+    if (color_ == color) return;
+    color_ = color;
+    update();
+}
+
+void PaletteButton::setColorFlag(bool &member, bool value)
+{
+    if (member == value) return;
+    member = value;
     update();
 }
 
 void PaletteButton::setIsPaintColor(bool isPaintColor)
 {
-    if (isPaintColor_ == isPaintColor) return;
-    isPaintColor_ = isPaintColor;
-    update();
+    setColorFlag(isPaintColor_, isPaintColor);
 }
 
 void PaletteButton::setIsEraseColor(bool isEraseColor)
 {
-    if (isEraseColor_ == isEraseColor) return;
-    isEraseColor_ = isEraseColor;
-    update();
+    setColorFlag(isEraseColor_, isEraseColor);
 }

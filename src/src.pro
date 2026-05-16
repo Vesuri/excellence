@@ -59,6 +59,7 @@ HEADERS  += mainwindow.h \
     tool.h \
     pen.h \
     pentip.h \
+    colorutils.h \
     palettebutton.h \
     currentcolorsbutton.h \
     buffer.h \

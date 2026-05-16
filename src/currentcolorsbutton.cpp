@@ -1,6 +1,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QMouseEvent>
+#include "colorutils.h"
 #include "currentcolorsbutton.h"
 
 static const int kSwatchW = 28;
@@ -25,8 +26,7 @@ void CurrentColorsButton::paintEvent(QPaintEvent *)
         painter.fillRect(r, color);
         painter.setPen(QColor(0, 0, 0, 160));
         painter.drawRect(r.adjusted(0, 0, -1, -1));
-        int luma = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
-        painter.setPen(luma > 128 ? Qt::black : Qt::white);
+        painter.setPen(contrastColor(color));
         QFont f = painter.font();
         f.setPixelSize(9);
         painter.setFont(f);
