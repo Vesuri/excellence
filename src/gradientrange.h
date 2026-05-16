@@ -104,7 +104,7 @@ inline QString gradientFillModeName(GradientFillMode mode)
 inline QString paintModeName(Buffer::PaintMode mode)
 {
     switch (mode) {
-    case Buffer::Normal:       return "Color";
+    case Buffer::Color:       return "Color";
     case Buffer::Replace:      return "Replace";
     case Buffer::Smear:        return "Smear";
     case Buffer::Smooth:       return "Smooth";
@@ -130,7 +130,7 @@ inline QString effectiveDrawModeName(Buffer::PaintMode paintMode)
 {
     if (!drawModeActive)
         return "Color";
-    if (paintMode == Buffer::Normal)
+    if (paintMode == Buffer::Color)
         return gradientFillModeName(activeGradientFillMode);
     return paintModeName(paintMode);
 }

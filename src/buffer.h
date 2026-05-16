@@ -17,7 +17,7 @@ class Buffer : public QObject
 {
     Q_OBJECT
 public:
-    enum PaintMode { Normal, Replace, Smear, Smooth, Range, AverageSmear, Cycle, Random,
+    enum PaintMode { Color, Replace, Smear, Smooth, Range, AverageSmear, Cycle, Random,
                      Tint, Colorize, Brighten, Darken, Mix, Negative,
                      Dither1, Dither2, Transparent, BrushMode };
 

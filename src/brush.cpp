@@ -31,7 +31,7 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
     unsigned eraseC = buffer->eraseColor();
     bool effectiveErase = isErase;
     paintC = Pen::resolveDrawColor(buffer, mode, effectiveErase, paintC);
-    // mode is now Normal if it was Cycle/Random; effectiveErase is false in that case.
+    // mode is now Color if it was Cycle/Random; effectiveErase is false in that case.
 
     for (int y = 0; y < brushImage.height(); y++) {
         for (int x = 0; x < brushImage.width(); x++) {
@@ -46,7 +46,7 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
 
             if (isErase) {
                 // Erase: BrushMode treated as Normal (use eraseColor, not brush pixel)
-                Buffer::PaintMode eraseMode = (mode == Buffer::BrushMode) ? Buffer::Normal : mode;
+                Buffer::PaintMode eraseMode = (mode == Buffer::BrushMode) ? Buffer::Color : mode;
                 Pen::applyPixelMode(p, buffer, eraseMode, effectiveErase, paintC, eraseC);
             } else if (mode == Buffer::BrushMode) {
                 // Stamp the brush's own pixel colors

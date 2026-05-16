@@ -19,7 +19,7 @@
 DrawModeTool DrawModeTool::instance;
 
 DrawModeTool::DrawModeTool(QObject *parent) : Tool(parent),
-    selectedMode_(Buffer::Normal)
+    selectedMode_(Buffer::Color)
 {
 }
 
@@ -46,7 +46,7 @@ void DrawModeTool::onToolChanged(Tool *)
 
 void DrawModeTool::onPaintModeChanged(Buffer::PaintMode mode)
 {
-    if (mode != Buffer::Normal) {
+    if (mode != Buffer::Color) {
         selectedMode_ = mode;
         button_->setChecked(true);
         drawModeActive = true;
@@ -66,8 +66,8 @@ void DrawModeTool::onPenChanged(Pen *)
 {
     updateAvailability();
     if (buffer_ && !isModeAvailable(buffer_->paintMode())) {
-        selectedMode_ = Buffer::Normal;
-        buffer_->setPaintMode(Buffer::Normal);
+        selectedMode_ = Buffer::Color;
+        buffer_->setPaintMode(Buffer::Color);
     }
 }
 
@@ -109,14 +109,14 @@ void DrawModeTool::updateAvailability()
     }
 
     if (button_->isChecked() && !fillModeSelected_ && !isModeAvailable(selectedMode_)) {
-        selectedMode_ = Buffer::Normal;
-        buffer_->setPaintMode(Buffer::Normal);
+        selectedMode_ = Buffer::Color;
+        buffer_->setPaintMode(Buffer::Color);
     }
 }
 
 bool DrawModeTool::isModeAvailable(Buffer::PaintMode mode) const
 {
-    if (!buffer_) return mode == Buffer::Normal;
+    if (!buffer_) return mode == Buffer::Color;
 
     bool brushActive = qobject_cast<Brush *>(buffer_->pen()) != nullptr;
     Tool *tool = buffer_->tool();
@@ -125,7 +125,7 @@ bool DrawModeTool::isModeAvailable(Buffer::PaintMode mode) const
     bool allowsBrushBtn = !tool || tool->allowsBrushModeButton();
 
     switch (mode) {
-    case Buffer::Normal:      return true;
+    case Buffer::Color:      return true;
     case Buffer::BrushMode:   return brushActive && allowsBrushBtn;
     case Buffer::Replace:     return brushActive;
     case Buffer::Random:      return restricted;
@@ -143,7 +143,7 @@ void DrawModeTool::applyMode()
         return;
     bool active = button_->isChecked();
     drawModeActive = active;
-    buffer_->setPaintMode(active ? selectedMode_ : Buffer::Normal);
+    buffer_->setPaintMode(active ? selectedMode_ : Buffer::Color);
 }
 
 
@@ -179,7 +179,7 @@ QWidget *DrawModeTool::createOptionsWidget()
         connect(btn, &QRadioButton::clicked, [this, mode]() {
             fillModeSelected_ = false;
             selectedMode_ = mode;
-            button_->setChecked(mode != Buffer::Normal);
+            button_->setChecked(mode != Buffer::Color);
             applyMode();
         });
         connect(this, &DrawModeTool::selectedModeChanged, btn, [this, btn, mode](Buffer::PaintMode active) {
@@ -246,7 +246,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     col2->setSpacing(8);
     col2->setAlignment(Qt::AlignTop);
     static constexpr const char *kGeneral = "General draw mode";
-    col2->addWidget(makeMode("Color",    Buffer::Normal,       kGeneral));
+    col2->addWidget(makeMode("Color",    Buffer::Color,       kGeneral));
     auto *tintBtn      = makeMode("Tint",     Buffer::Tint,         kGeneral);
     auto *colorizeBtn  = makeMode("Colorize", Buffer::Colorize,     kGeneral);
     auto *brightenBtn  = makeMode("Brighten", Buffer::Brighten,     kGeneral);

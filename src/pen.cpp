@@ -249,14 +249,14 @@ unsigned Pen::resolveDrawColor(Buffer *buffer, Buffer::PaintMode &mode,
     bool hovering = tool && tool->mouseButton() == Qt::NoButton;
 
     if (mode == Buffer::Cycle) {
-        mode = Buffer::Normal;
+        mode = Buffer::Color;
         if (hovering) return paintColor;
         unsigned color = static_cast<unsigned>(buffer->nextCycleColor(isErase));
         isErase = false;
         return color;
     }
     if (mode == Buffer::Random) {
-        mode = Buffer::Normal;
+        mode = Buffer::Color;
         if (hovering) return paintColor;
         const auto &markers = gradientRanges[activeGradientRange].markers();
         isErase = false;
@@ -275,7 +275,7 @@ void Pen::applyPixelMode(const QPoint &p, Buffer *buffer,
     unsigned paintC = isErase ? eraseColor : paintColor;
     unsigned eraseC = isErase ? paintColor : eraseColor;
     switch (mode) {
-    case Buffer::Normal:
+    case Buffer::Color:
     case Buffer::Replace:
         if (buffer->image().rect().contains(p))
             buffer->image().setPixel(p, paintC);
