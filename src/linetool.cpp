@@ -311,12 +311,7 @@ QRect LineTool::polygonFill()
     for (const QPoint &v : vertices_)
         polyBbox = polyBbox.united(QRect(v, v));
 
-    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
-    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
-    QPoint gradFrom = hvMode ? QPoint(0, 0) : firstPoint_;
-    if (centerFill && isRadial)
-        gradFrom = polyBbox.center();
-    QPoint gradTo = hvMode ? QPoint(image.width() - 1, image.height() - 1) : lastPoint_;
+    auto [gradFrom, gradTo] = gradientEndpoints(polyBbox, firstPoint_, lastPoint_);
 
     if (useGradient)
         return GradientRenderer::applyPolygonGradient(image, vertices_, fillColor,

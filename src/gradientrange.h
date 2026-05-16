@@ -3,6 +3,8 @@
 
 #include <QString>
 #include <QVector>
+#include <QRect>
+#include <utility>
 #include "buffer.h"
 
 struct GradientMarker {
@@ -111,6 +113,21 @@ inline bool gradientFillActive()
     return drawModeActive
         && activeGradientFillMode != FillFlat
         && !gradientRanges[activeGradientRange].markers().isEmpty();
+}
+
+// Computes gradient from/to endpoints for a polygon or path fill.
+// For HV modes the gradient spans the shape's bounding box; for other modes
+// the caller's drag start/end points are used as-is.
+inline std::pair<QPoint, QPoint> gradientEndpoints(
+    const QRect &bbox, const QPoint &startFallback, const QPoint &endFallback)
+{
+    const bool hvMode = activeGradientFillMode == FillHorizontal
+                     || activeGradientFillMode == FillVertical;
+    QPoint from = hvMode ? bbox.topLeft()     : startFallback;
+    if (centerFill && gradientFillIsRadial(activeGradientFillMode))
+        from = bbox.center();
+    const QPoint to = hvMode ? bbox.bottomRight() : endFallback;
+    return {from, to};
 }
 
 #endif // GRADIENTRANGE_H

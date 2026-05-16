@@ -183,12 +183,7 @@ QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
     for (const QPoint &p : pathPoints_)
         polyBbox = polyBbox.united(QRect(p, p));
 
-    bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
-    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
-    QPoint gradFrom = hvMode ? QPoint(0, 0) : startingPoint;
-    if (centerFill && isRadial)
-        gradFrom = polyBbox.center();
-    QPoint gradTo = hvMode ? QPoint(image.width() - 1, image.height() - 1) : to;
+    auto [gradFrom, gradTo] = gradientEndpoints(polyBbox, startingPoint, to);
 
     if (useGradient)
         return GradientRenderer::applyPolygonGradient(image, pathPoints_, fillColor,
