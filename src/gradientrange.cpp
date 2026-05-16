@@ -19,9 +19,9 @@ void GradientRange::setDefault(const QImage &image)
     constexpr int n = 6;
 
     markers_.clear();
+    int start = (kGradientSlotCount - n) / 2;
     for (int i = 0; i < n; i++) {
-        int slot = (i + 1) * (kGradientSlotCount - 1) / (n + 1);
-        markers_.append({slot, GradientRenderer::nearestColorIndex(targetColors[i], image), false});
+        markers_.append({start + i, GradientRenderer::nearestColorIndex(targetColors[i], image), false});
     }
 
     spread_       = 0;
