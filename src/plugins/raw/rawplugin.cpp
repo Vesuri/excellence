@@ -1,5 +1,4 @@
 #include <QImage>
-#include <QSharedPointer>
 
 #include "rawplugin.h"
 
@@ -21,7 +20,10 @@ QImageIOHandler *RawPlugin::create(QIODevice */*device*/, const QByteArray &/*fo
 }
 
 RawHandler::RawHandler() : QImageIOHandler(),
-    compressionRatio(-1)
+    interleave_(true),
+    wordAlign_(true),
+    paletteDepth_(24),
+    palettePlacement_(RawOption::PlacementEnd)
 {
 }
 
@@ -41,12 +43,7 @@ bool RawHandler::write(const QImage &image)
         return false;
     }
 
-    bool interleave = true;
-    bool wordAlign = true;
-    QString palettePlacement = "end";
-    int paletteDepth = 24;
-
-    int width = (image.width() + (wordAlign ? 15 : 7)) & (wordAlign ? 0xfff0 : 0xfff8);
+    int width = (image.width() + (wordAlign_ ? 15 : 7)) & (wordAlign_ ? 0xfff0 : 0xfff8);
     int height = image.height();
     int bitplanes = 0;
     for (int colors = image.colorCount() - 1; colors > 0; colors >>= 1) {
@@ -54,26 +51,26 @@ bool RawHandler::write(const QImage &image)
     }
 
     int lineWidth = width / 8;
-    int bitplaneDelta = interleave ? lineWidth : (lineWidth * height);
-    int lineDelta = interleave ? (lineWidth * bitplanes) : lineWidth;
+    int bitplaneDelta = interleave_ ? lineWidth : (lineWidth * height);
+    int lineDelta = interleave_ ? (lineWidth * bitplanes) : lineWidth;
 
     int dataSize = lineWidth * height * bitplanes;
-    int paletteSize = image.colorCount() * paletteDepth / 6;
-    int dataOffset = palettePlacement == "start" ? paletteSize : 0;
-    int paletteOffset = palettePlacement == "end" ? dataSize : 0;
+    int paletteSize = image.colorCount() * paletteDepth_ / 6;
+    int dataOffset = palettePlacement_ == RawOption::PlacementStart ? paletteSize : 0;
+    int paletteOffset = palettePlacement_ == RawOption::PlacementEnd ? dataSize : 0;
 
-    if (!palettePlacement.isEmpty()) {
+    if (palettePlacement_ != RawOption::PlacementNone) {
         dataSize += paletteSize;
     }
 
     unsigned char *data = new unsigned char[dataSize];
     memset(data, 0, static_cast<size_t>(dataSize));
 
-    if (!palettePlacement.isEmpty()) {
+    if (palettePlacement_ != RawOption::PlacementNone) {
         for (int c = 0; c < image.colorCount(); c++) {
             QRgb rgba = image.color(c);
-            if (paletteDepth == 12) {
-                data[paletteOffset + 2 * c] = static_cast<unsigned char>(qRed(rgba) >> 4);
+            if (paletteDepth_ == 12) {
+                data[paletteOffset + 2 * c]     = static_cast<unsigned char>(qRed(rgba) >> 4);
                 data[paletteOffset + 2 * c + 1] = static_cast<unsigned char>(qGreen(rgba) & 0xf0) | static_cast<unsigned char>(qBlue(rgba) >> 4);
             } else {
                 data[paletteOffset + 4 * c + 1] = static_cast<unsigned char>(qRed(rgba));
@@ -112,27 +109,35 @@ bool RawHandler::write(const QImage &image)
 
 QVariant RawHandler::option(QImageIOHandler::ImageOption option) const
 {
-    if (option == QImageIOHandler::CompressionRatio) {
-        return compressionRatio;
-    } else {
-        return QImageIOHandler::option(option);
+    switch (static_cast<int>(option)) {
+    case RawOption::Interleave:       return interleave_;
+    case RawOption::WordAlign:        return wordAlign_;
+    case RawOption::PaletteDepth:     return paletteDepth_;
+    case RawOption::PalettePlacement: return static_cast<int>(palettePlacement_);
+    default:                          return QImageIOHandler::option(option);
     }
 }
 
 void RawHandler::setOption(QImageIOHandler::ImageOption option, const QVariant &value)
 {
-    if (option == QImageIOHandler::CompressionRatio) {
-        compressionRatio = value;
-    } else {
-        QImageIOHandler::setOption(option, value);
+    switch (static_cast<int>(option)) {
+    case RawOption::Interleave:       interleave_ = value.toBool();                                         break;
+    case RawOption::WordAlign:        wordAlign_ = value.toBool();                                          break;
+    case RawOption::PaletteDepth:     paletteDepth_ = value.toInt();                                        break;
+    case RawOption::PalettePlacement: palettePlacement_ = static_cast<RawOption::Placement>(value.toInt()); break;
+    default:                          QImageIOHandler::setOption(option, value);                            break;
     }
 }
 
 bool RawHandler::supportsOption(QImageIOHandler::ImageOption option) const
 {
-    if (option == QImageIOHandler::CompressionRatio) {
+    switch (static_cast<int>(option)) {
+    case RawOption::Interleave:
+    case RawOption::WordAlign:
+    case RawOption::PaletteDepth:
+    case RawOption::PalettePlacement:
         return true;
-    } else {
+    default:
         return QImageIOHandler::supportsOption(option);
     }
 }
