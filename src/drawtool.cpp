@@ -121,11 +121,20 @@ QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
     const bool useGradient = gradientFillActive();
     const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
     bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
     QImage &image = buffer_->image();
+
+    QRect polyBbox;
+    for (const QPoint &p : pathPoints_)
+        polyBbox = polyBbox.united(QRect(p, p));
+
     QPoint gradFrom = hvMode ? QPoint(0, 0) : startingPoint;
-    QPoint gradTo   = hvMode ? QPoint(image.width() - 1, image.height() - 1) : to;
+    if (centerFill && isRadial)
+        gradFrom = polyBbox.center();
+    QPoint gradTo = hvMode ? QPoint(image.width() - 1, image.height() - 1) : to;
+    QRect conformRect = conformFill ? polyBbox : QRect();
     return GradientRenderer::polygonFillScanline(image, pathPoints_, fillColor,
-        useGradient, range, activeGradientFillMode, gradFrom, gradTo);
+        useGradient, range, activeGradientFillMode, gradFrom, gradTo, conformRect);
 }
 
 void DrawTool::registerTool()

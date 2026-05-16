@@ -77,6 +77,13 @@ enum GradientFillMode {
 };
 extern GradientFillMode activeGradientFillMode;
 extern bool drawModeActive;
+extern bool conformFill;
+extern bool centerFill;
+
+inline bool gradientFillIsRadial(GradientFillMode mode)
+{
+    return mode == FillRadial || mode == FillSpherical || mode == FillHighlight;
+}
 
 // Returns true when draw mode is on, a gradient fill mode is selected, and the
 // active range has markers.

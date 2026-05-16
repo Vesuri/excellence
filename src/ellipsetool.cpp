@@ -106,10 +106,73 @@ QRect EllipseTool::drawEllipseShape(double angle, bool applyGradient)
         QImage &image = buffer_->image();
         const GradientRange *range = &gradientRanges[activeGradientRange];
         bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+        bool isRadial = gradientFillIsRadial(activeGradientFillMode);
         QPoint gradFrom = hvMode ? QPoint(cx_ - rx_, cy_ - ry_) : startPoint_;
-        QPoint gradTo   = hvMode ? QPoint(cx_ + rx_, cy_ + ry_) : QPoint(cx_ + rx_, cy_);
+        if (centerFill && isRadial)
+            gradFrom = QPoint(cx_, cy_);
+        QPoint gradTo = hvMode ? QPoint(cx_ + rx_, cy_ + ry_) : QPoint(cx_ + rx_, cy_);
+        QRect ellipseBbox = QRect(cx_ - rx_, cy_ - ry_, 2 * rx_ + 1, 2 * ry_ + 1);
+        QRect conformRect = conformFill ? ellipseBbox : QRect();
+
+        // For H/V conform, the per-row or per-column span matters, not the global bbox.
+        // fillEllipse calls pixels in row order, so we can compute the row's x extent
+        // once per row by re-solving the same quadratic that fillEllipse uses internally.
+        const bool hConform = conformFill && activeGradientFillMode == FillHorizontal;
+        const bool vConform = conformFill && activeGradientFillMode == FillVertical;
+        const double cosA = std::cos(angle), sinA = std::sin(angle);
+        const double rx2 = double(rx_) * rx_, ry2 = double(ry_) * ry_;
+
+        // For V conform: pre-compute per-column y extents.
+        // Solving for dy given dx uses the same quadratic with cosA/sinA swapped.
+        int xBound = 0;
+        QVector<int> colY0, colY1;
+        if (vConform) {
+            xBound = int(std::ceil(std::sqrt(rx2 * cosA * cosA + ry2 * sinA * sinA))) + 1;
+            colY0.fill(INT_MAX, 2 * xBound + 1);
+            colY1.fill(INT_MIN, 2 * xBound + 1);
+            for (int dx = -xBound; dx <= xBound; dx++) {
+                double A = sinA * sinA / rx2 + cosA * cosA / ry2;
+                double B = 2.0 * dx * cosA * sinA * (1.0 / rx2 - 1.0 / ry2);
+                double C = double(dx) * dx * (cosA * cosA / rx2 + sinA * sinA / ry2) - 1.0;
+                double disc = B * B - 4.0 * A * C;
+                if (disc < 0) continue;
+                double sqrtD = std::sqrt(disc);
+                int y1 = cy_ + qRound((-B - sqrtD) / (2.0 * A));
+                int y2 = cy_ + qRound((-B + sqrtD) / (2.0 * A));
+                if (y1 > y2) qSwap(y1, y2);
+                colY0[dx + xBound] = y1;
+                colY1[dx + xBound] = y2;
+            }
+        }
+
+        int lastY = INT_MIN;
+        int rowX0 = 0, rowX1 = 0;
         auto fn = [&](const QPoint &p) {
-            float t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo);
+            QRect pixConform = conformRect;
+            if (hConform) {
+                if (p.y() != lastY) {
+                    lastY = p.y();
+                    int dy = p.y() - cy_;
+                    double A = cosA * cosA / rx2 + sinA * sinA / ry2;
+                    double B = 2.0 * dy * cosA * sinA * (1.0 / rx2 - 1.0 / ry2);
+                    double C = double(dy) * dy * (sinA * sinA / rx2 + cosA * cosA / ry2) - 1.0;
+                    double disc = B * B - 4.0 * A * C;
+                    if (disc >= 0) {
+                        double sqrtD = std::sqrt(disc);
+                        rowX0 = cx_ + qRound((-B - sqrtD) / (2.0 * A));
+                        rowX1 = cx_ + qRound((-B + sqrtD) / (2.0 * A));
+                        if (rowX0 > rowX1) qSwap(rowX0, rowX1);
+                    } else {
+                        rowX0 = rowX1 = p.x();
+                    }
+                }
+                pixConform = QRect(rowX0, p.y(), rowX1 - rowX0 + 1, 1);
+            } else if (vConform) {
+                int dxi = p.x() - cx_ + xBound;
+                if (dxi >= 0 && dxi < colY0.size() && colY0[dxi] <= colY1[dxi])
+                    pixConform = QRect(p.x(), colY0[dxi], 1, colY1[dxi] - colY0[dxi] + 1);
+            }
+            float t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo, pixConform);
             int ci = GradientRenderer::colorIndex(t, p.x(), p.y(), range, image);
             image.setPixel(p.x(), p.y(), static_cast<uint>(ci));
             changedRect = changedRect.united(QRect(p, p));

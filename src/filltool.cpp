@@ -183,13 +183,53 @@ QRect FillTool::applyGradientFill(const QPoint &endPoint)
     }
 
     bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    bool isRadial = activeGradientFillMode == FillRadial || activeGradientFillMode == FillSpherical;
     QPoint gradFrom = hvMode ? QPoint(0, 0) : startPoint_;
-    QPoint gradTo   = hvMode ? QPoint(image.width() - 1, image.height() - 1) : endPoint;
+    if (centerFill && isRadial)
+        gradFrom = visitedRect_.center();
+    QPoint gradTo = hvMode ? QPoint(image.width() - 1, image.height() - 1) : endPoint;
+
+    const bool hConform = conformFill && activeGradientFillMode == FillHorizontal;
+    const bool vConform = conformFill && activeGradientFillMode == FillVertical;
+
+    // For V conform: pre-scan to collect per-column y ranges.
+    QVector<int> colY0, colY1;
+    if (vConform) {
+        colY0.fill(INT_MAX, visitedW_);
+        colY1.fill(INT_MIN, visitedW_);
+        for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
+            for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
+                if (y < 0 || y >= visitedH_ || x < 0 || x >= visitedW_) continue;
+                if (!visited_[y * visitedW_ + x]) continue;
+                colY0[x] = qMin(colY0[x], y);
+                colY1[x] = qMax(colY1[x], y);
+            }
+        }
+    }
+
     for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
+        // For H conform: find this row's x extent.
+        int rowX0 = visitedRect_.right() + 1, rowX1 = visitedRect_.left() - 1;
+        if (hConform) {
+            for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
+                if (y < 0 || y >= visitedH_ || x < 0 || x >= visitedW_) continue;
+                if (!visited_[y * visitedW_ + x]) continue;
+                rowX0 = qMin(rowX0, x);
+                rowX1 = qMax(rowX1, x);
+            }
+        }
+
         for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
             if (y < 0 || y >= visitedH_ || x < 0 || x >= visitedW_) continue;
             if (!visited_[y * visitedW_ + x]) continue;
-            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo);
+            QRect pixConform;
+            if (hConform && rowX0 <= rowX1)
+                pixConform = QRect(rowX0, y, rowX1 - rowX0 + 1, 1);
+            else if (vConform && x < colY0.size() && colY0[x] <= colY1[x])
+                pixConform = QRect(x, colY0[x], 1, colY1[x] - colY0[x] + 1);
+            else if (conformFill)
+                pixConform = visitedRect_;
+            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, pixConform);
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
         }

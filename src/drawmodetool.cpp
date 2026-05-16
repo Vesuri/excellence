@@ -1,4 +1,5 @@
 #include <QButtonGroup>
+#include <QCheckBox>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -383,14 +384,15 @@ QWidget *DrawModeTool::createOptionsWidget()
         sep->setFrameShadow(QFrame::Sunken);
         col5vb->addWidget(sep);
     }
-    auto makeCol5Stub = [&](const char *label, const char *tooltip) {
-        QRadioButton *b = new QRadioButton(label, col5);
-        b->setToolTip(tooltip);
-        b->setEnabled(false);
-        col5vb->addWidget(b);
+    auto addFillCheck = [&](const char *label, const char *tip, bool &flag) {
+        QCheckBox *chk = new QCheckBox(label, col5);
+        chk->setToolTip(tip);
+        chk->setChecked(flag);
+        connect(chk, &QCheckBox::toggled, [&flag](bool v) { flag = v; });
+        col5vb->addWidget(chk);
     };
-    makeCol5Stub("Conform", "Conform fill to edges");
-    makeCol5Stub("Center",  "Auto center to fill");
+    addFillCheck("Conform", "Scale gradient to the bounding rect of the filled area", conformFill);
+    addFillCheck("Center",  "Originate radial/spherical/highlight fills from the area center", centerFill);
 
     mainRow->addWidget(col5);
 

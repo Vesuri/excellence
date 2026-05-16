@@ -273,11 +273,20 @@ QRect LineTool::polygonFill()
     const bool useGradient = gradientFillActive();
     const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
     bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
     QImage &image = buffer_->image();
+
+    QRect polyBbox;
+    for (const QPoint &v : vertices_)
+        polyBbox = polyBbox.united(QRect(v, v));
+
     QPoint gradFrom = hvMode ? QPoint(0, 0) : firstPoint_;
-    QPoint gradTo   = hvMode ? QPoint(image.width() - 1, image.height() - 1) : lastPoint_;
+    if (centerFill && isRadial)
+        gradFrom = polyBbox.center();
+    QPoint gradTo = hvMode ? QPoint(image.width() - 1, image.height() - 1) : lastPoint_;
+    QRect conformRect = conformFill ? polyBbox : QRect();
     return GradientRenderer::polygonFillScanline(image, vertices_, fillColor,
-        useGradient, range, activeGradientFillMode, gradFrom, gradTo);
+        useGradient, range, activeGradientFillMode, gradFrom, gradTo, conformRect);
 }
 
 // ── Tool registration / activation ────────────────────────────────────────

@@ -15,16 +15,21 @@ namespace GradientRenderer {
 
     // Computes the t value (0..1) for a pixel based on the fill mode.
     // For Horizontal/Vertical, from/to define the start and end of the gradient span.
+    // conformRect: when valid, scales the gradient to the fill bounding rect instead of
+    // using absolute canvas coordinates. Pass QRect() to disable.
     float computeT(int px, int py,
-                   GradientFillMode mode, const QPoint &from, const QPoint &to);
+                   GradientFillMode mode, const QPoint &from, const QPoint &to,
+                   const QRect &conformRect = QRect());
 
     // Scanline polygon fill with optional gradient. Returns the changed rect.
     // gradFrom/gradTo are the gradient endpoints (caller handles hvMode logic).
     // range may be null when useGradient is false.
+    // conformRect: when valid, scales the gradient to the bounding rect (see computeT).
     QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
                               int fillColor, bool useGradient, const GradientRange *range,
                               GradientFillMode fillMode,
-                              const QPoint &gradFrom, const QPoint &gradTo);
+                              const QPoint &gradFrom, const QPoint &gradTo,
+                              const QRect &conformRect = QRect());
 }
 
 #endif // GRADIENTRENDERER_H

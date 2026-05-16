@@ -127,16 +127,32 @@ int colorIndex(float t, int pixelX, int pixelY,
     return markers.last().colorIndex;
 }
 
-float computeT(int px, int py,
-               GradientFillMode mode, const QPoint &from, const QPoint &to)
+static float conformRadius(const QRect &rect, const QPoint &from)
 {
+    float maxDist = 1.0f;
+    const QPoint corners[] = { rect.topLeft(), rect.topRight(), rect.bottomLeft(), rect.bottomRight() };
+    for (const QPoint &c : corners) {
+        float ddx = float(c.x() - from.x());
+        float ddy = float(c.y() - from.y());
+        maxDist = qMax(maxDist, sqrtf(ddx * ddx + ddy * ddy));
+    }
+    return maxDist;
+}
+
+float computeT(int px, int py,
+               GradientFillMode mode, const QPoint &from, const QPoint &to,
+               const QRect &conformRect)
+{
+    const bool conform = conformRect.isValid();
     switch (mode) {
     case FillHorizontal: {
-        int x0 = qMin(from.x(), to.x()), x1 = qMax(from.x(), to.x());
+        int x0 = conform ? conformRect.left()  : qMin(from.x(), to.x());
+        int x1 = conform ? conformRect.right() : qMax(from.x(), to.x());
         return float(px - x0) / qMax(x1 - x0, 1);
     }
     case FillVertical: {
-        int y0 = qMin(from.y(), to.y()), y1 = qMax(from.y(), to.y());
+        int y0 = conform ? conformRect.top()    : qMin(from.y(), to.y());
+        int y1 = conform ? conformRect.bottom() : qMax(from.y(), to.y());
         return float(py - y0) / qMax(y1 - y0, 1);
     }
     case FillLinear: {
@@ -146,12 +162,25 @@ float computeT(int px, int py,
         if (lenSq < 1.0f) return 0.0f;
         float rx = float(px - from.x());
         float ry = float(py - from.y());
-        return qBound(0.0f, (rx * dx + ry * dy) / lenSq, 1.0f);
+        float t_raw = (rx * dx + ry * dy) / lenSq;
+        if (!conform)
+            return qBound(0.0f, t_raw, 1.0f);
+        const QPoint corners[] = { conformRect.topLeft(), conformRect.topRight(),
+                                   conformRect.bottomLeft(), conformRect.bottomRight() };
+        float t_min = 1e9f, t_max = -1e9f;
+        for (const QPoint &c : corners) {
+            float t = (float(c.x() - from.x()) * dx + float(c.y() - from.y()) * dy) / lenSq;
+            t_min = qMin(t_min, t);
+            t_max = qMax(t_max, t);
+        }
+        float span = t_max - t_min;
+        if (span < 1e-6f) return 0.0f;
+        return qBound(0.0f, (t_raw - t_min) / span, 1.0f);
     }
     case FillRadial: {
-        float dx = float(to.x() - from.x());
-        float dy = float(to.y() - from.y());
-        float radius = sqrtf(dx * dx + dy * dy);
+        float radius = conform ? conformRadius(conformRect, from)
+                               : sqrtf(float(to.x() - from.x()) * float(to.x() - from.x())
+                                     + float(to.y() - from.y()) * float(to.y() - from.y()));
         if (radius < 1.0f) return 0.0f;
         float rx = float(px - from.x());
         float ry = float(py - from.y());
@@ -159,9 +188,9 @@ float computeT(int px, int py,
     }
     case FillSpherical:
     case FillHighlight: {
-        float dx = float(to.x() - from.x());
-        float dy = float(to.y() - from.y());
-        float radius = sqrtf(dx * dx + dy * dy);
+        float radius = conform ? conformRadius(conformRect, from)
+                               : sqrtf(float(to.x() - from.x()) * float(to.x() - from.x())
+                                     + float(to.y() - from.y()) * float(to.y() - from.y()));
         if (radius < 1.0f) return 0.0f;
         float rx = float(px - from.x());
         float ry = float(py - from.y());
@@ -176,13 +205,17 @@ float computeT(int px, int py,
 QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
                           int fillColor, bool useGradient, const GradientRange *range,
                           GradientFillMode fillMode,
-                          const QPoint &gradFrom, const QPoint &gradTo)
+                          const QPoint &gradFrom, const QPoint &gradTo,
+                          const QRect &conformRect)
 {
     if (polygon.size() < 3)
         return QRect();
 
     const QRect imageRect = image.rect();
     const int n = polygon.size();
+    const bool conform = conformRect.isValid();
+    const bool hConform = conform && fillMode == FillHorizontal;
+    const bool vConform = conform && fillMode == FillVertical;
 
     int minY = imageRect.bottom(), maxY = imageRect.top();
     for (const QPoint &v : polygon) {
@@ -192,24 +225,53 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
     minY = qMax(minY, imageRect.top());
     maxY = qMin(maxY, imageRect.bottom());
 
-    QRect changedRect;
-    for (int y = minY; y <= maxY; y++) {
+    auto scanlineXS = [&](int y) {
         QList<int> xs;
         for (int i = 0; i < n; i++) {
             const QPoint &p1 = polygon[i];
             const QPoint &p2 = polygon[(i + 1) % n];
-            if ((p1.y() <= y && p2.y() > y) || (p2.y() <= y && p1.y() > y)) {
-                int x = p1.x() + (y - p1.y()) * (p2.x() - p1.x()) / (p2.y() - p1.y());
-                xs.append(x);
-            }
+            if ((p1.y() <= y && p2.y() > y) || (p2.y() <= y && p1.y() > y))
+                xs.append(p1.x() + (y - p1.y()) * (p2.x() - p1.x()) / (p2.y() - p1.y()));
         }
         std::sort(xs.begin(), xs.end());
+        return xs;
+    };
+
+    // For V conform: pre-scan to collect per-column y ranges.
+    QVector<int> colY0, colY1;
+    if (vConform) {
+        colY0.fill(INT_MAX, imageRect.width());
+        colY1.fill(INT_MIN, imageRect.width());
+        for (int y = minY; y <= maxY; y++) {
+            const QList<int> xs = scanlineXS(y);
+            for (int i = 0; i + 1 < xs.size(); i += 2) {
+                int x1 = qMax(xs[i], imageRect.left());
+                int x2 = qMin(xs[i + 1], imageRect.right());
+                for (int x = x1; x <= x2; x++) {
+                    colY0[x - imageRect.left()] = qMin(colY0[x - imageRect.left()], y);
+                    colY1[x - imageRect.left()] = qMax(colY1[x - imageRect.left()], y);
+                }
+            }
+        }
+    }
+
+    QRect changedRect;
+    for (int y = minY; y <= maxY; y++) {
+        const QList<int> xs = scanlineXS(y);
         for (int i = 0; i + 1 < xs.size(); i += 2) {
             int x1 = qMax(xs[i], imageRect.left());
             int x2 = qMin(xs[i + 1], imageRect.right());
             for (int x = x1; x <= x2; x++) {
                 if (useGradient) {
-                    float t = computeT(x, y, fillMode, gradFrom, gradTo);
+                    QRect pixConform = conformRect;
+                    if (hConform)
+                        pixConform = QRect(x1, y, x2 - x1 + 1, 1);
+                    else if (vConform) {
+                        int xi = x - imageRect.left();
+                        if (xi >= 0 && xi < colY0.size() && colY0[xi] <= colY1[xi])
+                            pixConform = QRect(x, colY0[xi], 1, colY1[xi] - colY0[xi] + 1);
+                    }
+                    float t = computeT(x, y, fillMode, gradFrom, gradTo, pixConform);
                     int ci = colorIndex(t, x, y, range, image);
                     image.setPixel(x, y, static_cast<uint>(ci));
                 } else {

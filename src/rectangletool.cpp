@@ -157,9 +157,12 @@ QRect RectangleTool::drawGradientRect(const QRect &fillRect, const QPoint &curre
 {
     QImage &image = buffer_->image();
     const GradientRange *range = &gradientRanges[activeGradientRange];
+    bool isRadial = gradientFillIsRadial(activeGradientFillMode);
+    QPoint from = (centerFill && isRadial) ? fillRect.center() : startPoint;
+    QRect conformRect = conformFill ? fillRect : QRect();
     for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
         for (int x = fillRect.left(); x <= fillRect.right(); x++) {
-            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, startPoint, current);
+            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, from, current, conformRect);
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
         }

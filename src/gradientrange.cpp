@@ -5,6 +5,8 @@ GradientRange gradientRanges[kGradientRangeCount];
 int activeGradientRange = 0;
 GradientFillMode activeGradientFillMode = FillFlat;
 bool drawModeActive = false;
+bool conformFill = false;
+bool centerFill = false;
 
 int GradientRange::colorCount() const
 {
