@@ -523,6 +523,8 @@ void BufferView::handleKey(QKeyEvent *event)
                 buffer->undoAll();
         } else if (event->modifiers() & Qt::ShiftModifier)
             buffer->redo();
+        else if (buffer->tool() && buffer->tool()->isInRubberBandMode())
+            buffer->tool()->cancel();
         else
             buffer->undo();
         break;

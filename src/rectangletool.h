@@ -28,6 +28,7 @@ public:
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
     void cancel() override;
+    bool isInRubberBandMode() const override { return rubberBand_.pending; }
     QString status() const override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
