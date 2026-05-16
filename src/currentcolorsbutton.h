@@ -9,6 +9,7 @@ class CurrentColorsButton : public QWidget
 public:
     explicit CurrentColorsButton(QWidget *parent = nullptr);
 
+    QSize sizeHint() const override;
     void paintEvent(QPaintEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
 
@@ -21,8 +22,10 @@ signals:
     void backgroundClicked();
 
 private:
-    QColor paintColor;
-    QColor eraseColor;
+    QColor paintColor_;
+    QColor eraseColor_;
+    int paintIndex_ = 0;
+    int eraseIndex_ = 0;
 };
 
 #endif // CURRENTCOLORSBUTTON_H

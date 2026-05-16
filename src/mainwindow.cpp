@@ -1,6 +1,10 @@
 #include "palettebutton.h"
 #include <QAbstractSpinBox>
 #include <QCloseEvent>
+#include <QFrame>
+#include <QLabel>
+#include <QStatusBar>
+#include "currentcolorsbutton.h"
 #include <QInputDialog>
 #include <QKeyEvent>
 #include <QLineEdit>
@@ -26,6 +30,31 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+static QString paintModeLabel(Buffer::PaintMode mode)
+{
+    switch (mode) {
+    case Buffer::Normal:       return "Normal";
+    case Buffer::Replace:      return "Replace";
+    case Buffer::Smear:        return "Smear";
+    case Buffer::Smooth:       return "Smooth";
+    case Buffer::Range:        return "Range";
+    case Buffer::AverageSmear: return "Avg Smear";
+    case Buffer::Cycle:        return "Cycle";
+    case Buffer::Random:       return "Random";
+    case Buffer::Tint:         return "Tint";
+    case Buffer::Colorize:     return "Colorize";
+    case Buffer::Brighten:     return "Brighten";
+    case Buffer::Darken:       return "Darken";
+    case Buffer::Mix:          return "Mix";
+    case Buffer::Negative:     return "Negative";
+    case Buffer::Dither1:      return "Dither1";
+    case Buffer::Dither2:      return "Dither2";
+    case Buffer::Transparent:  return "Transparent";
+    case Buffer::BrushMode:    return "Brush";
+    }
+    return {};
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -39,6 +68,34 @@ MainWindow::MainWindow(QWidget *parent) :
     paletteMode(Pick)
 {
     ui->setupUi(this);
+
+    // Status bar
+    statusColorsButton_ = new CurrentColorsButton;
+    statusToolLabel_ = new QLabel;
+    statusModeLabel_ = new QLabel;
+    statusBrushLabel_ = new QLabel;
+    statusCoordsLabel_ = new QLabel;
+    statusCoordsLabel_->setToolTip(tr("Click to toggle absolute/relative coordinates"));
+    statusCoordsLabel_->installEventFilter(this);
+
+    auto *sep1 = new QFrame; sep1->setFrameShape(QFrame::VLine); sep1->setFrameShadow(QFrame::Sunken);
+    auto *sep2 = new QFrame; sep2->setFrameShape(QFrame::VLine); sep2->setFrameShadow(QFrame::Sunken);
+    auto *sep3 = new QFrame; sep3->setFrameShape(QFrame::VLine); sep3->setFrameShadow(QFrame::Sunken);
+
+    statusBar()->setSizeGripEnabled(false);
+    statusBar()->addWidget(statusColorsButton_);
+    statusBar()->addWidget(sep1);
+    statusBar()->addWidget(statusToolLabel_);
+    statusBar()->addWidget(sep2);
+    statusBar()->addWidget(statusModeLabel_);
+    statusBar()->addWidget(sep3);
+    statusBar()->addWidget(statusBrushLabel_);
+    statusBar()->addPermanentWidget(statusCoordsLabel_);
+
+    connect(statusColorsButton_, &CurrentColorsButton::foregroundClicked,
+            this, &MainWindow::pickForegroundColor);
+    connect(statusColorsButton_, &CurrentColorsButton::backgroundClicked,
+            this, &MainWindow::pickBackgroundColor);
 
 #ifdef Q_OS_MAC
     // Detach the menu bar so it becomes the application-level menu bar on
@@ -198,8 +255,6 @@ void MainWindow::initialize()
         tools.at(i)->setBuffer(buffer);
     }
 
-    connect(ui->currentColorsButton, SIGNAL(foregroundClicked()), this, SLOT(pickForegroundColor()));
-    connect(ui->currentColorsButton, SIGNAL(backgroundClicked()), this, SLOT(pickBackgroundColor()));
 
     for (Tool *tool : tools) {
         if (qobject_cast<DrawTool *>(tool)) { buffer->setTool(tool); break; }
@@ -255,9 +310,15 @@ void MainWindow::setBuffer(Buffer *newBuffer)
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), penTip, SLOT(setEraseColor(unsigned)));
     connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), toolPenTip, SLOT(setPaintColor(unsigned)));
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), toolPenTip, SLOT(setEraseColor(unsigned)));
-    connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setPaintColor(unsigned, QColor)));
-    connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), ui->currentColorsButton, SLOT(setEraseColor(unsigned, QColor)));
     connect(buffer, &Buffer::dirtyChanged, this, &MainWindow::onDirtyChanged);
+    connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateStatusBarStatic()));
+    connect(buffer, &Buffer::paintModeChanged, this, [this](Buffer::PaintMode) { updateStatusBarStatic(); });
+    connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateStatusBarStatic()));
+    connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateStatusBarStatic()));
+    connect(buffer, SIGNAL(paletteModified()), this, SLOT(updateStatusBarStatic()));
+    connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), statusColorsButton_, SLOT(setPaintColor(unsigned,QColor)));
+    connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), statusColorsButton_, SLOT(setEraseColor(unsigned,QColor)));
+    updateStatusBarStatic();
 
     delete oldBuffer;
 }
@@ -268,8 +329,6 @@ void MainWindow::updatePalette()
         PaletteButton *button = static_cast<PaletteButton *>(ui->paletteLayout->itemAt(i)->widget());
         button->setColor(QColor(buffer->image().color(i)));
     }
-    ui->currentColorsButton->setPaintColor(buffer->paintColor(), QColor(buffer->image().color(static_cast<int>(buffer->paintColor()))));
-    ui->currentColorsButton->setEraseColor(buffer->eraseColor(), QColor(buffer->image().color(static_cast<int>(buffer->eraseColor()))));
 }
 
 void MainWindow::openFile(const QString &path)
@@ -320,6 +379,7 @@ void MainWindow::newWindow()
     bufferView->installEventFilter(this);
     bufferView->setBuffer(buffer);
     connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
+    connect(bufferView, &BufferView::cursorMoved, this, &MainWindow::updateCursorStatus);
     bufferView->show();
     bufferViews.append(bufferView);
     if (!activeBufferView)
@@ -348,6 +408,7 @@ void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
         bufferView->centerOn(point);
 
     connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
+    connect(bufferView, &BufferView::cursorMoved, this, &MainWindow::updateCursorStatus);
     bufferView->show();
     bufferViews.append(bufferView);
 }
@@ -769,6 +830,12 @@ void MainWindow::paletteRemapPage()
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+    if (watched == statusCoordsLabel_ && event->type() == QEvent::MouseButtonPress) {
+        relativeCoordsMode_ = !relativeCoordsMode_;
+        updateCursorStatus(lastCursorPoint_, lastCursorValid_);
+        return true;
+    }
+
     if (watched == qApp && event->type() == QEvent::Quit) {
         if (isVisible()) {
             if (close())
@@ -817,6 +884,53 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         break;
     }
     return QObject::eventFilter(watched, event);
+}
+
+void MainWindow::updateStatusBarStatic()
+{
+    if (!buffer) return;
+
+    Tool *tool = buffer->tool();
+    statusToolLabel_->setText(tool ? tool->name() : QString());
+    statusModeLabel_->setText(paintModeLabel(buffer->paintMode()));
+
+    auto colorAt = [this](unsigned index) {
+        return QColor(buffer->image().color(static_cast<int>(index)));
+    };
+    statusColorsButton_->setPaintColor(buffer->paintColor(), colorAt(buffer->paintColor()));
+    statusColorsButton_->setEraseColor(buffer->eraseColor(), colorAt(buffer->eraseColor()));
+
+    if (Brush *brush = qobject_cast<Brush *>(buffer->pen())) {
+        statusBrushLabel_->setText(QString("%1\xd7%2").arg(brush->image().width()).arg(brush->image().height()));
+        statusBrushLabel_->setVisible(true);
+    } else {
+        statusBrushLabel_->setText(QString());
+        statusBrushLabel_->setVisible(false);
+    }
+}
+
+void MainWindow::updateCursorStatus(QPoint point, bool valid)
+{
+    lastCursorPoint_ = point;
+    lastCursorValid_ = valid;
+
+    updateStatusBarStatic();
+
+    if (!valid || !buffer) {
+        statusCoordsLabel_->clear();
+        return;
+    }
+
+    QString toolStatus = buffer->tool() ? buffer->tool()->status() : QString();
+
+    if (relativeCoordsMode_ && !toolStatus.isEmpty()) {
+        statusCoordsLabel_->setText(toolStatus);
+    } else {
+        QString text = QString("X: %1  Y: %2").arg(point.x()).arg(point.y());
+        if (!toolStatus.isEmpty())
+            text += "  " + toolStatus;
+        statusCoordsLabel_->setText(text);
+    }
 }
 
 void MainWindow::updateWindowTitle(int paletteIndex)

@@ -183,6 +183,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             setZoomLevel(zoomLevel_ + (wheelEvent->delta() > 0 ? 1 : -1));
             ui->graphicsView->centerOn(point);
             updateWindowTitle(point);
+            emit cursorMoved(point, buffer && buffer->image().rect().contains(point));
             return true;
         }
         case QEvent::GraphicsSceneMousePress:
@@ -262,6 +263,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             }
 
             updateWindowTitle(point);
+            emit cursorMoved(point, buffer && buffer->image().rect().contains(point));
             lastMousePoint = point;
             break;
         }
@@ -276,6 +278,7 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 buffer->clearHoverPreview();
             scene->setGuides(false, {}, {});
             updateWindowTitle();
+            emit cursorMoved(QPoint(), false);
             break;
         default:
             break;

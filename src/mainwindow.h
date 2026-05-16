@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QVector>
 #include <QRgb>
+#include <QPoint>
 
 namespace Ui {
 class MainWindow;
@@ -16,6 +17,8 @@ class PaletteItem;
 class BufferView;
 class Buffer;
 class PenTip;
+class QLabel;
+class CurrentColorsButton;
 
 class MainWindow : public QMainWindow
 {
@@ -84,6 +87,8 @@ private slots:
     void about();
     void onDirtyChanged(bool dirty);
     void openMagnifiedViewAt(int zoomLevel, QPoint point);
+    void updateStatusBarStatic();
+    void updateCursorStatus(QPoint point, bool valid);
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };
@@ -105,6 +110,15 @@ private:
     QVector<QRgb> paletteUndoSnapshot_;
     QVector<QRgb> paletteRestorePoint_;
     bool saveWithTransparency_ = false;
+
+    CurrentColorsButton *statusColorsButton_;
+    QLabel *statusToolLabel_;
+    QLabel *statusModeLabel_;
+    QLabel *statusBrushLabel_;
+    QLabel *statusCoordsLabel_;
+    bool relativeCoordsMode_ = false;
+    QPoint lastCursorPoint_;
+    bool lastCursorValid_ = false;
 };
 
 #endif // MAINWINDOW_H

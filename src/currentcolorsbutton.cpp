@@ -1,56 +1,60 @@
 #include <QPainter>
-#include <QPainterPath>
 #include <QPaintEvent>
 #include <QMouseEvent>
 #include "currentcolorsbutton.h"
 
+static const int kSwatchW = 28;
+static const int kGap     = 1;
+
 CurrentColorsButton::CurrentColorsButton(QWidget *parent) : QWidget(parent)
 {
-
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    setCursor(Qt::PointingHandCursor);
 }
 
-void CurrentColorsButton::paintEvent(QPaintEvent *event)
+QSize CurrentColorsButton::sizeHint() const
 {
-    QRect rect = event->rect().adjusted(0, 0, 1, 1);
+    return QSize(kSwatchW * 2 + kGap, 14);
+}
 
-    QPainter painter;
-    painter.begin(this);
+void CurrentColorsButton::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
 
-    QPainterPath path;
-    path.moveTo(rect.topLeft());
-    path.lineTo(rect.topRight());
-    path.lineTo(rect.right(), (rect.top() + rect.bottom()) / 2);
-    path.lineTo(rect.left(), (rect.top() + rect.bottom()) / 2);
-    painter.fillPath(path, paintColor);
+    auto drawSwatch = [&](const QRect &r, const QColor &color, int index) {
+        painter.fillRect(r, color);
+        painter.setPen(QColor(0, 0, 0, 160));
+        painter.drawRect(r.adjusted(0, 0, -1, -1));
+        int luma = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
+        painter.setPen(luma > 128 ? Qt::black : Qt::white);
+        QFont f = painter.font();
+        f.setPixelSize(9);
+        painter.setFont(f);
+        painter.drawText(r, Qt::AlignCenter, QString::number(index));
+    };
 
-    path = QPainterPath();
-    path.moveTo(rect.left(), (rect.top() + rect.bottom()) / 2);
-    path.lineTo(rect.right(), (rect.top() + rect.bottom()) / 2);
-    path.lineTo(rect.bottomRight());
-    path.lineTo(rect.bottomLeft());
-    painter.fillPath(path, eraseColor);
-
-    painter.end();
+    drawSwatch(QRect(0,              0, kSwatchW, height()), paintColor_, paintIndex_);
+    drawSwatch(QRect(kSwatchW + kGap, 0, kSwatchW, height()), eraseColor_, eraseIndex_);
 }
 
 void CurrentColorsButton::mousePressEvent(QMouseEvent *e)
 {
-    if (e->position().y() < height() / 2)
+    if (e->position().x() <= kSwatchW)
         emit foregroundClicked();
     else
         emit backgroundClicked();
 }
 
-void CurrentColorsButton::setPaintColor(unsigned, const QColor &color)
+void CurrentColorsButton::setPaintColor(unsigned colorIndex, const QColor &color)
 {
-    this->paintColor = color;
-
+    paintColor_ = color;
+    paintIndex_ = static_cast<int>(colorIndex);
     update();
 }
 
-void CurrentColorsButton::setEraseColor(unsigned, const QColor &color)
+void CurrentColorsButton::setEraseColor(unsigned colorIndex, const QColor &color)
 {
-    this->eraseColor = color;
-
+    eraseColor_ = color;
+    eraseIndex_ = static_cast<int>(colorIndex);
     update();
 }
