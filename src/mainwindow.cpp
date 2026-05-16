@@ -121,8 +121,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushFlipVertical, SIGNAL(triggered()), this, SLOT(brushFlipVertical()));
     connect(ui->actionBrushRotate90CW, SIGNAL(triggered()), this, SLOT(brushRotate90CW()));
     connect(ui->actionBrushRotate90CCW, SIGNAL(triggered()), this, SLOT(brushRotate90CCW()));
+    connect(ui->actionBrushRotateNumeric, SIGNAL(triggered()), this, SLOT(brushRotateNumeric()));
     connect(ui->actionBrushDouble, SIGNAL(triggered()), this, SLOT(brushDouble()));
+    connect(ui->actionBrushDoubleX, SIGNAL(triggered()), this, SLOT(brushDoubleX()));
+    connect(ui->actionBrushDoubleY, SIGNAL(triggered()), this, SLOT(brushDoubleY()));
     connect(ui->actionBrushHalve, SIGNAL(triggered()), this, SLOT(brushHalve()));
+    connect(ui->actionBrushHalveX, SIGNAL(triggered()), this, SLOT(brushHalveX()));
+    connect(ui->actionBrushHalveY, SIGNAL(triggered()), this, SLOT(brushHalveY()));
     connect(ui->actionBrushScaleToSize, SIGNAL(triggered()), this, SLOT(brushScaleToSize()));
     connect(ui->actionBrushShearX, SIGNAL(triggered()), this, SLOT(brushShearX()));
     connect(ui->actionBrushShearY, SIGNAL(triggered()), this, SLOT(brushShearY()));
@@ -590,45 +595,86 @@ void MainWindow::brushAutoBackground()
     brush->detectBackground();
 }
 
-void MainWindow::brushFlipHorizontal()
+Brush *MainWindow::brushForTransform()
 {
     Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    if (brush && !brush->hasOriginal())
+        brush->storeOriginal();
+    return brush;
+}
+
+void MainWindow::brushFlipHorizontal()
+{
+    Brush *brush = brushForTransform();
     if (brush) brush->flipHorizontal();
 }
 
 void MainWindow::brushFlipVertical()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->flipVertical();
 }
 
 void MainWindow::brushRotate90CW()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->rotate90CW();
 }
 
 void MainWindow::brushRotate90CCW()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->rotate90CCW();
+}
+
+void MainWindow::brushRotateNumeric()
+{
+    Brush *brush = brushForTransform();
+    if (!brush) return;
+    bool ok;
+    double degrees = QInputDialog::getDouble(this, "Rotate Brush", "Degrees (clockwise):", 45.0, -360.0, 360.0, 1, &ok);
+    if (ok) brush->rotateByDegrees(degrees);
 }
 
 void MainWindow::brushDouble()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->doubleSize();
+}
+
+void MainWindow::brushDoubleX()
+{
+    Brush *brush = brushForTransform();
+    if (brush) brush->doubleWidth();
+}
+
+void MainWindow::brushDoubleY()
+{
+    Brush *brush = brushForTransform();
+    if (brush) brush->doubleHeight();
 }
 
 void MainWindow::brushHalve()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->halveSize();
+}
+
+void MainWindow::brushHalveX()
+{
+    Brush *brush = brushForTransform();
+    if (brush) brush->halveWidth();
+}
+
+void MainWindow::brushHalveY()
+{
+    Brush *brush = brushForTransform();
+    if (brush) brush->halveHeight();
 }
 
 void MainWindow::brushScaleToSize()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (!brush)
         return;
     bool ok;
@@ -641,7 +687,7 @@ void MainWindow::brushScaleToSize()
 
 void MainWindow::brushShearX()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (!brush) return;
     bool ok;
     double factor = QInputDialog::getDouble(this, "Shear X", "Factor (-2.0 to 2.0):", 0.5, -2.0, 2.0, 2, &ok);
@@ -650,7 +696,7 @@ void MainWindow::brushShearX()
 
 void MainWindow::brushShearY()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (!brush) return;
     bool ok;
     double factor = QInputDialog::getDouble(this, "Shear Y", "Factor (-2.0 to 2.0):", 0.5, -2.0, 2.0, 2, &ok);
@@ -659,7 +705,7 @@ void MainWindow::brushShearY()
 
 void MainWindow::brushBendX()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (!brush) return;
     bool ok;
     double amount = QInputDialog::getDouble(this, "Bend X", "Amount (-1.0 to 1.0):", 0.3, -1.0, 1.0, 2, &ok);
@@ -668,7 +714,7 @@ void MainWindow::brushBendX()
 
 void MainWindow::brushBendY()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (!brush) return;
     bool ok;
     double amount = QInputDialog::getDouble(this, "Bend Y", "Amount (-1.0 to 1.0):", 0.3, -1.0, 1.0, 2, &ok);
@@ -677,19 +723,19 @@ void MainWindow::brushBendY()
 
 void MainWindow::brushOutline()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->outline(static_cast<int>(buffer->paintColor()));
 }
 
 void MainWindow::brushTrim()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->trim();
 }
 
 void MainWindow::brushTileCut()
 {
-    Brush *brush = qobject_cast<Brush *>(buffer->pen());
+    Brush *brush = brushForTransform();
     if (brush) brush->tileCut();
 }
 

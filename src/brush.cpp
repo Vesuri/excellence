@@ -1,5 +1,6 @@
 #include <QRect>
 #include <QImage>
+#include <QTransform>
 #include <climits>
 #include <cmath>
 #include "buffer.h"
@@ -137,22 +138,28 @@ void Brush::setTransparentIndex(int index)
     transparentIndex_ = index;
 }
 
+// ── Private helpers ─────────────────────────────────────────────────────────
+
+static int nearestColorIndex(QRgb color, int defaultIdx, const QVector<QRgb> &palette)
+{
+    int bestIdx = defaultIdx, bestDist = INT_MAX;
+    for (int i = 0; i < palette.size(); i++) {
+        int dr = qRed(color)   - qRed(palette[i]);
+        int dg = qGreen(color) - qGreen(palette[i]);
+        int db = qBlue(color)  - qBlue(palette[i]);
+        int dist = dr*dr + dg*dg + db*db;
+        if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+    }
+    return bestIdx;
+}
+
 void Brush::remap(const QVector<QRgb> &palette)
 {
-    for (int y = 0; y < image_.height(); y++) {
+    for (int y = 0; y < image_.height(); y++)
         for (int x = 0; x < image_.width(); x++) {
             QRgb color = image_.color(image_.pixelIndex(x, y));
-            int bestIdx = 0, bestDist = INT_MAX;
-            for (int i = 0; i < palette.size(); i++) {
-                int dr = qRed(color)   - qRed(palette[i]);
-                int dg = qGreen(color) - qGreen(palette[i]);
-                int db = qBlue(color)  - qBlue(palette[i]);
-                int dist = dr*dr + dg*dg + db*db;
-                if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-            }
-            image_.setPixel(x, y, static_cast<uint>(bestIdx));
+            image_.setPixel(x, y, static_cast<uint>(nearestColorIndex(color, 0, palette)));
         }
-    }
 }
 
 void Brush::replaceColor(int fromIndex, int toIndex)
@@ -163,27 +170,14 @@ void Brush::replaceColor(int fromIndex, int toIndex)
                 image_.setPixel(x, y, static_cast<uint>(toIndex));
 }
 
-// ── Private helper ─────────────────────────────────────────────────────────
-
 QImage Brush::reindex(const QImage &src) const
 {
     QImage result(src.width(), src.height(), QImage::Format_Indexed8);
     result.setColorTable(image_.colorTable());
     const QVector<QRgb> ct = image_.colorTable();
-    for (int y = 0; y < src.height(); y++) {
-        for (int x = 0; x < src.width(); x++) {
-            QRgb color = src.pixel(x, y);
-            int bestIdx = 0, bestDist = INT_MAX;
-            for (int i = 0; i < ct.size(); i++) {
-                int dr = qRed(color)   - qRed(ct[i]);
-                int dg = qGreen(color) - qGreen(ct[i]);
-                int db = qBlue(color)  - qBlue(ct[i]);
-                int dist = dr*dr + dg*dg + db*db;
-                if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-            }
-            result.setPixel(x, y, static_cast<uint>(bestIdx));
-        }
-    }
+    for (int y = 0; y < src.height(); y++)
+        for (int x = 0; x < src.width(); x++)
+            result.setPixel(x, y, static_cast<uint>(nearestColorIndex(src.pixel(x, y), 0, ct)));
     return result;
 }
 
@@ -216,6 +210,28 @@ void Brush::rotate90CCW()
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
 }
 
+void Brush::rotateByDegrees(double degrees)
+{
+    int bg = qMax(0, transparentIndex_);
+    QImage argb = image_.convertToFormat(QImage::Format_ARGB32);
+    QTransform t;
+    t.rotate(degrees);
+    argb = argb.transformed(t, Qt::SmoothTransformation);
+
+    QImage result(argb.width(), argb.height(), QImage::Format_Indexed8);
+    result.setColorTable(image_.colorTable());
+    const QVector<QRgb> ct = image_.colorTable();
+    for (int y = 0; y < argb.height(); y++) {
+        for (int x = 0; x < argb.width(); x++) {
+            QRgb color = argb.pixel(x, y);
+            int idx = (qAlpha(color) < 128) ? bg : nearestColorIndex(color, bg, ct);
+            result.setPixel(x, y, static_cast<uint>(idx));
+        }
+    }
+    image_ = result;
+    handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+}
+
 void Brush::scale(int width, int height)
 {
     if (width < 1)  width  = 1;
@@ -226,8 +242,12 @@ void Brush::scale(int width, int height)
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
 }
 
-void Brush::doubleSize() { scale(image_.width() * 2, image_.height() * 2); }
-void Brush::halveSize()  { scale(qMax(1, image_.width() / 2), qMax(1, image_.height() / 2)); }
+void Brush::doubleSize()   { scale(image_.width() * 2,           image_.height() * 2); }
+void Brush::doubleWidth()  { scale(image_.width() * 2,           image_.height()); }
+void Brush::doubleHeight() { scale(image_.width(),               image_.height() * 2); }
+void Brush::halveSize()    { scale(qMax(1, image_.width() / 2),  qMax(1, image_.height() / 2)); }
+void Brush::halveWidth()   { scale(qMax(1, image_.width() / 2),  image_.height()); }
+void Brush::halveHeight()  { scale(image_.width(),               qMax(1, image_.height() / 2)); }
 
 void Brush::shearX(double factor)
 {

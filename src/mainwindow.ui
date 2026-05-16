@@ -134,9 +134,14 @@
     <addaction name="separator"/>
     <addaction name="actionBrushRotate90CW"/>
     <addaction name="actionBrushRotate90CCW"/>
+    <addaction name="actionBrushRotateNumeric"/>
     <addaction name="separator"/>
     <addaction name="actionBrushDouble"/>
+    <addaction name="actionBrushDoubleX"/>
+    <addaction name="actionBrushDoubleY"/>
     <addaction name="actionBrushHalve"/>
+    <addaction name="actionBrushHalveX"/>
+    <addaction name="actionBrushHalveY"/>
     <addaction name="actionBrushScaleToSize"/>
     <addaction name="separator"/>
     <addaction name="actionBrushShearX"/>
@@ -336,6 +341,11 @@
     <string>Rotate 90° CCW</string>
    </property>
   </action>
+  <action name="actionBrushRotateNumeric">
+   <property name="text">
+    <string>Rotate by Degrees...</string>
+   </property>
+  </action>
   <action name="actionBrushDouble">
    <property name="text">
     <string>Double Size</string>
@@ -344,12 +354,38 @@
     <string>H</string>
    </property>
   </action>
+  <action name="actionBrushDoubleX">
+   <property name="text">
+    <string>Double Width</string>
+   </property>
+   <property name="shortcut">
+    <string>X</string>
+   </property>
+  </action>
+  <action name="actionBrushDoubleY">
+   <property name="text">
+    <string>Double Height</string>
+   </property>
+   <property name="shortcut">
+    <string>Y</string>
+   </property>
+  </action>
   <action name="actionBrushHalve">
    <property name="text">
     <string>Halve Size</string>
    </property>
    <property name="shortcut">
     <string>h</string>
+   </property>
+  </action>
+  <action name="actionBrushHalveX">
+   <property name="text">
+    <string>Halve Width</string>
+   </property>
+  </action>
+  <action name="actionBrushHalveY">
+   <property name="text">
+    <string>Halve Height</string>
    </property>
   </action>
   <action name="actionBrushScaleToSize">

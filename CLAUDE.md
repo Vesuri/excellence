@@ -159,7 +159,7 @@ Currently wired tool-activation keys (plain key activates; repeated press cycles
 
 Other canvas shortcuts: `S` show page, `N`/`Shift+N` center/pan, `M`/`Shift+M` magnifier, `P` pixel grid, `G` grid lock, `/` mirror, `Tab` gradient cycle, `K`/`Shift+K` clear, `[`/`]` cycle palette color, `U`/`Shift+U`/`Alt+U` undo/redo, `Alt+R` flip gradient range, `Alt+J`/`Alt+Shift+J` next/prev gradient range, `J` swap buffers, arrow keys scroll, `+`/`-` zoom.
 
-Brush transform shortcuts are menu actions in `mainwindow.ui`: `x` flip H, `y` flip V, `z` rotate 90° CW, `H`/`h` double/halve, `o` outline, `Shift+O` trim, `Shift+B` restore.
+Brush transform shortcuts are menu actions in `mainwindow.ui`: `x` flip H, `y` flip V, `z` rotate 90° CW, `H`/`h` double/halve both, `X` (Shift+X) double width, `Y` (Shift+Y) double height, `o` outline, `Shift+O` trim, `Shift+B` restore. All transform slots call `brushForTransform()` which auto-saves the original before the first transform so Restore works; `brushRestore()` uses `qobject_cast` directly.
 
 ## Project documents
 

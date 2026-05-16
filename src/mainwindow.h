@@ -65,8 +65,13 @@ private slots:
     void brushFlipVertical();
     void brushRotate90CW();
     void brushRotate90CCW();
+    void brushRotateNumeric();
     void brushDouble();
+    void brushDoubleX();
+    void brushDoubleY();
     void brushHalve();
+    void brushHalveX();
+    void brushHalveY();
     void brushScaleToSize();
     void brushShearX();
     void brushShearY();
@@ -95,6 +100,7 @@ private:
 
     void updateWindowTitle();
     QImage convertToIndexed(const QImage &source) const;
+    class Brush *brushForTransform();
 
     Ui::MainWindow *ui;
     QFileDialog *openDialog;

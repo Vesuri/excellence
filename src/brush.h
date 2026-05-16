@@ -27,9 +27,14 @@ public:
     void flipVertical();
     void rotate90CW();
     void rotate90CCW();
+    void rotateByDegrees(double degrees);
     void scale(int width, int height);
     void doubleSize();
+    void doubleWidth();
+    void doubleHeight();
     void halveSize();
+    void halveWidth();
+    void halveHeight();
     void shearX(double factor);
     void shearY(double factor);
     void bendX(double amount);
