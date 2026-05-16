@@ -483,6 +483,25 @@ void BufferView::handleKey(QKeyEvent *event)
         if (event->modifiers() & Qt::AltModifier) {
             gradientRanges[activeGradientRange].flip();
             GradientTool::instance.refreshPanel();
+        } else {
+            for (Tool *tool : tools) {
+                if (auto *rt = qobject_cast<RectangleTool *>(tool)) {
+                    if (event->modifiers() & Qt::ShiftModifier)
+                        rt->setDrawMode(RectangleTool::FilledRectangle);
+                    else
+                        rt->setDrawMode(RectangleTool::Rectangle);
+                    tool->click();
+                    break;
+                }
+            }
+        }
+        break;
+    case Qt::Key_B:
+        for (Tool *tool : tools) {
+            if (qobject_cast<BrushTool *>(tool)) {
+                tool->click();
+                break;
+            }
         }
         break;
     case Qt::Key_J:
