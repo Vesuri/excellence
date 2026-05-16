@@ -16,7 +16,7 @@ void GradientRange::setDefault(const QImage &image)
         qRgb(255,   0,   0), qRgb(255, 128,   0), qRgb(255, 255,   0),
         qRgb(  0, 255,   0), qRgb(  0,   0, 255), qRgb(160,   0, 255)
     };
-    static const int n = static_cast<int>(sizeof(targetColors) / sizeof(targetColors[0]));
+    constexpr int n = 6;
 
     markers_.clear();
     for (int i = 0; i < n; i++) {

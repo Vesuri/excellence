@@ -163,6 +163,7 @@ QWidget *GradientTool::createOptionsWidget()
     GradientRange *range = &gradientRanges[activeGradientRange];
 
     QWidget *w = new QWidget;
+    delete ui_;
     ui_ = new Ui::GradientToolOptions;
     ui_->setupUi(w);
 
@@ -194,21 +195,21 @@ QWidget *GradientTool::createOptionsWidget()
     ui_->randomCheck->setChecked(range->random());
     connect(ui_->randomCheck, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setRandom(v);
-        if (ui_) ui_->ditherSlider->setEnabled(v);
-        if (ui_) ui_->markerBox->update();
+        ui_->ditherSlider->setEnabled(v);
+        ui_->markerBox->update();
     });
 
     ui_->hardEdgesCheck->setChecked(range->hardEdges());
     connect(ui_->hardEdgesCheck, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setHardEdges(v);
-        if (ui_) ui_->markerBox->update();
+        ui_->markerBox->update();
     });
 
     ui_->ditherSlider->setValue(range->ditherAmount());
     ui_->ditherSlider->setEnabled(range->random());
     connect(ui_->ditherSlider, &QSlider::valueChanged, [this](int v) {
         gradientRanges[activeGradientRange].setDitherAmount(v);
-        if (ui_) ui_->markerBox->update();
+        ui_->markerBox->update();
     });
 
     ui_->cycleButton->setChecked(range->cycling());
