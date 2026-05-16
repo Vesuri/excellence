@@ -48,6 +48,8 @@ protected slots:
 
 protected:
     virtual QWidget* createOptionsWidget();
+    void connectToolChecked();
+    void disconnectToolChecked();
 
     Qt::MouseButton mouseButton_;
     Buffer *buffer_;

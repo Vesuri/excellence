@@ -37,15 +37,9 @@ void RectangleTool::setDrawMode(const DrawMode &drawMode)
 
 void RectangleTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr) {
-        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
-    }
-
+    disconnectToolChecked();
     Tool::setBuffer(buffer);
-
-    if (buffer_ != nullptr) {
-        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
-    }
+    connectToolChecked();
 }
 
 QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
@@ -87,18 +81,9 @@ QRect RectangleTool::move(const QPoint &point)
         Algorithms::rectangle(p0, p1, drawLambda);
     } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
                && gradientFillActive()) {
-        QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
-        changedRect = fillRect;
+        changedRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
-        QImage &image = buffer_->image();
-        const GradientRange *range = &gradientRanges[activeGradientRange];
-        for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
-            for (int x = fillRect.left(); x <= fillRect.right(); x++) {
-                float t = GradientRenderer::computeT(x, y, activeGradientFillMode, startPoint, point);
-                int ci = GradientRenderer::colorIndex(t, x, y, range, image);
-                image.setPixel(x, y, static_cast<uint>(ci));
-            }
-        }
+        drawGradientRect(changedRect, point);
     } else {
         Algorithms::fillRectangle(p0, p1, changesLambda);
         undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
@@ -123,17 +108,7 @@ QRect RectangleTool::release(const QPoint &point)
         Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &pt) { changedRect = changedRect.united(this->draw(pt)); });
     } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
                && gradientFillActive()) {
-        QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
-        QImage &image = buffer_->image();
-        const GradientRange *range = &gradientRanges[activeGradientRange];
-        for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
-            for (int x = fillRect.left(); x <= fillRect.right(); x++) {
-                float t = GradientRenderer::computeT(x, y, activeGradientFillMode, startPoint, point);
-                int ci = GradientRenderer::colorIndex(t, x, y, range, image);
-                image.setPixel(x, y, static_cast<uint>(ci));
-            }
-        }
-        changedRect = fillRect;
+        changedRect = drawGradientRect(QRect(p0, p1).normalized().intersected(buffer_->image().rect()), point);
     } else {
         Algorithms::fillRectangle(p0, p1, [this, &changedRect](const QPoint &pt) { changedRect = changedRect.united(this->draw(pt)); });
     }
@@ -174,6 +149,20 @@ QWidget* RectangleTool::createOptionsWidget()
 void RectangleTool::setAnchorMode(bool centerToCorner)
 {
     anchorMode_ = centerToCorner ? CenterToCorner : CornerToCorner;
+}
+
+QRect RectangleTool::drawGradientRect(const QRect &fillRect, const QPoint &current)
+{
+    QImage &image = buffer_->image();
+    const GradientRange *range = &gradientRanges[activeGradientRange];
+    for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
+        for (int x = fillRect.left(); x <= fillRect.right(); x++) {
+            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, startPoint, current);
+            int ci = GradientRenderer::colorIndex(t, x, y, range, image);
+            image.setPixel(x, y, static_cast<uint>(ci));
+        }
+    }
+    return fillRect;
 }
 
 QRect RectangleTool::changes(const QPoint &point)

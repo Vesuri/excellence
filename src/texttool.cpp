@@ -89,11 +89,9 @@ TextTool::TextTool(QObject *parent) : Tool(parent)
 
 void TextTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr)
-        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    disconnectToolChecked();
     Tool::setBuffer(buffer);
-    if (buffer_ != nullptr)
-        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    connectToolChecked();
 }
 
 QRect TextTool::press(const QPoint &, const Qt::KeyboardModifiers &)

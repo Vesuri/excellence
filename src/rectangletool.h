@@ -36,6 +36,7 @@ private slots:
 private:
     QRect changes(const QPoint &point);
     QRect draw(const QPoint &point);
+    QRect drawGradientRect(const QRect &fillRect, const QPoint &current);
     void cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const;
 
     DrawMode drawMode;

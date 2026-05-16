@@ -1,5 +1,7 @@
 #include "gradientrenderer.h"
 #include <QColor>
+#include <QList>
+#include <algorithm>
 #include <climits>
 #include <cmath>
 
@@ -169,6 +171,56 @@ float computeT(int px, int py,
     default:
         return 0.0f;
     }
+}
+
+QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
+                          int fillColor, bool useGradient, const GradientRange *range,
+                          GradientFillMode fillMode,
+                          const QPoint &gradFrom, const QPoint &gradTo)
+{
+    if (polygon.size() < 3)
+        return QRect();
+
+    const QRect imageRect = image.rect();
+    const int n = polygon.size();
+
+    int minY = imageRect.bottom(), maxY = imageRect.top();
+    for (const QPoint &v : polygon) {
+        minY = qMin(minY, v.y());
+        maxY = qMax(maxY, v.y());
+    }
+    minY = qMax(minY, imageRect.top());
+    maxY = qMin(maxY, imageRect.bottom());
+
+    QRect changedRect;
+    for (int y = minY; y <= maxY; y++) {
+        QList<int> xs;
+        for (int i = 0; i < n; i++) {
+            const QPoint &p1 = polygon[i];
+            const QPoint &p2 = polygon[(i + 1) % n];
+            if ((p1.y() <= y && p2.y() > y) || (p2.y() <= y && p1.y() > y)) {
+                int x = p1.x() + (y - p1.y()) * (p2.x() - p1.x()) / (p2.y() - p1.y());
+                xs.append(x);
+            }
+        }
+        std::sort(xs.begin(), xs.end());
+        for (int i = 0; i + 1 < xs.size(); i += 2) {
+            int x1 = qMax(xs[i], imageRect.left());
+            int x2 = qMin(xs[i + 1], imageRect.right());
+            for (int x = x1; x <= x2; x++) {
+                if (useGradient) {
+                    float t = computeT(x, y, fillMode, gradFrom, gradTo);
+                    int ci = colorIndex(t, x, y, range, image);
+                    image.setPixel(x, y, static_cast<uint>(ci));
+                } else {
+                    image.setPixel(x, y, static_cast<uint>(fillColor));
+                }
+            }
+            if (x1 <= x2)
+                changedRect = changedRect.united(QRect(x1, y, x2 - x1 + 1, 1));
+        }
+    }
+    return changedRect;
 }
 
 } // namespace GradientRenderer

@@ -16,11 +16,9 @@ CarveBrushTool::CarveBrushTool(QObject *parent) : Tool(parent),
 
 void CarveBrushTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr)
-        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    disconnectToolChecked();
     Tool::setBuffer(buffer);
-    if (buffer_ != nullptr)
-        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    connectToolChecked();
 }
 
 QRect CarveBrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)

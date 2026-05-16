@@ -1,8 +1,6 @@
-#include <algorithm>
 #include <QGridLayout>
 #include <QImage>
 #include <QRect>
-#include <QVector>
 #include "pen.h"
 #include "buffer.h"
 #include "algorithms.h"
@@ -37,16 +35,9 @@ void DrawTool::setDrawMode(const DrawMode &drawMode)
 
 void DrawTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr) {
-        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
-    }
-
+    disconnectToolChecked();
     Tool::setBuffer(buffer);
-
-    if (buffer_ != nullptr) {
-        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
-        setCheckedIfEqual(buffer_->tool());
-    }
+    connectToolChecked();
 }
 
 QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
@@ -127,56 +118,14 @@ QRect DrawTool::draw(const QPoint &point)
 
 QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
 {
-    if (pathPoints_.size() < 3)
-        return QRect();
-
-    QImage &image = buffer_->image();
-    const QRect imageRect = image.rect();
-    const int n = pathPoints_.size();
-
-    int minY = imageRect.bottom(), maxY = imageRect.top();
-    for (const QPoint &v : pathPoints_) {
-        minY = qMin(minY, v.y());
-        maxY = qMax(maxY, v.y());
-    }
-    minY = qMax(minY, imageRect.top());
-    maxY = qMin(maxY, imageRect.bottom());
-
     const bool useGradient = gradientFillActive();
     const GradientRange *range = useGradient ? &gradientRanges[activeGradientRange] : nullptr;
     bool hvMode = activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical;
+    QImage &image = buffer_->image();
     QPoint gradFrom = hvMode ? QPoint(0, 0) : startingPoint;
     QPoint gradTo   = hvMode ? QPoint(image.width() - 1, image.height() - 1) : to;
-
-    QRect changedRect;
-    for (int y = minY; y <= maxY; y++) {
-        QVector<int> xs;
-        for (int i = 0; i < n; i++) {
-            const QPoint &p1 = pathPoints_[i];
-            const QPoint &p2 = pathPoints_[(i + 1) % n];
-            if ((p1.y() <= y && p2.y() > y) || (p2.y() <= y && p1.y() > y)) {
-                int x = p1.x() + (y - p1.y()) * (p2.x() - p1.x()) / (p2.y() - p1.y());
-                xs.append(x);
-            }
-        }
-        std::sort(xs.begin(), xs.end());
-        for (int i = 0; i + 1 < xs.size(); i += 2) {
-            int x1 = qMax(xs[i], imageRect.left());
-            int x2 = qMin(xs[i + 1], imageRect.right());
-            for (int x = x1; x <= x2; x++) {
-                if (useGradient) {
-                    float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo);
-                    int ci = GradientRenderer::colorIndex(t, x, y, range, image);
-                    image.setPixel(x, y, static_cast<uint>(ci));
-                } else {
-                    image.setPixel(x, y, static_cast<uint>(fillColor));
-                }
-            }
-            if (x1 <= x2)
-                changedRect = changedRect.united(QRect(x1, y, x2 - x1 + 1, 1));
-        }
-    }
-    return changedRect;
+    return GradientRenderer::polygonFillScanline(image, pathPoints_, fillColor,
+        useGradient, range, activeGradientFillMode, gradFrom, gradTo);
 }
 
 void DrawTool::registerTool()

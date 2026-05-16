@@ -28,6 +28,20 @@ void Tool::setBuffer(Buffer *buffer)
     buffer_ = buffer;
 }
 
+void Tool::connectToolChecked()
+{
+    if (buffer_) {
+        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+        setCheckedIfEqual(buffer_->tool());
+    }
+}
+
+void Tool::disconnectToolChecked()
+{
+    if (buffer_)
+        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+}
+
 QRect Tool::hover(const QPoint &)
 {
     return QRect();

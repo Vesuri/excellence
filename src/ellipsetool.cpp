@@ -54,12 +54,10 @@ void EllipseTool::setDrawMode(DrawMode mode)
 
 void EllipseTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr)
-        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    disconnectToolChecked();
     resetState();
     Tool::setBuffer(buffer);
-    if (buffer_ != nullptr)
-        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+    connectToolChecked();
 }
 
 // ── Geometry helpers ───────────────────────────────────────────────────────
