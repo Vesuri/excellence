@@ -94,9 +94,11 @@ bool RawHandler::write(const QImage &image)
     }
 
     qint64 remainingBytes = dataSize;
+    bool writeOk = true;
     for (char *buffer = reinterpret_cast<char *>(data); remainingBytes > 0;) {
         qint64 result = device()->write(buffer, remainingBytes);
         if (result < 0) {
+            writeOk = false;
             break;
         }
         remainingBytes -= result;
@@ -104,7 +106,7 @@ bool RawHandler::write(const QImage &image)
     }
     delete [] data;
 
-    return true;
+    return writeOk;
 }
 
 QVariant RawHandler::option(QImageIOHandler::ImageOption option) const
