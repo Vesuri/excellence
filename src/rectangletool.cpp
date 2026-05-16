@@ -186,10 +186,17 @@ QRect RectangleTool::applyGradientRect(const QRect &fillRect, const QPoint &grad
 {
     QImage &image = buffer_->image();
     const GradientRange *range = &gradientRanges[activeGradientRange];
-    QRect conformRect = conformFill ? fillRect : QRect();
+    const bool isHighlight = activeGradientFillMode == FillHighlight;
+    QList<QPoint> rectPoly;
+    if (isHighlight)
+        rectPoly = {fillRect.topLeft(), fillRect.topRight(),
+                    fillRect.bottomRight(), fillRect.bottomLeft()};
+    QRect conformRect = (conformFill && !isHighlight) ? fillRect : QRect();
     for (int y = fillRect.top(); y <= fillRect.bottom(); y++) {
         for (int x = fillRect.left(); x <= fillRect.right(); x++) {
-            float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, conformRect);
+            float t = isHighlight
+                ? GradientRenderer::highlightTPolygon(x, y, gradFrom, rectPoly)
+                : GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, conformRect);
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
         }

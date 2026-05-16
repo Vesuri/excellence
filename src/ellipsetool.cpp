@@ -172,34 +172,67 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
         }
     }
 
+    // For FillHighlight: precompute rotated-frame origin offsets for ray-ellipse intersection.
+    const bool isHighlight = activeGradientFillMode == FillHighlight;
+    const float fU0 = float(gradFrom.x() - cx_) * float(cosA) + float(gradFrom.y() - cy_) * float(sinA);
+    const float fV0 = -float(gradFrom.x() - cx_) * float(sinA) + float(gradFrom.y() - cy_) * float(cosA);
+    const float fRx2 = float(rx_) * float(rx_), fRy2 = float(ry_) * float(ry_);
+
     int lastY = INT_MIN;
     int rowX0 = 0, rowX1 = 0;
     Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, [&](const QPoint &p) {
-        QRect pixConform = conformRect;
-        if (hConform) {
-            if (p.y() != lastY) {
-                lastY = p.y();
-                int dy = p.y() - cy_;
-                double A = cosA * cosA / rx2 + sinA * sinA / ry2;
-                double B = 2.0 * dy * cosA * sinA * (1.0 / rx2 - 1.0 / ry2);
-                double C = double(dy) * dy * (sinA * sinA / rx2 + cosA * cosA / ry2) - 1.0;
-                double disc = B * B - 4.0 * A * C;
-                if (disc >= 0) {
-                    double sqrtD = std::sqrt(disc);
-                    rowX0 = cx_ + qRound((-B - sqrtD) / (2.0 * A));
-                    rowX1 = cx_ + qRound((-B + sqrtD) / (2.0 * A));
-                    if (rowX0 > rowX1) qSwap(rowX0, rowX1);
+        float t;
+        if (isHighlight) {
+            // Ray: gradFrom + t*(P - gradFrom). P is at t=1.
+            // Transform ray into ellipse frame, solve quadratic for boundary intersection.
+            float pdx = float(p.x() - gradFrom.x());
+            float pdy = float(p.y() - gradFrom.y());
+            float distP2 = pdx * pdx + pdy * pdy;
+            if (distP2 < 0.25f) {
+                t = 0.0f;
+            } else {
+                float fdx_ = pdx * float(cosA) + pdy * float(sinA);
+                float fdy_ = -pdx * float(sinA) + pdy * float(cosA);
+                float qA = (fdx_ * fdx_) / fRx2 + (fdy_ * fdy_) / fRy2;
+                float qB = 2.0f * (fU0 * fdx_ / fRx2 + fV0 * fdy_ / fRy2);
+                float qC = fU0 * fU0 / fRx2 + fV0 * fV0 / fRy2 - 1.0f;
+                float disc = qB * qB - 4.0f * qA * qC;
+                if (qA < 1e-12f || disc < 0.0f) {
+                    t = 1.0f;
                 } else {
-                    rowX0 = rowX1 = p.x();
+                    float sqrtDisc = sqrtf(disc);
+                    float maxT = qMax((-qB - sqrtDisc) / (2.0f * qA),
+                                      (-qB + sqrtDisc) / (2.0f * qA));
+                    t = maxT > 0.5f ? qBound(0.0f, 1.0f / maxT, 1.0f) : 1.0f;
                 }
             }
-            pixConform = QRect(rowX0, p.y(), rowX1 - rowX0 + 1, 1);
-        } else if (vConform) {
-            int dxi = p.x() - cx_ + xBound;
-            if (dxi >= 0 && dxi < colY0.size() && colY0[dxi] <= colY1[dxi])
-                pixConform = QRect(p.x(), colY0[dxi], 1, colY1[dxi] - colY0[dxi] + 1);
+        } else {
+            QRect pixConform = conformRect;
+            if (hConform) {
+                if (p.y() != lastY) {
+                    lastY = p.y();
+                    int dy = p.y() - cy_;
+                    double A = cosA * cosA / rx2 + sinA * sinA / ry2;
+                    double B = 2.0 * dy * cosA * sinA * (1.0 / rx2 - 1.0 / ry2);
+                    double C = double(dy) * dy * (sinA * sinA / rx2 + cosA * cosA / ry2) - 1.0;
+                    double disc = B * B - 4.0 * A * C;
+                    if (disc >= 0) {
+                        double sqrtD = std::sqrt(disc);
+                        rowX0 = cx_ + qRound((-B - sqrtD) / (2.0 * A));
+                        rowX1 = cx_ + qRound((-B + sqrtD) / (2.0 * A));
+                        if (rowX0 > rowX1) qSwap(rowX0, rowX1);
+                    } else {
+                        rowX0 = rowX1 = p.x();
+                    }
+                }
+                pixConform = QRect(rowX0, p.y(), rowX1 - rowX0 + 1, 1);
+            } else if (vConform) {
+                int dxi = p.x() - cx_ + xBound;
+                if (dxi >= 0 && dxi < colY0.size() && colY0[dxi] <= colY1[dxi])
+                    pixConform = QRect(p.x(), colY0[dxi], 1, colY1[dxi] - colY0[dxi] + 1);
+            }
+            t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo, pixConform);
         }
-        float t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo, pixConform);
         int ci = GradientRenderer::colorIndex(t, p.x(), p.y(), range, image);
         image.setPixel(p.x(), p.y(), static_cast<uint>(ci));
     });

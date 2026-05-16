@@ -19,6 +19,10 @@ namespace GradientRenderer {
     // Returns the maximum distance from `from` to any corner of `rect`.
     float conformRadius(const QRect &rect, const QPoint &from);
 
+    // FillHighlight: t = dist(center, pixel) / dist(center, polygon boundary along that ray).
+    // Returns t in [0, 1]: 0 at the center, 1 at the boundary in each pixel's direction.
+    float highlightTPolygon(int px, int py, const QPoint &center, const QList<QPoint> &polygon);
+
     // Applies a gradient fill with explicit from/to endpoints to a polygon.
     // Computes the bounding-box conformRect from the polygon itself when conform is true.
     QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,

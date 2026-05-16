@@ -129,56 +129,39 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
     const GradientRange *range = &gradientRanges[activeGradientRange];
 
     if (activeGradientFillMode == FillHighlight) {
-        // BFS distance transform from boundary pixels inward.
-        // Boundary = visited pixel with at least one non-visited 4-neighbor.
-        QVector<int> dist(visitedW_ * visitedH_, -1);
-        QVector<int> queue;
-        queue.reserve(visitedRect_.width() * visitedRect_.height());
-
-        for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
-            for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
-                if (!visited_[y * visitedW_ + x]) continue;
-                bool boundary =
-                    (x == 0               || !visited_[y * visitedW_ + x - 1]) ||
-                    (x == visitedW_ - 1   || !visited_[y * visitedW_ + x + 1]) ||
-                    (y == 0               || !visited_[(y - 1) * visitedW_ + x]) ||
-                    (y == visitedH_ - 1   || !visited_[(y + 1) * visitedW_ + x]);
-                if (boundary) {
-                    dist[y * visitedW_ + x] = 0;
-                    queue.append(y * visitedW_ + x);
-                }
-            }
-        }
-
-        static const int ddx[] = {-1, 1, 0, 0};
-        static const int ddy[] = {0, 0, -1, 1};
-        int maxDist = 0;
-        for (int qi = 0; qi < queue.size(); qi++) {
-            int idx = queue[qi];
-            int cx = idx % visitedW_;
-            int cy = idx / visitedW_;
-            int d = dist[idx];
-            for (int i = 0; i < 4; i++) {
-                int nx = cx + ddx[i], ny = cy + ddy[i];
-                if (nx < 0 || ny < 0 || nx >= visitedW_ || ny >= visitedH_) continue;
-                int ni = ny * visitedW_ + nx;
-                if (!visited_[ni] || dist[ni] >= 0) continue;
-                dist[ni] = d + 1;
-                if (dist[ni] > maxDist) maxDist = dist[ni];
-                queue.append(ni);
-            }
-        }
-
+        // Ray-march from gradFrom through each pixel outward to find where the ray
+        // exits the filled region. t = dist(center, pixel) / dist(center, exit).
         for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
             for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
                 if (y < 0 || y >= visitedH_ || x < 0 || x >= visitedW_) continue;
                 if (!visited_[y * visitedW_ + x]) continue;
-                float t = maxDist > 0 ? 1.0f - float(dist[y * visitedW_ + x]) / float(maxDist) : 0.0f;
+                float dx = float(x - gradFrom.x());
+                float dy = float(y - gradFrom.y());
+                float distP = sqrtf(dx * dx + dy * dy);
+                float t;
+                if (distP < 0.5f) {
+                    t = 0.0f;
+                } else {
+                    float stepX = dx / distP;
+                    float stepY = dy / distP;
+                    float fx = float(x), fy = float(y);
+                    int lastX = x, lastY = y;
+                    while (true) {
+                        fx += stepX; fy += stepY;
+                        int ix = qRound(fx), iy = qRound(fy);
+                        if (ix < 0 || iy < 0 || ix >= visitedW_ || iy >= visitedH_) break;
+                        if (!visited_[iy * visitedW_ + ix]) break;
+                        lastX = ix; lastY = iy;
+                    }
+                    float dBx = float(lastX - gradFrom.x());
+                    float dBy = float(lastY - gradFrom.y());
+                    float distB = sqrtf(dBx * dBx + dBy * dBy);
+                    t = distB > 0.5f ? qBound(0.0f, distP / distB, 1.0f) : 1.0f;
+                }
                 int ci = GradientRenderer::colorIndex(t, x, y, range, image);
                 image.setPixel(x, y, static_cast<uint>(ci));
             }
         }
-
         return visitedRect_;
     }
 

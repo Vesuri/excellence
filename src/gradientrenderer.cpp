@@ -8,12 +8,6 @@
 
 namespace GradientRenderer {
 
-static QColor colorAt(int idx, const QImage &image)
-{
-    if (idx < 0 || idx >= image.colorCount()) return Qt::white;
-    return QColor(image.color(idx));
-}
-
 struct DitherPair { int idx1; int idx2; float blend; };
 
 static DitherPair ditherPair(const QColor &ideal, const QImage &image)
@@ -49,6 +43,12 @@ static DitherPair ditherPair(const QColor &ideal, const QImage &image)
     float denom = float(dr*dr + dg*dg + db*db);
     float blend = denom > 0.0f ? qBound(0.0f, float(er*dr + eg*dg + eb*db) / denom, 1.0f) : 0.0f;
     return {idx1, idx2, blend};
+}
+
+static QColor colorAt(int idx, const QImage &image)
+{
+    if (idx < 0 || idx >= image.colorCount()) return Qt::white;
+    return QColor(image.color(idx));
 }
 
 int nearestColorIndex(QRgb target, const QImage &image)
@@ -133,6 +133,36 @@ int colorIndex(float t, int pixelX, int pixelY,
     return markers.last().colorIndex;
 }
 
+float highlightTPolygon(int px, int py, const QPoint &center, const QList<QPoint> &polygon)
+{
+    float dx = float(px - center.x());
+    float dy = float(py - center.y());
+    if (dx * dx + dy * dy < 0.25f) return 0.0f;
+
+    // Ray: center + t*(dx,dy). Pixel P is at t=1.
+    // Find maximum t where the ray intersects a polygon edge.
+    // gradient_t = 1/maxT (0 at center, 1 at boundary in each direction).
+    float maxT = 1.0f;
+    const int n = polygon.size();
+    for (int i = 0; i < n; i++) {
+        const QPoint &v1 = polygon[i];
+        const QPoint &v2 = polygon[(i + 1) % n];
+        float ex = float(v2.x() - v1.x());
+        float ey = float(v2.y() - v1.y());
+        // Cramer's rule for: center + t*(dx,dy) = v1 + s*(ex,ey)
+        // det = ex*dy - ey*dx
+        float det = ex * dy - ey * dx;
+        if (fabsf(det) < 1e-6f) continue;
+        float cvx = float(v1.x() - center.x());
+        float cvy = float(v1.y() - center.y());
+        float t = (-cvx * ey + ex * cvy) / det;
+        float s = (dx * cvy - dy * cvx) / det;
+        if (t > 0.0f && s >= 0.0f && s <= 1.0f)
+            maxT = qMax(maxT, t);
+    }
+    return qBound(0.0f, 1.0f / maxT, 1.0f);
+}
+
 float conformRadius(const QRect &rect, const QPoint &from)
 {
     float maxDist = 1.0f;
@@ -192,8 +222,7 @@ float computeT(int px, int py,
         float ry = float(py - from.y());
         return qBound(0.0f, sqrtf(rx * rx + ry * ry) / radius, 1.0f);
     }
-    case FillSpherical:
-    case FillHighlight: {
+    case FillSpherical: {
         float radius = conform ? conformRadius(conformRect, from)
                                : sqrtf(float(to.x() - from.x()) * float(to.x() - from.x())
                                      + float(to.y() - from.y()) * float(to.y() - from.y()));
@@ -202,6 +231,17 @@ float computeT(int px, int py,
         float ry = float(py - from.y());
         float raw = qBound(0.0f, sqrtf(rx * rx + ry * ry) / radius, 1.0f);
         return sinf(raw * float(M_PI) / 2.0f);
+    }
+    case FillHighlight: {
+        // Shape tools compute highlight t via highlightTPolygon/ellipse; this is a
+        // linear-radial fallback for contexts where shape data is not available.
+        float radius = conform ? conformRadius(conformRect, from)
+                               : sqrtf(float(to.x() - from.x()) * float(to.x() - from.x())
+                                     + float(to.y() - from.y()) * float(to.y() - from.y()));
+        if (radius < 1.0f) return 0.0f;
+        float rx = float(px - from.x());
+        float ry = float(py - from.y());
+        return qBound(0.0f, sqrtf(rx * rx + ry * ry) / radius, 1.0f);
     }
     default:
         return 0.0f;
@@ -269,15 +309,20 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
             int x2 = qMin(xs[i + 1], imageRect.right());
             for (int x = x1; x <= x2; x++) {
                 if (useGradient) {
-                    QRect pixConform = conformRect;
-                    if (hConform)
-                        pixConform = QRect(x1, y, x2 - x1 + 1, 1);
-                    else if (vConform) {
-                        int xi = x - imageRect.left();
-                        if (xi >= 0 && xi < colY0.size() && colY0[xi] <= colY1[xi])
-                            pixConform = QRect(x, colY0[xi], 1, colY1[xi] - colY0[xi] + 1);
+                    float t;
+                    if (fillMode == FillHighlight) {
+                        t = highlightTPolygon(x, y, gradFrom, polygon);
+                    } else {
+                        QRect pixConform = conformRect;
+                        if (hConform)
+                            pixConform = QRect(x1, y, x2 - x1 + 1, 1);
+                        else if (vConform) {
+                            int xi = x - imageRect.left();
+                            if (xi >= 0 && xi < colY0.size() && colY0[xi] <= colY1[xi])
+                                pixConform = QRect(x, colY0[xi], 1, colY1[xi] - colY0[xi] + 1);
+                        }
+                        t = computeT(x, y, fillMode, gradFrom, gradTo, pixConform);
                     }
-                    float t = computeT(x, y, fillMode, gradFrom, gradTo, pixConform);
                     int ci = colorIndex(t, x, y, range, image);
                     image.setPixel(x, y, static_cast<uint>(ci));
                 } else {
@@ -311,7 +356,9 @@ QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
         QRect edgeConformRect = (conform && !hvMode) ? polyBbox : QRect();
         auto applyGrad = [&](const QPoint &p) {
             if (!image.rect().contains(p)) return;
-            float t = computeT(p.x(), p.y(), mode, gradFrom, gradTo, edgeConformRect);
+            float t = (mode == FillHighlight)
+                ? highlightTPolygon(p.x(), p.y(), gradFrom, polygon)
+                : computeT(p.x(), p.y(), mode, gradFrom, gradTo, edgeConformRect);
             image.setPixel(p, static_cast<uint>(colorIndex(t, p.x(), p.y(), range, image)));
         };
         for (int i = 0; i < polygon.size(); i++)
