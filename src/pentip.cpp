@@ -22,8 +22,12 @@ PenTip::Shape PenTip::shape() const { return shape_; }
 
 void PenTip::setSize(int w, int h)
 {
-    width_ = qMax(1, w);
-    height_ = qMax(1, h);
+    w = qMax(1, w);
+    h = qMax(1, h);
+    if (w == width_ && h == height_)
+        return;
+    width_ = w;
+    height_ = h;
     emit sizeChanged(width_, height_);
 }
 

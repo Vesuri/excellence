@@ -46,6 +46,7 @@ private:
 
     Buffer::PaintMode previousMode_;
     bool fillModeSelected_ = false;
+    void setFillModeSelected(bool v) { fillModeSelected_ = fillModeSelected = v; }
     Ui::DrawModeToolOptions *ui_ = nullptr;
     QList<QRadioButton *> generalModeBtns_;    // disabled when restrictToColorAndRandom
     QList<QRadioButton *> fillSensitiveBtns_;  // disabled when restrictToColorAndRandom or hasFill

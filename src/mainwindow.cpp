@@ -57,12 +57,18 @@ MainWindow::MainWindow(QWidget *parent) :
     statusBrushLabel_ = new QLabel;
     statusCoordsLabel_ = new QLabel;
 
-
-    auto *sep1 = new QFrame; sep1->setFrameShape(QFrame::VLine); sep1->setFrameShadow(QFrame::Sunken);
-    auto *sep2 = new QFrame; sep2->setFrameShape(QFrame::VLine); sep2->setFrameShadow(QFrame::Sunken);
-    auto *sep3 = new QFrame; sep3->setFrameShape(QFrame::VLine); sep3->setFrameShadow(QFrame::Sunken);
-    statusBrushSep_ = new QFrame; statusBrushSep_->setFrameShape(QFrame::VLine); statusBrushSep_->setFrameShadow(QFrame::Sunken); statusBrushSep_->setVisible(false);
-    statusCoordsSep_ = new QFrame; statusCoordsSep_->setFrameShape(QFrame::VLine); statusCoordsSep_->setFrameShadow(QFrame::Sunken); statusCoordsSep_->setVisible(false);
+    auto makeSep = [](bool visible = true) {
+        auto *f = new QFrame;
+        f->setFrameShape(QFrame::VLine);
+        f->setFrameShadow(QFrame::Sunken);
+        f->setVisible(visible);
+        return f;
+    };
+    auto *sep1 = makeSep();
+    auto *sep2 = makeSep();
+    auto *sep3 = makeSep();
+    statusBrushSep_  = makeSep(false);
+    statusCoordsSep_ = makeSep(false);
 
     statusBar()->setSizeGripEnabled(false);
     auto sbMargins = statusBar()->contentsMargins();
@@ -899,21 +905,20 @@ void MainWindow::updateStatusBarStatic()
     statusColorsButton_->setPaintColor(buffer->paintColor(), colorAt(buffer->paintColor()));
     statusColorsButton_->setEraseColor(buffer->eraseColor(), colorAt(buffer->eraseColor()));
 
+    bool hasSizeInfo = false;
     if (Brush *brush = qobject_cast<Brush *>(buffer->pen())) {
         statusBrushLabel_->setText(QString("%1\xc3\x97%2").arg(brush->image().width()).arg(brush->image().height()));
         statusBrushLabel_->setToolTip(tr("Brush size"));
-        statusBrushLabel_->setVisible(true);
-        statusBrushSep_->setVisible(true);
+        hasSizeInfo = true;
     } else if (PenTip *tip = buffer->penTip()) {
         statusBrushLabel_->setText(QString("%1\xc3\x97%2").arg(tip->width()).arg(tip->height()));
         statusBrushLabel_->setToolTip(tr("Pen size"));
-        statusBrushLabel_->setVisible(true);
-        statusBrushSep_->setVisible(true);
+        hasSizeInfo = true;
     } else {
         statusBrushLabel_->setText(QString());
-        statusBrushLabel_->setVisible(false);
-        statusBrushSep_->setVisible(false);
     }
+    statusBrushLabel_->setVisible(hasSizeInfo);
+    statusBrushSep_->setVisible(hasSizeInfo);
 }
 
 void MainWindow::updateCursorStatus(QPoint point, bool valid)
