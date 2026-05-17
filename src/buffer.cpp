@@ -447,6 +447,11 @@ void Buffer::clearDirty()
 void Buffer::undo()
 {
     if (!undoBuffers.isEmpty()) {
+        if (moveUndoBuffer) {
+            moveUndoBuffer->apply(this);
+            delete moveUndoBuffer;
+            moveUndoBuffer = nullptr;
+        }
         UndoBuffer *undoBuffer = undoBuffers.takeLast();
         redoStack.append(new UndoBuffer(undoBuffer->pos(), image_.copy(undoBuffer->rect())));
         undoBuffer->apply(this);
@@ -474,6 +479,11 @@ void Buffer::mergeLastUndo()
 void Buffer::redo()
 {
     if (!redoStack.isEmpty()) {
+        if (moveUndoBuffer) {
+            moveUndoBuffer->apply(this);
+            delete moveUndoBuffer;
+            moveUndoBuffer = nullptr;
+        }
         UndoBuffer *redoBuffer = redoStack.takeLast();
         undoBuffers.append(new UndoBuffer(redoBuffer->pos(), image_.copy(redoBuffer->rect())));
         redoBuffer->apply(this);
