@@ -9,26 +9,20 @@
    <property name="spacing">
     <number>8</number>
    </property>
-   <property name="leftMargin"><number>6</number></property>
-   <property name="topMargin"><number>6</number></property>
-   <property name="rightMargin"><number>6</number></property>
-   <property name="bottomMargin"><number>6</number></property>
+   <property name="leftMargin"><number>4</number></property>
+   <property name="topMargin"><number>4</number></property>
+   <property name="rightMargin"><number>4</number></property>
+   <property name="bottomMargin"><number>4</number></property>
    <item>
     <layout class="QHBoxLayout" name="rangeRow">
      <property name="spacing">
-      <number>2</number>
+      <number>4</number>
      </property>
      <item>
       <widget class="QPushButton" name="range0">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -41,13 +35,7 @@
       <widget class="QPushButton" name="range1">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -60,13 +48,7 @@
       <widget class="QPushButton" name="range2">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -79,13 +61,7 @@
       <widget class="QPushButton" name="range3">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -98,13 +74,7 @@
       <widget class="QPushButton" name="range4">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -117,13 +87,7 @@
       <widget class="QPushButton" name="range5">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -136,13 +100,7 @@
       <widget class="QPushButton" name="range6">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -155,13 +113,7 @@
       <widget class="QPushButton" name="range7">
        <property name="minimumSize">
         <size>
-         <width>28</width>
-         <height>22</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>28</width>
+         <width>0</width>
          <height>22</height>
         </size>
        </property>
@@ -170,302 +122,280 @@
        </property>
       </widget>
      </item>
-     <item>
-      <spacer name="hSpacer1">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
     </layout>
    </item>
    <item>
-    <widget class="GradientMarkerBox" name="markerBox"/>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="infoRow">
-     <property name="spacing">
-      <number>6</number>
+    <widget class="QGroupBox" name="colorsGroup">
+     <property name="title">
+      <string>Colors</string>
      </property>
-     <item>
-      <widget class="QLabel" name="colorsLabel">
-       <property name="text">
-        <string>Colors: 0</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="hSpacer2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_spread">
-       <property name="text">
-        <string>Spread:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSpinBox" name="spreadSpin">
-       <property name="minimumSize">
-        <size>
-         <width>60</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>60</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="minimum">
-        <number>0</number>
-       </property>
-       <property name="maximum">
-        <number>254</number>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     <layout class="QVBoxLayout" name="colorsGroupLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin"><number>6</number></property>
+      <property name="topMargin"><number>4</number></property>
+      <property name="rightMargin"><number>6</number></property>
+      <property name="bottomMargin"><number>6</number></property>
+      <item>
+       <widget class="GradientMarkerBox" name="markerBox"/>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="infoRow">
+        <property name="spacing">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="colorsLabel">
+          <property name="text">
+           <string>Colors: 0</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="hSpacer2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_spread">
+          <property name="text">
+           <string>Spread:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="spreadSpin">
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>60</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>254</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="btnRow">
+        <property name="spacing">
+         <number>4</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="flipBtn">
+          <property name="styleSheet">
+           <string notr="true">padding: 4px;</string>
+          </property>
+          <property name="text">
+           <string>Flip</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="clearBtn">
+          <property name="styleSheet">
+           <string notr="true">padding: 4px;</string>
+          </property>
+          <property name="text">
+           <string>Clear</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="undoBtn">
+          <property name="styleSheet">
+           <string notr="true">padding: 4px;</string>
+          </property>
+          <property name="text">
+           <string>Undo</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="restoreBtn">
+          <property name="styleSheet">
+           <string notr="true">padding: 4px;</string>
+          </property>
+          <property name="text">
+           <string>Restore</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="ditherRow">
-     <property name="spacing">
-      <number>6</number>
+    <widget class="QGroupBox" name="ditherGroup">
+     <property name="title">
+      <string>Dithering</string>
      </property>
-     <item>
-      <widget class="QCheckBox" name="randomCheck">
-       <property name="text">
-        <string>Random</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QCheckBox" name="hardEdgesCheck">
-       <property name="text">
-        <string>Hard Edges</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="hSpacer3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_dither">
-       <property name="text">
-        <string>Dither:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="ditherSlider">
-       <property name="minimumSize">
-        <size>
-         <width>80</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="minimum">
-        <number>0</number>
-       </property>
-       <property name="maximum">
-        <number>100</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     <layout class="QVBoxLayout" name="ditherGroupLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin"><number>6</number></property>
+      <property name="topMargin"><number>4</number></property>
+      <property name="rightMargin"><number>6</number></property>
+      <property name="bottomMargin"><number>6</number></property>
+      <item>
+       <widget class="QCheckBox" name="randomCheck">
+        <property name="text">
+         <string>Random</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="hardEdgesCheck">
+        <property name="text">
+         <string>Hard Edges</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="ditherAmountRow">
+        <property name="spacing">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_dither">
+          <property name="text">
+           <string>Amount:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="ditherSlider">
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="ditherSpin">
+          <property name="minimumSize">
+           <size>
+            <width>52</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>52</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>100</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="cycleRow">
-     <property name="spacing">
-      <number>6</number>
+    <widget class="QGroupBox" name="cycleGroup">
+     <property name="title">
+      <string>Color Cycling</string>
      </property>
-     <item>
-      <widget class="QPushButton" name="cycleButton">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Cycle</string>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="hSpacer4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_speed">
-       <property name="text">
-        <string>Speed:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QSlider" name="speedSlider">
-       <property name="minimumSize">
-        <size>
-         <width>80</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>80</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="minimum">
-        <number>0</number>
-       </property>
-       <property name="maximum">
-        <number>71</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <layout class="QHBoxLayout" name="btnRow">
-     <property name="spacing">
-      <number>4</number>
-     </property>
-     <item>
-      <widget class="QPushButton" name="flipBtn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Flip</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="clearBtn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Clear</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="undoBtn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Undo</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="restoreBtn">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>24</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Restore</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+     <layout class="QVBoxLayout" name="cycleGroupLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin"><number>6</number></property>
+      <property name="topMargin"><number>4</number></property>
+      <property name="rightMargin"><number>6</number></property>
+      <property name="bottomMargin"><number>6</number></property>
+      <item>
+       <widget class="QCheckBox" name="cycleButton">
+        <property name="text">
+         <string>Enabled</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="cycleSpeedRow">
+        <property name="spacing">
+         <number>6</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label_speed">
+          <property name="text">
+           <string>Speed:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSlider" name="speedSlider">
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>71</number>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="speedSpin">
+          <property name="minimumSize">
+           <size>
+            <width>52</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>52</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>71</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>

@@ -81,12 +81,18 @@ void GradientTool::refreshPanel()
     { QSignalBlocker b(ui_->randomCheck);   ui_->randomCheck->setChecked(range->random()); }
     { QSignalBlocker b(ui_->hardEdgesCheck); ui_->hardEdgesCheck->setChecked(range->hardEdges()); }
     {
-        QSignalBlocker b(ui_->ditherSlider);
+        QSignalBlocker b1(ui_->ditherSlider), b2(ui_->ditherSpin);
         ui_->ditherSlider->setValue(range->ditherAmount());
+        ui_->ditherSpin->setValue(range->ditherAmount());
         ui_->ditherSlider->setEnabled(range->random());
+        ui_->ditherSpin->setEnabled(range->random());
     }
     { QSignalBlocker b(ui_->cycleButton);   ui_->cycleButton->setChecked(range->cycling()); }
-    { QSignalBlocker b(ui_->speedSlider);   ui_->speedSlider->setValue(range->cycleSpeed()); }
+    {
+        QSignalBlocker b1(ui_->speedSlider), b2(ui_->speedSpin);
+        ui_->speedSlider->setValue(range->cycleSpeed());
+        ui_->speedSpin->setValue(range->cycleSpeed());
+    }
 }
 
 void GradientTool::onRangeChanged()
@@ -183,6 +189,7 @@ QWidget *GradientTool::createOptionsWidget()
     connect(ui_->randomCheck, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setRandom(v);
         ui_->ditherSlider->setEnabled(v);
+        ui_->ditherSpin->setEnabled(v);
         ui_->markerBox->update();
     });
 
@@ -194,20 +201,39 @@ QWidget *GradientTool::createOptionsWidget()
 
     ui_->ditherSlider->setValue(range->ditherAmount());
     ui_->ditherSlider->setEnabled(range->random());
+    ui_->ditherSpin->setValue(range->ditherAmount());
+    ui_->ditherSpin->setEnabled(range->random());
     connect(ui_->ditherSlider, &QSlider::valueChanged, [this](int v) {
+        QSignalBlocker b(ui_->ditherSpin);
+        ui_->ditherSpin->setValue(v);
+        gradientRanges[activeGradientRange].setDitherAmount(v);
+        ui_->markerBox->update();
+    });
+    connect(ui_->ditherSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+        QSignalBlocker b(ui_->ditherSlider);
+        ui_->ditherSlider->setValue(v);
         gradientRanges[activeGradientRange].setDitherAmount(v);
         ui_->markerBox->update();
     });
 
     ui_->cycleButton->setChecked(range->cycling());
-    connect(ui_->cycleButton, &QPushButton::toggled, [this](bool v) {
+    connect(ui_->cycleButton, &QCheckBox::toggled, [this](bool v) {
         gradientRanges[activeGradientRange].setCycling(v);
         cycleAccumulators_[activeGradientRange] = 0.0;
         updateTimer();
     });
 
     ui_->speedSlider->setValue(range->cycleSpeed());
+    ui_->speedSpin->setValue(range->cycleSpeed());
     connect(ui_->speedSlider, &QSlider::valueChanged, [this](int v) {
+        QSignalBlocker b(ui_->speedSpin);
+        ui_->speedSpin->setValue(v);
+        gradientRanges[activeGradientRange].setCycleSpeed(v);
+        updateTimer();
+    });
+    connect(ui_->speedSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
+        QSignalBlocker b(ui_->speedSlider);
+        ui_->speedSlider->setValue(v);
         gradientRanges[activeGradientRange].setCycleSpeed(v);
         updateTimer();
     });
