@@ -3,27 +3,13 @@
 #include <QColor>
 #include <QRect>
 #include <QVector>
+#include "colorutils.h"
 #include "gradientrange.h"
 #include "pen.h"
 #include "tool.h"
 
 Pen::Pen(QObject *parent) : QObject(parent)
 {
-}
-
-// ── Shared per-pixel helpers ──────────────────────────────────────────────────
-
-static int findNearestPalette(const QVector<QRgb> &palette, QRgb color)
-{
-    int bestIdx = 0, bestDist = INT_MAX;
-    for (int i = 0; i < palette.size(); i++) {
-        int dr = qRed(color)   - qRed(palette[i]);
-        int dg = qGreen(color) - qGreen(palette[i]);
-        int db = qBlue(color)  - qBlue(palette[i]);
-        int dist = dr*dr + dg*dg + db*db;
-        if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-    }
-    return bestIdx;
 }
 
 static const int kBayer4x4[4][4] = {
@@ -49,7 +35,7 @@ static void smearPixel(const QPoint &p, Buffer *buffer, unsigned fallbackColor)
     QRgb mixed = qRgb((qRed(srcColor)   + qRed(dstColor))   / 2,
                       (qGreen(srcColor) + qGreen(dstColor)) / 2,
                       (qBlue(srcColor)  + qBlue(dstColor))  / 2);
-    buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, mixed)));
+    buffer->image().setPixel(p, static_cast<uint>(nearestColorIndex(mixed, palette)));
 }
 
 static void smoothPixel(const QPoint &p, Buffer *buffer)
@@ -79,7 +65,7 @@ static void smoothPixel(const QPoint &p, Buffer *buffer)
     QRgb mid = qRgb((qRed(centerColor)   + qRed(neighborAvg))   / 2,
                     (qGreen(centerColor) + qGreen(neighborAvg)) / 2,
                     (qBlue(centerColor)  + qBlue(neighborAvg))  / 2);
-    int nearest = findNearestPalette(palette, mid);
+    int nearest = nearestColorIndex(mid, palette);
     if (nearest != centerIdx)
         buffer->image().setPixel(p, static_cast<uint>(nearest));
 }
@@ -107,7 +93,7 @@ static void averageSmearPixel(const QPoint &p, Buffer *buffer)
     QVector<int> grad = buffer->gradientColors();
     const QVector<QRgb> palette = buffer->image().colorTable();
     auto findNearest = [&](QRgb color) -> int {
-        if (grad.isEmpty()) return findNearestPalette(palette, color);
+        if (grad.isEmpty()) return nearestColorIndex(color, palette);
         int bestIdx = grad[0], bestDist = INT_MAX;
         for (int gi : grad) {
             if (gi >= palette.size()) continue;
@@ -194,7 +180,7 @@ static void colorEffectPixel(const QPoint &p, Buffer *buffer, unsigned baseColor
         break;
     default: return;
     }
-    buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, target)));
+    buffer->image().setPixel(p, static_cast<uint>(nearestColorIndex(target, palette)));
 }
 
 static void ditherPixel(const QPoint &p, Buffer *buffer, unsigned fgColor, unsigned bgColor, bool useBg)
@@ -237,7 +223,7 @@ static void transparentPixel(const QPoint &p, Buffer *buffer, unsigned paintColo
             (qGreen(paintRgb) * opacity + qGreen(canvasRgb) * (100 - opacity)) / 100,
             (qBlue(paintRgb)  * opacity + qBlue(canvasRgb)  * (100 - opacity)) / 100);
     }
-    buffer->image().setPixel(p, static_cast<uint>(findNearestPalette(palette, blended)));
+    buffer->image().setPixel(p, static_cast<uint>(nearestColorIndex(blended, palette)));
 }
 
 // ── Public methods ────────────────────────────────────────────────────────────

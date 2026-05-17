@@ -1,3 +1,4 @@
+#include "colorutils.h"
 #include "palettebutton.h"
 #include <QAbstractSpinBox>
 #include <QCloseEvent>
@@ -500,23 +501,12 @@ void MainWindow::paletteSwapAndRemapColors()
 QImage MainWindow::convertToIndexed(const QImage &source) const
 {
     QImage rgb = source.convertToFormat(QImage::Format_RGB32);
+    const QVector<QRgb> palette = buffer->image().colorTable();
     QImage indexed(rgb.size(), QImage::Format_Indexed8);
-    indexed.setColorTable(buffer->image().colorTable());
-    for (int y = 0; y < rgb.height(); y++) {
-        for (int x = 0; x < rgb.width(); x++) {
-            QRgb pixel = rgb.pixel(x, y);
-            int bestIdx = 0, bestDist = INT_MAX;
-            for (int i = 0; i < buffer->image().colorCount(); i++) {
-                QRgb c = buffer->image().color(i);
-                int dr = qRed(pixel) - qRed(c);
-                int dg = qGreen(pixel) - qGreen(c);
-                int db = qBlue(pixel) - qBlue(c);
-                int dist = dr*dr + dg*dg + db*db;
-                if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-            }
-            indexed.setPixel(x, y, bestIdx);
-        }
-    }
+    indexed.setColorTable(palette);
+    for (int y = 0; y < rgb.height(); y++)
+        for (int x = 0; x < rgb.width(); x++)
+            indexed.setPixel(x, y, nearestColorIndex(rgb.pixel(x, y), palette));
     return indexed;
 }
 
@@ -827,24 +817,10 @@ void MainWindow::paletteRemapPage()
     QImage &image = buffer->image();
 
     // Build a lookup: for each original palette index, find the closest entry in the current palette
+    const QVector<QRgb> currentPalette = image.colorTable();
     QVector<int> remap(qMin(origPalette.size(), colorCount));
-    for (int i = 0; i < remap.size(); i++) {
-        QRgb origColor = origPalette[i];
-        int bestIndex = i;
-        int bestDist = INT_MAX;
-        for (int j = 0; j < colorCount; j++) {
-            QRgb c = image.color(j);
-            int dr = qRed(origColor)   - qRed(c);
-            int dg = qGreen(origColor) - qGreen(c);
-            int db = qBlue(origColor)  - qBlue(c);
-            int dist = dr*dr + dg*dg + db*db;
-            if (dist < bestDist) {
-                bestDist = dist;
-                bestIndex = j;
-            }
-        }
-        remap[i] = bestIndex;
-    }
+    for (int i = 0; i < remap.size(); i++)
+        remap[i] = nearestColorIndex(origPalette[i], currentPalette);
 
     for (int y = 0; y < image.height(); y++) {
         for (int x = 0; x < image.width(); x++) {

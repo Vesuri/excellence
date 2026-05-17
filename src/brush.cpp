@@ -1,10 +1,10 @@
 #include <QRect>
 #include <QImage>
 #include <QTransform>
-#include <climits>
 #include <cmath>
 #include "buffer.h"
 #include "brush.h"
+#include "colorutils.h"
 
 Brush::Brush(const QImage &image, int transparentIndex, QObject *parent) : Pen(parent),
     image_(image),
@@ -138,27 +138,12 @@ void Brush::setTransparentIndex(int index)
     transparentIndex_ = index;
 }
 
-// ── Private helpers ─────────────────────────────────────────────────────────
-
-static int nearestColorIndex(QRgb color, int defaultIdx, const QVector<QRgb> &palette)
-{
-    int bestIdx = defaultIdx, bestDist = INT_MAX;
-    for (int i = 0; i < palette.size(); i++) {
-        int dr = qRed(color)   - qRed(palette[i]);
-        int dg = qGreen(color) - qGreen(palette[i]);
-        int db = qBlue(color)  - qBlue(palette[i]);
-        int dist = dr*dr + dg*dg + db*db;
-        if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-    }
-    return bestIdx;
-}
-
 void Brush::remap(const QVector<QRgb> &palette)
 {
     for (int y = 0; y < image_.height(); y++)
         for (int x = 0; x < image_.width(); x++) {
             QRgb color = image_.color(image_.pixelIndex(x, y));
-            image_.setPixel(x, y, static_cast<uint>(nearestColorIndex(color, 0, palette)));
+            image_.setPixel(x, y, static_cast<uint>(nearestColorIndex(color, palette)));
         }
 }
 
@@ -177,7 +162,7 @@ QImage Brush::reindex(const QImage &src) const
     const QVector<QRgb> ct = image_.colorTable();
     for (int y = 0; y < src.height(); y++)
         for (int x = 0; x < src.width(); x++)
-            result.setPixel(x, y, static_cast<uint>(nearestColorIndex(src.pixel(x, y), 0, ct)));
+            result.setPixel(x, y, static_cast<uint>(nearestColorIndex(src.pixel(x, y), ct)));
     return result;
 }
 
@@ -224,7 +209,7 @@ void Brush::rotateByDegrees(double degrees)
     for (int y = 0; y < argb.height(); y++) {
         for (int x = 0; x < argb.width(); x++) {
             QRgb color = argb.pixel(x, y);
-            int idx = (qAlpha(color) < 128) ? bg : nearestColorIndex(color, bg, ct);
+            int idx = (qAlpha(color) < 128) ? bg : nearestColorIndex(color, ct);
             result.setPixel(x, y, static_cast<uint>(idx));
         }
     }
