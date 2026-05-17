@@ -51,17 +51,23 @@ MainWindow::MainWindow(QWidget *parent) :
     // Status bar
     statusColorsButton_ = new CurrentColorsButton;
     statusToolLabel_ = new QLabel;
+    statusToolLabel_->setToolTip(tr("Active tool"));
     statusModeLabel_ = new QLabel;
+    statusModeLabel_->setToolTip(tr("Draw mode"));
     statusBrushLabel_ = new QLabel;
     statusCoordsLabel_ = new QLabel;
-    statusCoordsLabel_->setToolTip(tr("Click to toggle absolute/relative coordinates"));
-    statusCoordsLabel_->installEventFilter(this);
+
 
     auto *sep1 = new QFrame; sep1->setFrameShape(QFrame::VLine); sep1->setFrameShadow(QFrame::Sunken);
     auto *sep2 = new QFrame; sep2->setFrameShape(QFrame::VLine); sep2->setFrameShadow(QFrame::Sunken);
     auto *sep3 = new QFrame; sep3->setFrameShape(QFrame::VLine); sep3->setFrameShadow(QFrame::Sunken);
+    statusBrushSep_ = new QFrame; statusBrushSep_->setFrameShape(QFrame::VLine); statusBrushSep_->setFrameShadow(QFrame::Sunken); statusBrushSep_->setVisible(false);
+    statusCoordsSep_ = new QFrame; statusCoordsSep_->setFrameShape(QFrame::VLine); statusCoordsSep_->setFrameShadow(QFrame::Sunken); statusCoordsSep_->setVisible(false);
 
     statusBar()->setSizeGripEnabled(false);
+    auto sbMargins = statusBar()->contentsMargins();
+    sbMargins.setRight(8);
+    statusBar()->setContentsMargins(sbMargins);
     statusBar()->addWidget(statusColorsButton_);
     statusBar()->addWidget(sep1);
     statusBar()->addWidget(statusToolLabel_);
@@ -69,6 +75,8 @@ MainWindow::MainWindow(QWidget *parent) :
     statusBar()->addWidget(statusModeLabel_);
     statusBar()->addWidget(sep3);
     statusBar()->addWidget(statusBrushLabel_);
+    statusBar()->addWidget(statusBrushSep_);
+    statusBar()->addPermanentWidget(statusCoordsSep_);
     statusBar()->addPermanentWidget(statusCoordsLabel_);
 
     connect(statusColorsButton_, &CurrentColorsButton::foregroundClicked,
@@ -142,6 +150,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
     connect(ui->actionHelpAbout, &QAction::triggered, this, &MainWindow::about);
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
+    connect(penTip, &PenTip::sizeChanged, this, [this](int, int) { updateStatusBarStatic(); });
 
     setAttribute(Qt::WA_Hover);
     installEventFilter(this);
@@ -296,6 +305,7 @@ void MainWindow::setBuffer(Buffer *newBuffer)
     connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), toolPenTip, SLOT(setEraseColor(unsigned)));
     connect(buffer, &Buffer::dirtyChanged, this, &MainWindow::onDirtyChanged);
     connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateStatusBarStatic()));
+    connect(buffer, &Buffer::penChanged, this, [this](Pen *) { updateStatusBarStatic(); });
     connect(buffer, &Buffer::paintModeChanged, this, [this](Buffer::PaintMode) { updateStatusBarStatic(); });
     connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateStatusBarStatic()));
     connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateStatusBarStatic()));
@@ -834,11 +844,6 @@ void MainWindow::paletteRemapPage()
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
-    if (watched == statusCoordsLabel_ && event->type() == QEvent::MouseButtonPress) {
-        relativeCoordsMode_ = !relativeCoordsMode_;
-        updateCursorStatus(lastCursorPoint_, lastCursorValid_);
-        return true;
-    }
 
     if (watched == qApp && event->type() == QEvent::Quit) {
         if (isVisible()) {
@@ -895,11 +900,19 @@ void MainWindow::updateStatusBarStatic()
     statusColorsButton_->setEraseColor(buffer->eraseColor(), colorAt(buffer->eraseColor()));
 
     if (Brush *brush = qobject_cast<Brush *>(buffer->pen())) {
-        statusBrushLabel_->setText(QString("%1\xd7%2").arg(brush->image().width()).arg(brush->image().height()));
+        statusBrushLabel_->setText(QString("%1\xc3\x97%2").arg(brush->image().width()).arg(brush->image().height()));
+        statusBrushLabel_->setToolTip(tr("Brush size"));
         statusBrushLabel_->setVisible(true);
+        statusBrushSep_->setVisible(true);
+    } else if (PenTip *tip = buffer->penTip()) {
+        statusBrushLabel_->setText(QString("%1\xc3\x97%2").arg(tip->width()).arg(tip->height()));
+        statusBrushLabel_->setToolTip(tr("Pen size"));
+        statusBrushLabel_->setVisible(true);
+        statusBrushSep_->setVisible(true);
     } else {
         statusBrushLabel_->setText(QString());
         statusBrushLabel_->setVisible(false);
+        statusBrushSep_->setVisible(false);
     }
 }
 
@@ -911,20 +924,18 @@ void MainWindow::updateCursorStatus(QPoint point, bool valid)
     updateStatusBarStatic();
 
     if (!valid || !buffer) {
+        statusCoordsSep_->setVisible(false);
         statusCoordsLabel_->clear();
         return;
     }
 
     QString toolStatus = buffer->tool() ? buffer->tool()->status() : QString();
 
-    if (relativeCoordsMode_ && !toolStatus.isEmpty()) {
-        statusCoordsLabel_->setText(toolStatus);
-    } else {
-        QString text = QString("X: %1  Y: %2").arg(point.x()).arg(point.y());
-        if (!toolStatus.isEmpty())
-            text += "  " + toolStatus;
-        statusCoordsLabel_->setText(text);
-    }
+    statusCoordsSep_->setVisible(true);
+    QString text = QString("%1  %2").arg(point.x()).arg(point.y());
+    if (!toolStatus.isEmpty())
+        text += "  " + toolStatus;
+    statusCoordsLabel_->setText(text);
 }
 
 void MainWindow::updateWindowTitle()

@@ -7,6 +7,7 @@ GradientRange gradientRanges[kGradientRangeCount];
 int activeGradientRange = 0;
 GradientFillMode activeGradientFillMode = FillFlat;
 bool drawModeActive = false;
+bool fillModeSelected = false;
 bool conformFill = false;
 bool centerFill = false;
 

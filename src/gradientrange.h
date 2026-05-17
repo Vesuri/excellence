@@ -85,6 +85,7 @@ enum GradientFillMode {
 };
 extern GradientFillMode activeGradientFillMode;
 extern bool drawModeActive;
+extern bool fillModeSelected;
 extern bool conformFill;
 extern bool centerFill;
 

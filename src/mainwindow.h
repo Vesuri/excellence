@@ -17,6 +17,7 @@ class PaletteItem;
 class BufferView;
 class Buffer;
 class PenTip;
+class QFrame;
 class QLabel;
 class CurrentColorsButton;
 
@@ -121,8 +122,10 @@ private:
     QLabel *statusToolLabel_;
     QLabel *statusModeLabel_;
     QLabel *statusBrushLabel_;
+    QFrame *statusBrushSep_;
+    QFrame *statusCoordsSep_;
     QLabel *statusCoordsLabel_;
-    bool relativeCoordsMode_ = false;
+
     QPoint lastCursorPoint_;
     bool lastCursorValid_ = false;
 };

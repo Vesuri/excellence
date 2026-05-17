@@ -59,7 +59,7 @@ inline QString effectiveDrawModeName(Buffer::PaintMode paintMode)
         return paintModeName(paintMode);
     if (!drawModeActive)
         return paintModeName(Buffer::Color);
-    if (paintMode == Buffer::Color)
+    if (fillModeSelected || paintMode == Buffer::Color)
         return gradientFillModeName(activeGradientFillMode);
     return paintModeName(paintMode);
 }

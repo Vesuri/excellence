@@ -24,6 +24,7 @@ void PenTip::setSize(int w, int h)
 {
     width_ = qMax(1, w);
     height_ = qMax(1, h);
+    emit sizeChanged(width_, height_);
 }
 
 void PenTip::setShape(Shape shape) { shape_ = shape; }

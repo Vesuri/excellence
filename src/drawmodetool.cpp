@@ -103,10 +103,10 @@ void DrawModeTool::updateAvailability()
 
     // Sync radio-button selection with fill availability.
     if (!hasFill && fillModeSelected_) {
-        fillModeSelected_ = false;
+        fillModeSelected_ = fillModeSelected = false;
         emit activeModeChanged(buffer_->paintMode());
     } else if (hasFill && !fillModeSelected_ && activeGradientFillMode != FillFlat) {
-        fillModeSelected_ = true;
+        fillModeSelected_ = fillModeSelected = true;
         for (auto &fb : fillModeBtns_) {
             if (fb.second == activeGradientFillMode) {
                 fb.first->setChecked(true);
@@ -234,7 +234,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     // Connect mode buttons
     auto connectMode = [&](QRadioButton *btn, Buffer::PaintMode mode) {
         connect(btn, &QRadioButton::clicked, [this, mode]() {
-            fillModeSelected_ = false;
+            fillModeSelected_ = fillModeSelected = false;
             if (isSelectableMode(mode)) previousMode_ = mode;
             button_->setChecked(isSelectableMode(mode));
             applyMode();
@@ -263,7 +263,7 @@ QWidget *DrawModeTool::createOptionsWidget()
 
     for (auto &fb : fillModeBtns_) {
         connect(fb.first, &QRadioButton::clicked, [this, fm = fb.second]() {
-            fillModeSelected_ = true;
+            fillModeSelected_ = fillModeSelected = true;
             activeGradientFillMode = fm;
             button_->setChecked(true);
             applyMode();

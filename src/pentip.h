@@ -22,6 +22,9 @@ public:
     int height() const;
     Shape shape() const;
 
+signals:
+    void sizeChanged(int w, int h);
+
 public slots:
     void setPaintColor(unsigned paintColor);
     void setEraseColor(unsigned eraseColor);

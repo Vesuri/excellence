@@ -1,6 +1,8 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QMouseEvent>
+#include <QHelpEvent>
+#include <QToolTip>
 #include "colorutils.h"
 #include "currentcolorsbutton.h"
 
@@ -35,6 +37,23 @@ void CurrentColorsButton::paintEvent(QPaintEvent *)
 
     drawSwatch(QRect(0,              0, kSwatchW, height()), paintColor_, paintIndex_);
     drawSwatch(QRect(kSwatchW + kGap, 0, kSwatchW, height()), eraseColor_, eraseIndex_);
+}
+
+bool CurrentColorsButton::event(QEvent *e)
+{
+    if (e->type() == QEvent::ToolTip) {
+        auto *he = static_cast<QHelpEvent *>(e);
+        bool isFg = he->pos().x() <= kSwatchW;
+        const QColor &color = isFg ? paintColor_ : eraseColor_;
+        int index = isFg ? paintIndex_ : eraseIndex_;
+        QString label = isFg ? tr("Foreground") : tr("Background");
+        QToolTip::showText(he->globalPos(),
+                           QString("%1: %2  %3\n%4").arg(label).arg(index).arg(color.name())
+                               .arg(tr("Click to pick color")),
+                           this);
+        return true;
+    }
+    return QWidget::event(e);
 }
 
 void CurrentColorsButton::mousePressEvent(QMouseEvent *e)
