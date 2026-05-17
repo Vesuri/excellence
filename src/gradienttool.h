@@ -3,9 +3,9 @@
 
 #include <QCheckBox>
 #include <QLabel>
-#include <QPushButton>
 #include <QSlider>
 #include <QSpinBox>
+#include <QTabBar>
 #include <QTimer>
 #include "tool.h"
 #include "gradientmarkerbox.h"
@@ -48,7 +48,6 @@ private:
     QTimer *cycleTimer_ = nullptr;
     double cycleAccumulators_[kGradientRangeCount] = {};
     bool cyclingEnabled_ = false;
-    QList<QPushButton *> rangeButtons_;
 };
 
 #endif // GRADIENTTOOL_H

@@ -64,10 +64,7 @@ void GradientTool::refreshPanel()
 {
     if (!optionsWidget_ || !ui_) return;
 
-    for (int i = 0; i < rangeButtons_.size(); i++) {
-        rangeButtons_[i]->setDown(i == activeGradientRange);
-        rangeButtons_[i]->setFlat(i != activeGradientRange);
-    }
+    { QSignalBlocker b(ui_->rangeTabBar); ui_->rangeTabBar->setCurrentIndex(activeGradientRange); }
 
     GradientRange *range = &gradientRanges[activeGradientRange];
 
@@ -76,7 +73,7 @@ void GradientTool::refreshPanel()
 
     { QSignalBlocker b(ui_->spreadSpin);    ui_->spreadSpin->setValue(range->spread()); }
 
-    ui_->colorsLabel->setText(QString("Colors: %1").arg(range->colorCount()));
+    ui_->colorsLabel->setText(QString("Color count: %1").arg(range->colorCount()));
 
     { QSignalBlocker b(ui_->randomCheck);   ui_->randomCheck->setChecked(range->random()); }
     { QSignalBlocker b(ui_->hardEdgesCheck); ui_->hardEdgesCheck->setChecked(range->hardEdges()); }
@@ -99,7 +96,7 @@ void GradientTool::onRangeChanged()
 {
     if (ui_)
         ui_->colorsLabel->setText(
-            QString("Colors: %1").arg(gradientRanges[activeGradientRange].colorCount()));
+            QString("Color count: %1").arg(gradientRanges[activeGradientRange].colorCount()));
 }
 
 void GradientTool::setBuffer(Buffer *buffer)
@@ -160,25 +157,16 @@ QWidget *GradientTool::createOptionsWidget()
     ui_ = new Ui::GradientToolOptions;
     ui_->setupUi(w);
 
-    // Range selector buttons
-    QPushButton *rangeBtns[] = {
-        ui_->range0, ui_->range1, ui_->range2, ui_->range3,
-        ui_->range4, ui_->range5, ui_->range6, ui_->range7
-    };
-    rangeButtons_.clear();
-    for (int i = 0; i < kGradientRangeCount; i++) {
-        QPushButton *btn = rangeBtns[i];
-        btn->setFlat(i != activeGradientRange);
-        btn->setDown(i == activeGradientRange);
-        connect(btn, &QPushButton::clicked, [this, i]() { setActiveRange(i); });
-        rangeButtons_.append(btn);
-    }
+    for (int i = 0; i < kGradientRangeCount; i++)
+        ui_->rangeTabBar->addTab(QString::number(i + 1));
+    ui_->rangeTabBar->setCurrentIndex(activeGradientRange);
+    connect(ui_->rangeTabBar, &QTabBar::currentChanged, this, &GradientTool::setActiveRange);
 
     ui_->markerBox->setRange(range);
     if (buffer_) ui_->markerBox->setBuffer(buffer_);
     connect(ui_->markerBox, &GradientMarkerBox::rangeChanged, this, &GradientTool::onRangeChanged);
 
-    ui_->colorsLabel->setText(QString("Colors: %1").arg(range->colorCount()));
+    ui_->colorsLabel->setText(QString("Color count: %1").arg(range->colorCount()));
     ui_->spreadSpin->setValue(range->spread());
     connect(ui_->spreadSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {
         gradientRanges[activeGradientRange].setSpread(v);
