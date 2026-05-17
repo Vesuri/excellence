@@ -514,6 +514,8 @@ void Buffer::clearUndoBuffer()
 
 void Buffer::setPen(Pen *pen)
 {
+    if (Brush *old = qobject_cast<Brush *>(pen_))
+        disconnect(old, &Brush::imageChanged, this, &Buffer::penModified);
     pen_ = pen;
     if (PenTip *t = qobject_cast<PenTip *>(pen))
         penTip_ = t;
@@ -521,6 +523,7 @@ void Buffer::setPen(Pen *pen)
         brush_ = b;
         brushStamp_ = b->image();
         brushTransparentIndex_ = b->transparentIndex();
+        connect(b, &Brush::imageChanged, this, &Buffer::penModified);
     }
     emit penChanged(pen);
 }

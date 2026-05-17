@@ -46,6 +46,9 @@ public:
     void restoreOriginal();
     bool hasOriginal() const;
 
+signals:
+    void imageChanged();
+
 private:
     QImage reindex(const QImage &src) const;
 

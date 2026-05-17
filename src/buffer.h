@@ -124,6 +124,7 @@ signals:
     void dirtyChanged(bool dirty);
     void paintModeChanged(PaintMode mode);
     void penChanged(Pen *pen);
+    void penModified();
     void segmentChanged();
 
 private:

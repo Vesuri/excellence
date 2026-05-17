@@ -139,6 +139,7 @@ void BufferView::setBuffer(Buffer *buffer)
         disconnect(this->buffer, SIGNAL(paintColorChanged(unsigned,QColor)));
         disconnect(this->buffer, SIGNAL(eraseColorChanged(unsigned,QColor)));
         disconnect(this->buffer, &Buffer::pixelGridChanged, scene, &CanvasScene::setPixelGrid);
+        disconnect(this->buffer, &Buffer::penModified, this, &BufferView::onToolChanged);
     }
 
     this->buffer = buffer;
@@ -149,6 +150,7 @@ void BufferView::setBuffer(Buffer *buffer)
         connect(buffer, SIGNAL(zoomed(QRect)), this, SLOT(setZoom(QRect)));
         connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(onToolChanged()));
+        connect(buffer, &Buffer::penModified, this, &BufferView::onToolChanged);
         connect(buffer, &Buffer::paintModeChanged, this, [this](Buffer::PaintMode) { updateWindowTitle(); });
         connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
         connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
@@ -501,6 +503,17 @@ void BufferView::handleKey(QKeyEvent *event)
         for (Tool *tool : tools) {
             if (qobject_cast<BrushTool *>(tool)) {
                 tool->click();
+                break;
+            }
+        }
+        break;
+    case Qt::Key_O:
+        for (Tool *tool : tools) {
+            if (auto *bt = qobject_cast<BrushTool *>(tool)) {
+                if (event->modifiers() & Qt::ShiftModifier)
+                    bt->brushTrim();
+                else
+                    bt->brushOutline();
                 break;
             }
         }

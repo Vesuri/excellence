@@ -168,8 +168,8 @@ QImage Brush::reindex(const QImage &src) const
 
 // ── Transforms ─────────────────────────────────────────────────────────────
 
-void Brush::flipHorizontal() { image_ = image_.mirrored(true, false); }
-void Brush::flipVertical()   { image_ = image_.mirrored(false, true); }
+void Brush::flipHorizontal() { image_ = image_.mirrored(true, false);  emit imageChanged(); }
+void Brush::flipVertical()   { image_ = image_.mirrored(false, true); emit imageChanged(); }
 
 void Brush::rotate90CW()
 {
@@ -181,6 +181,7 @@ void Brush::rotate90CW()
             result.setPixel(h - 1 - y, x, static_cast<uint>(image_.pixelIndex(x, y)));
     image_ = result;
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::rotate90CCW()
@@ -193,6 +194,7 @@ void Brush::rotate90CCW()
             result.setPixel(y, w - 1 - x, static_cast<uint>(image_.pixelIndex(x, y)));
     image_ = result;
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::rotateByDegrees(double degrees)
@@ -215,6 +217,7 @@ void Brush::rotateByDegrees(double degrees)
     }
     image_ = result;
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::scale(int width, int height)
@@ -225,6 +228,7 @@ void Brush::scale(int width, int height)
                        .scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     image_ = reindex(rgb);
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::doubleSize()   { scale(image_.width() * 2,           image_.height() * 2); }
@@ -254,6 +258,7 @@ void Brush::shearX(double factor)
     }
     image_ = result;
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::shearY(double factor)
@@ -276,6 +281,7 @@ void Brush::shearY(double factor)
     }
     image_ = result;
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::bendX(double amount)
@@ -298,6 +304,7 @@ void Brush::bendX(double amount)
     }
     image_ = result;
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::bendY(double amount)
@@ -320,6 +327,7 @@ void Brush::bendY(double amount)
     }
     image_ = result;
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
+    emit imageChanged();
 }
 
 void Brush::outline(int colorIndex)
@@ -339,6 +347,7 @@ void Brush::outline(int colorIndex)
         }
     }
     image_ = result;
+    emit imageChanged();
 }
 
 void Brush::trim()
@@ -358,17 +367,20 @@ void Brush::trim()
         }
     }
     image_ = result;
+    emit imageChanged();
 }
 
 void Brush::tileCut()
 {
     int w = image_.width(), h = image_.height();
-    if (w > 1 && h > 1)
+    if (w > 1 && h > 1) {
         image_ = image_.copy(0, 0, w - 1, h - 1);
+        emit imageChanged();
+    }
 }
 
 void Brush::storeOriginal()   { originalImage_ = image_; }
-void Brush::restoreOriginal() { if (!originalImage_.isNull()) { image_ = originalImage_; handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2); } }
+void Brush::restoreOriginal() { if (!originalImage_.isNull()) { image_ = originalImage_; handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2); emit imageChanged(); } }
 bool Brush::hasOriginal() const { return !originalImage_.isNull(); }
 
 void Brush::detectBackground()
