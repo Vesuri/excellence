@@ -23,7 +23,7 @@ void GradientRange::setDefault(const QImage &image)
     int start = (kGradientSlotCount - n) / 2;
     const QVector<QRgb> palette = image.colorTable();
     for (int i = 0; i < n; i++) {
-        markers_.append({start + i, nearestColorIndex(targetColors[i], palette), false});
+        markers_.append({start + i, nearestColorIndex(targetColors[i], palette), -1, false});
     }
 
     spread_       = 0;
@@ -38,16 +38,30 @@ int GradientRange::colorCount() const
 {
     if (markers_.size() < 2) return markers_.size();
     int n = markers_.last().slot - markers_.first().slot + 1;
-    return n + (n - 1) * spread_;
+    int doubleMarkers = 0;
+    for (const auto &m : markers_)
+        if (m.incomingColorIndex >= 0) ++doubleMarkers;
+    return n + (n - 1) * spread_ + doubleMarkers;
 }
 
-void GradientRange::addMarker(int slot, int colorIndex, bool abrupt)
+void GradientRange::addMarker(int slot, int colorIndex, int incomingColorIndex, bool abrupt)
 {
     removeMarker(slot);
-    markers_.append({slot, colorIndex, abrupt});
+    markers_.append({slot, colorIndex, incomingColorIndex, abrupt});
     std::sort(markers_.begin(), markers_.end(), [](const GradientMarker &a, const GradientMarker &b) {
         return a.slot < b.slot;
     });
+}
+
+void GradientRange::setMarkerColors(int slot, int colorIndex, int incomingColorIndex)
+{
+    for (auto &m : markers_) {
+        if (m.slot == slot) {
+            m.colorIndex = colorIndex;
+            m.incomingColorIndex = incomingColorIndex;
+            return;
+        }
+    }
 }
 
 void GradientRange::removeMarker(int slot)

@@ -73,7 +73,7 @@ void GradientTool::refreshPanel()
 
     { QSignalBlocker b(ui_->spreadSpin);    ui_->spreadSpin->setValue(range->spread()); }
 
-    ui_->colorsLabel->setText(QString("Color count: %1").arg(range->colorCount()));
+    ui_->colorsGroup->setTitle(QString("Colors (%1)").arg(range->colorCount()));
 
     { QSignalBlocker b(ui_->randomCheck);   ui_->randomCheck->setChecked(range->random()); }
     { QSignalBlocker b(ui_->hardEdgesCheck); ui_->hardEdgesCheck->setChecked(range->hardEdges()); }
@@ -95,8 +95,8 @@ void GradientTool::refreshPanel()
 void GradientTool::onRangeChanged()
 {
     if (ui_)
-        ui_->colorsLabel->setText(
-            QString("Color count: %1").arg(gradientRanges[activeGradientRange].colorCount()));
+        ui_->colorsGroup->setTitle(
+            QString("Colors (%1)").arg(gradientRanges[activeGradientRange].colorCount()));
 }
 
 void GradientTool::setBuffer(Buffer *buffer)

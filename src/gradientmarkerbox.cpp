@@ -72,7 +72,13 @@ void GradientMarkerBox::paintEvent(QPaintEvent *)
         for (const auto &m : range_->markers()) {
             int x1 = slotX(m.slot);
             int x2 = slotX(m.slot + 1);
-            p.fillRect(x1, 0, x2 - x1, kMarkerRowHeight, colorForIndex(m.colorIndex));
+            if (m.incomingColorIndex >= 0) {
+                int mid = kMarkerRowHeight / 2;
+                p.fillRect(x1, 0,   x2 - x1, mid,                  colorForIndex(m.incomingColorIndex));
+                p.fillRect(x1, mid, x2 - x1, kMarkerRowHeight - mid, colorForIndex(m.colorIndex));
+            } else {
+                p.fillRect(x1, 0, x2 - x1, kMarkerRowHeight, colorForIndex(m.colorIndex));
+            }
             if (m.abrupt) {
                 p.setPen(Qt::white);
                 p.drawLine(x2 - 1, 0, x2 - 1, kMarkerRowHeight - 1);
@@ -99,14 +105,10 @@ void GradientMarkerBox::paintEvent(QPaintEvent *)
 void GradientMarkerBox::saveSlotState(int slot)
 {
     if (dragSavedStates_.contains(slot)) return;
-    const auto &markers = range_->markers();
-    for (const auto &m : markers) {
-        if (m.slot == slot) {
-            dragSavedStates_[slot] = {true, m.colorIndex, m.abrupt};
-            return;
-        }
-    }
-    dragSavedStates_[slot] = {false, -1, false};
+    if (const GradientMarker *m = range_->findMarkerAt(slot))
+        dragSavedStates_[slot] = {true, m->colorIndex, m->incomingColorIndex, m->abrupt};
+    else
+        dragSavedStates_[slot] = {false, -1, -1, false};
 }
 
 void GradientMarkerBox::mousePressEvent(QMouseEvent *event)
@@ -114,6 +116,27 @@ void GradientMarkerBox::mousePressEvent(QMouseEvent *event)
     if (!range_) return;
     int slot = slotAt(event->pos().x());
     if (event->button() == Qt::LeftButton) {
+        if (event->modifiers() & Qt::ShiftModifier) {
+            shiftMarkersAt(slot, event->pos().x());
+            emit rangeChanged();
+            update();
+            return;
+        }
+        if (const GradientMarker *m = range_->findMarkerAt(slot)) {
+            int outgoing = m->colorIndex;
+            int incoming = m->incomingColorIndex;
+            if (incoming >= 0) {
+                if (event->pos().y() < kMarkerRowHeight / 2)
+                    range_->setMarkerColors(slot, outgoing, -1);
+                else
+                    range_->setMarkerColors(slot, incoming, -1);
+            } else {
+                range_->removeMarker(slot);
+            }
+            emit rangeChanged();
+            update();
+            return;
+        }
         int colorIndex = buffer_ ? static_cast<int>(buffer_->paintColor()) : 0;
         dragging_ = true;
         dragStartSlot_ = slot;
@@ -124,9 +147,34 @@ void GradientMarkerBox::mousePressEvent(QMouseEvent *event)
         emit rangeChanged();
         update();
     } else if (event->button() == Qt::RightButton) {
+        if (event->modifiers() & Qt::ShiftModifier) {
+            shiftRightClickAt(slot);
+        } else {
+            int fgColor = buffer_ ? static_cast<int>(buffer_->paintColor()) : 0;
+            bool clickedTop = event->pos().y() < kMarkerRowHeight / 2;
+            if (const GradientMarker *m = range_->findMarkerAt(slot)) {
+                int outgoing = m->colorIndex;
+                int incoming = m->incomingColorIndex;
+                if (incoming >= 0) {
+                    if (clickedTop) {
+                        if (buffer_) buffer_->setPaintColor(static_cast<unsigned>(incoming));
+                        range_->setMarkerColors(slot, outgoing, -1);
+                    } else {
+                        if (buffer_) buffer_->setPaintColor(static_cast<unsigned>(outgoing));
+                        range_->setMarkerColors(slot, incoming, -1);
+                    }
+                } else {
+                    if (clickedTop)
+                        range_->setMarkerColors(slot, outgoing, fgColor);
+                    else
+                        range_->setMarkerColors(slot, fgColor, outgoing);
+                }
+            } else {
+                range_->addMarker(slot, fgColor);
+            }
+        }
         dragging_ = false;
         dragSavedStates_.clear();
-        range_->removeMarker(slot);
         emit rangeChanged();
         update();
     }
@@ -157,7 +205,7 @@ void GradientMarkerBox::mouseMoveEvent(QMouseEvent *event)
         int s = it.key();
         if (s >= minSlot && s <= maxSlot) continue;
         if (it.value().hadMarker)
-            range_->addMarker(s, it.value().colorIndex, it.value().abrupt);
+            range_->addMarker(s, it.value().colorIndex, it.value().incomingColorIndex, it.value().abrupt);
         else
             range_->removeMarker(s);
     }
@@ -176,26 +224,36 @@ void GradientMarkerBox::mouseReleaseEvent(QMouseEvent *event)
 
 void GradientMarkerBox::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    if (!range_ || event->button() != Qt::LeftButton) return;
-    int slot = slotAt(event->pos().x());
-    // Toggle abrupt flag on the marker at this slot, or add an abrupt marker
+    mousePressEvent(event);
+}
+
+void GradientMarkerBox::shiftMarkers(int fromSlot, int toSlot, int delta)
+{
     const auto &markers = range_->markers();
-    for (int i = 0; i < markers.size(); i++) {
-        if (markers[i].slot == slot) {
-            int colorIndex = markers[i].colorIndex;
-            bool abrupt = !markers[i].abrupt;
-            range_->removeMarker(slot);
-            range_->addMarker(slot, colorIndex, abrupt);
-            emit rangeChanged();
-            update();
-            return;
-        }
+    QVector<GradientMarker> toShift;
+    for (const auto &m : markers) {
+        if (m.slot >= fromSlot && m.slot <= toSlot)
+            toShift.append(m);
     }
-    // No marker here — add an abrupt one
-    int colorIndex = buffer_ ? static_cast<int>(buffer_->paintColor()) : 0;
-    range_->addMarker(slot, colorIndex, true);
-    emit rangeChanged();
-    update();
+    for (const auto &m : toShift)
+        range_->removeMarker(m.slot);
+    for (const auto &m : toShift)
+        range_->addMarker(qBound(0, m.slot + delta, kSlotCount - 1), m.colorIndex, m.incomingColorIndex, m.abrupt);
+}
+
+void GradientMarkerBox::shiftMarkersAt(int slot, int x)
+{
+    int midX = (slotX(slot) + slotX(slot + 1)) / 2;
+    if (x < midX)
+        shiftMarkers(slot, kSlotCount - 1, +1);
+    else
+        shiftMarkers(0, slot, -1);
+}
+
+void GradientMarkerBox::shiftRightClickAt(int slot)
+{
+    range_->removeMarker(slot);
+    shiftMarkers(slot + 1, kSlotCount - 1, -1);
 }
 
 void GradientMarkerBox::dragEnterEvent(QDragEnterEvent *event)

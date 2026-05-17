@@ -36,10 +36,11 @@ int colorIndex(float t, int pixelX, int pixelY,
             if (markers[i].abrupt || hardEdges)
                 return markers[i].colorIndex;
 
+            const int endColor = markers[i + 1].effectiveIncomingColor();
             float seg_t = (slotPos - markers[i].slot) / float(markers[i + 1].slot - markers[i].slot);
 
             if (isRandom)
-                return seg_t < 0.5f ? markers[i].colorIndex : markers[i + 1].colorIndex;
+                return seg_t < 0.5f ? markers[i].colorIndex : endColor;
 
             // clang-format off
             static const int bayer16[16][16] = {
@@ -63,7 +64,7 @@ int colorIndex(float t, int pixelX, int pixelY,
             // clang-format on
 
             float threshold = (bayer16[pixelY % 16][pixelX % 16] + 0.5f) / 256.0f;
-            return seg_t > threshold ? markers[i + 1].colorIndex : markers[i].colorIndex;
+            return seg_t > threshold ? endColor : markers[i].colorIndex;
         }
     }
     return markers.last().colorIndex;

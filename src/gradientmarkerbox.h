@@ -40,6 +40,9 @@ private:
     int slotX(int slot) const;
     QColor colorForIndex(int colorIndex) const;
     void saveSlotState(int slot);
+    void shiftMarkers(int fromSlot, int toSlot, int delta);
+    void shiftMarkersAt(int slot, int x);
+    void shiftRightClickAt(int slot);
 
     GradientRange *range_ = nullptr;
     Buffer *buffer_ = nullptr;
@@ -47,7 +50,7 @@ private:
     bool dragging_ = false;
     int dragStartSlot_ = 0;
     int dragBaseColor_ = 0;
-    struct DragSlotState { bool hadMarker; int colorIndex; bool abrupt; };
+    struct DragSlotState { bool hadMarker; int colorIndex; int incomingColorIndex; bool abrupt; };
     QMap<int, DragSlotState> dragSavedStates_;
 };
 

@@ -42,13 +42,6 @@
          <number>6</number>
         </property>
         <item>
-         <widget class="QLabel" name="colorsLabel">
-          <property name="text">
-           <string>Color count: 0</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <spacer name="hSpacer2">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>

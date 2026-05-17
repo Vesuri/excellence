@@ -10,8 +10,13 @@
 
 struct GradientMarker {
     int slot = 0;
-    int colorIndex = 0;
+    int colorIndex = 0;           // outgoing color
+    int incomingColorIndex = -1;  // -1 = same as colorIndex
     bool abrupt = false;
+
+    int effectiveIncomingColor() const {
+        return incomingColorIndex >= 0 ? incomingColorIndex : colorIndex;
+    }
 };
 
 class GradientRange
@@ -19,8 +24,15 @@ class GradientRange
 public:
     const QVector<GradientMarker> &markers() const { return markers_; }
 
-    void addMarker(int slot, int colorIndex, bool abrupt = false);
+    const GradientMarker* findMarkerAt(int slot) const {
+        for (const auto &m : markers_)
+            if (m.slot == slot) return &m;
+        return nullptr;
+    }
+
+    void addMarker(int slot, int colorIndex, int incomingColorIndex = -1, bool abrupt = false);
     void removeMarker(int slot);
+    void setMarkerColors(int slot, int colorIndex, int incomingColorIndex);
 
     int spread() const { return spread_; }
     void setSpread(int spread) { spread_ = qBound(0, spread, 254); }
