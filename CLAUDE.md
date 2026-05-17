@@ -115,8 +115,10 @@ When `centerFill` is true for Radial/Spherical/Highlight, no rubber band is show
 
 ### Gradient Fill Controls
 
-`gradientrange.h` exports two global flags alongside `activeGradientFillMode`:
+`gradientrange.h` exports several global flags alongside `activeGradientFillMode`:
 
+- **`drawModeActive`** — true when the DrawMode button is checked. Read by `effectiveDrawModeName()` to decide whether to show the gradient fill mode name or fall back to "Color".
+- **`fillModeSelected`** — true when one of the gradient fill mode buttons is selected in the DrawMode options panel. Kept in sync with `DrawModeTool::fillModeSelected_` via `DrawModeTool::setFillModeSelected()`. Read by `effectiveDrawModeName()` to show the correct fill mode name even when `buffer->paintMode()` is not `Color` (e.g. when it is `Cycle` due to a previous non-fill mode selection).
 - **`conformFill`** — when true, gradient fills scale to the cross-sections of the filled area rather than using absolute canvas coordinates. For Horizontal/Vertical modes this means per-row or per-column normalization (each row/column gets a gradient that spans exactly its own pixel extent). For Linear/Radial/Spherical/Highlight the gradient is bounded by the fill's bounding rect. Implemented in `GradientRenderer::computeT()` via the `conformRect` parameter, and via pre-scan loops in `polygonFillScanline`, `FillTool::applyGradientFill`, and `EllipseTool::drawEllipseShape`.
 - **`centerFill`** — when true, Radial/Spherical/Highlight fills originate from the geometric center of the filled area (fill rect center, polygon bbox center, `(cx_, cy_)` for ellipses) rather than the drag start point.
 - **`gradientFillIsRadial(mode)`** — inline helper in `gradientrange.h` returning true for `FillRadial | FillSpherical | FillHighlight`; use this instead of repeating the three-way check. Note: `FillTool::applyGradientFill` intentionally excludes `FillHighlight` from its center check because that mode uses a separate BFS distance-transform path that doesn't accept a gradient origin point.
