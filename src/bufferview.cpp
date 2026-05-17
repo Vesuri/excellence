@@ -501,8 +501,11 @@ void BufferView::handleKey(QKeyEvent *event)
         break;
     case Qt::Key_B:
         for (Tool *tool : tools) {
-            if (qobject_cast<BrushTool *>(tool)) {
-                tool->click();
+            if (auto *bt = qobject_cast<BrushTool *>(tool)) {
+                if (event->modifiers() & Qt::ShiftModifier)
+                    bt->brushRestore();
+                else
+                    tool->click();
                 break;
             }
         }

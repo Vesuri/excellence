@@ -81,6 +81,7 @@ public slots:
     void setHandle(const QPoint &offset);
     void brushOutline();
     void brushTrim();
+    void brushRestore();
 
 private slots:
     void wellClicked(int index);
@@ -104,7 +105,6 @@ private slots:
     void brushBendXMinus();
     void brushBendYPlus();
     void brushBendYMinus();
-    void brushRestore();
     void brushTileCut();
 
 private:
