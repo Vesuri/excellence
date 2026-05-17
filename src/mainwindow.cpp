@@ -604,7 +604,7 @@ void MainWindow::brushAutoBackground()
 Brush *MainWindow::brushForTransform()
 {
     Brush *brush = qobject_cast<Brush *>(buffer->pen());
-    if (brush && !brush->hasOriginal())
+    if (brush)
         brush->storeOriginal();
     return brush;
 }

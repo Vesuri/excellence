@@ -413,7 +413,7 @@ static Brush *currentBrush(Buffer *buf)
 #define BRUSH_TRANSFORM(method) \
     Brush *brush = currentBrush(buffer_); \
     if (!brush) return; \
-    if (!brush->hasOriginal()) brush->storeOriginal(); \
+    brush->storeOriginal(); \
     brush->method; \
     if (ui_) ui_->handleWidget->update(); \
     if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
@@ -436,7 +436,7 @@ void BrushTool::brushOutline()
 {
     Brush *brush = currentBrush(buffer_);
     if (!brush || !buffer_) return;
-    if (!brush->hasOriginal()) brush->storeOriginal();
+    brush->storeOriginal();
     brush->outline(static_cast<int>(buffer_->paintColor()));
     if (ui_) ui_->handleWidget->update();
     if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));

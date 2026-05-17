@@ -163,7 +163,7 @@ Currently wired tool-activation keys (plain key activates; repeated press cycles
 
 Other canvas shortcuts: `S` show page, `N`/`Shift+N` center/pan, `M`/`Shift+M` magnifier, `P` pixel grid, `G` grid lock, `/` mirror, `Tab` gradient cycle, `K`/`Shift+K` clear, `[`/`]` cycle palette color, `U`/`Shift+U`/`Alt+U` undo/redo, `Alt+R` flip gradient range, `Alt+J`/`Alt+Shift+J` next/prev gradient range, `J` swap buffers, arrow keys scroll, `+`/`-` zoom.
 
-Brush transform shortcuts are menu actions in `mainwindow.ui`: `x` flip H, `y` flip V, `z` rotate 90° CW, `H`/`h` double/halve both, `X` (Shift+X) double width, `Y` (Shift+Y) double height. All transform slots call `brushForTransform()` which auto-saves the original before the first transform so Restore works; `brushRestore()` uses `qobject_cast` directly.
+Brush transform shortcuts are menu actions in `mainwindow.ui`: `x` flip H, `y` flip V, `z` rotate 90° CW, `H`/`h` double/halve both, `X` (Shift+X) double width, `Y` (Shift+Y) double height. All transform slots call `brushForTransform()` which saves the current brush state before each transform (single-step undo); `brushRestore()` uses `qobject_cast` directly. Restore does not update the saved state — pressing Restore twice is a no-op.
 
 `o` (Outline), `Shift+O` (Trim), and `Shift+B` (Restore) are handled in `BufferView::handleKey()` — `Key_O` dispatches to `BrushTool::brushOutline()` / `brushTrim()` based on Shift; `Key_B` dispatches to `BrushTool::brushRestore()` when Shift is held, otherwise cycles BrushTool mode. `brushOutline`, `brushTrim`, and `brushRestore` are public slots on BrushTool. The matching menu actions in `mainwindow.ui` provide the shortcut label in the menu.
 
