@@ -1,5 +1,5 @@
 #include "gradientrange.h"
-#include "gradientrenderer.h"
+#include "colorutils.h"
 #include <QImage>
 #include <algorithm>
 
@@ -21,8 +21,9 @@ void GradientRange::setDefault(const QImage &image)
 
     markers_.clear();
     int start = (kGradientSlotCount - n) / 2;
+    const QVector<QRgb> palette = image.colorTable();
     for (int i = 0; i < n; i++) {
-        markers_.append({start + i, GradientRenderer::nearestColorIndex(targetColors[i], image), false});
+        markers_.append({start + i, nearestColorIndex(targetColors[i], palette), false});
     }
 
     spread_       = 0;

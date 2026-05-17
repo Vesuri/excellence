@@ -1,5 +1,4 @@
 #include "gradientrenderer.h"
-#include <QColor>
 #include <QList>
 #include <algorithm>
 #include <climits>
@@ -7,48 +6,6 @@
 #include "algorithms.h"
 
 namespace GradientRenderer {
-
-struct DitherPair { int idx1; int idx2; float blend; };
-
-static DitherPair ditherPair(const QColor &ideal, const QImage &image)
-{
-    const int n = image.colorCount();
-    if (n < 2) return {0, 0, 0.0f};
-
-    int idx1 = 0, idx2 = 0;
-    int dist1 = INT_MAX, dist2 = INT_MAX;
-
-    for (int i = 0; i < n; i++) {
-        QColor c(image.color(i));
-        int dr = ideal.red()   - c.red();
-        int dg = ideal.green() - c.green();
-        int db = ideal.blue()  - c.blue();
-        int dist = dr*dr + dg*dg + db*db;
-        if (dist < dist1) {
-            idx2 = idx1; dist2 = dist1;
-            idx1 = i;    dist1 = dist;
-        } else if (dist < dist2) {
-            idx2 = i; dist2 = dist;
-        }
-    }
-
-    QColor c1(image.color(idx1));
-    QColor c2(image.color(idx2));
-    int dr = c2.red()   - c1.red();
-    int dg = c2.green() - c1.green();
-    int db = c2.blue()  - c1.blue();
-    int er = ideal.red()   - c1.red();
-    int eg = ideal.green() - c1.green();
-    int eb = ideal.blue()  - c1.blue();
-    float denom = float(dr*dr + dg*dg + db*db);
-    float blend = denom > 0.0f ? qBound(0.0f, float(er*dr + eg*dg + eb*db) / denom, 1.0f) : 0.0f;
-    return {idx1, idx2, blend};
-}
-
-int nearestColorIndex(QRgb target, const QImage &image)
-{
-    return ditherPair(QColor(target), image).idx1;
-}
 
 int colorIndex(float t, int pixelX, int pixelY,
                const GradientRange *range, const QImage &image)

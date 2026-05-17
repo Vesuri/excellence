@@ -12,9 +12,6 @@
 inline float sphericalT(float t) { return 1.0f - sqrtf(1.0f - t * t); }
 
 namespace GradientRenderer {
-    // Returns the palette index of the closest color to `target` by squared RGB distance.
-    int nearestColorIndex(QRgb target, const QImage &image);
-
     // Returns the palette color index for gradient position t (0=start, 1=end),
     // applying dithering based on pixel coordinates.
     int colorIndex(float t, int pixelX, int pixelY,
