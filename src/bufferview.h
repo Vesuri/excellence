@@ -32,6 +32,8 @@ public:
 signals:
     void magnifyAtPointRequested(int zoomLevel, QPoint point);
     void cursorMoved(QPoint point, bool valid);
+    void squashDialogsRequested();
+    void toggleAllDialogsRequested();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

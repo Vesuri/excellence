@@ -538,6 +538,37 @@ void BufferView::handleKey(QKeyEvent *event)
         else
             buffer->undo();
         break;
+    case Qt::Key_F1:
+        DrawModeTool::instance.activateModeByKey(Buffer::BrushMode);
+        break;
+    case Qt::Key_F2:
+        DrawModeTool::instance.activateModeByKey(Buffer::Color);
+        break;
+    case Qt::Key_F3:
+        DrawModeTool::instance.toggleReplaceMode();
+        break;
+    case Qt::Key_F4:
+        DrawModeTool::instance.activateModeByKey(Buffer::Smear);
+        break;
+    case Qt::Key_F5:
+        DrawModeTool::instance.activateModeByKey(Buffer::Range);
+        break;
+    case Qt::Key_F6:
+        DrawModeTool::instance.activateModeByKey(Buffer::AverageSmear);
+        break;
+    case Qt::Key_F7:
+        DrawModeTool::instance.activateModeByKey(Buffer::Cycle);
+        break;
+    case Qt::Key_F8:
+        DrawModeTool::instance.activateModeByKey(Buffer::Smooth);
+        break;
+    case Qt::Key_F9:
+        emit squashDialogsRequested();
+        break;
+    case Qt::Key_F10:
+    case Qt::Key_Space:
+        emit toggleAllDialogsRequested();
+        break;
     default:
         break;
     }

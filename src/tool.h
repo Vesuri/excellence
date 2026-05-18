@@ -41,6 +41,8 @@ public:
     virtual bool restrictToColorAndRandom() const { return false; }
     virtual bool allowsBrushModeButton() const { return true; }
 
+    QWidget *optionsWidget() const { return optionsWidget_; }
+
 public slots:
     void toggleOptionsWidget();
 

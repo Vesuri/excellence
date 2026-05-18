@@ -416,6 +416,8 @@ void MainWindow::newWindow()
     bufferView->setBuffer(buffer);
     connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
     connect(bufferView, &BufferView::cursorMoved, this, &MainWindow::updateCursorStatus);
+    connect(bufferView, &BufferView::squashDialogsRequested, this, &MainWindow::squashDialogs);
+    connect(bufferView, &BufferView::toggleAllDialogsRequested, this, &MainWindow::toggleAllDialogs);
     bufferView->show();
     bufferViews.append(bufferView);
     if (!activeBufferView)
@@ -445,6 +447,8 @@ void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
 
     connect(bufferView, &BufferView::magnifyAtPointRequested, this, &MainWindow::openMagnifiedViewAt);
     connect(bufferView, &BufferView::cursorMoved, this, &MainWindow::updateCursorStatus);
+    connect(bufferView, &BufferView::squashDialogsRequested, this, &MainWindow::squashDialogs);
+    connect(bufferView, &BufferView::toggleAllDialogsRequested, this, &MainWindow::toggleAllDialogs);
     bufferView->show();
     bufferViews.append(bufferView);
 }
@@ -1042,4 +1046,41 @@ void MainWindow::about()
            "Version 1.0<br><br>"
            "A pixel art editor inspired by Brilliance on the Commodore Amiga.<br><br>"
            "Copyright &copy; 2024 Vesa Halttunen"));
+}
+
+QVector<QWidget *> MainWindow::collectAndHideToolDialogs()
+{
+    QVector<QWidget *> result;
+    for (Tool *tool : tools) {
+        QWidget *w = tool->optionsWidget();
+        if (w && w->isVisible()) {
+            result.append(w);
+            w->hide();
+        }
+    }
+    return result;
+}
+
+void MainWindow::squashDialogs()
+{
+    if (squashedDialogs_.isEmpty())
+        squashedDialogs_ = collectAndHideToolDialogs();
+    else {
+        for (QWidget *w : squashedDialogs_)
+            w->show();
+        squashedDialogs_.clear();
+    }
+}
+
+void MainWindow::toggleAllDialogs()
+{
+    if (isVisible()) {
+        hiddenDialogs_ = collectAndHideToolDialogs();
+        hide();
+    } else {
+        show();
+        for (QWidget *w : hiddenDialogs_)
+            w->show();
+        hiddenDialogs_.clear();
+    }
 }

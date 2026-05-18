@@ -149,10 +149,37 @@ void DrawModeTool::applyMode()
     drawModeActive = active;
     if (active)
         buffer_->setPaintMode(previousMode_);
-    else if (ui_ && ui_->brushModeBtn->isChecked())
+    else if (ui_ ? ui_->brushModeBtn->isChecked() : brushModeActive_)
         buffer_->setPaintMode(Buffer::BrushMode);
     else
         buffer_->setPaintMode(Buffer::Color);
+}
+
+void DrawModeTool::activateModeByKey(Buffer::PaintMode mode)
+{
+    if (!buffer_ || !isModeAvailable(mode)) return;
+    setFillModeSelected(false);
+    if (mode == Buffer::BrushMode) {
+        brushModeActive_ = true;
+        button_->setChecked(false);
+        if (ui_) ui_->brushModeBtn->setChecked(true);
+    } else {
+        brushModeActive_ = false;
+        bool selectable = isSelectableMode(mode);
+        if (selectable) previousMode_ = mode;
+        button_->setChecked(selectable);
+        if (ui_) ui_->brushModeBtn->setChecked(false);
+    }
+    applyMode();
+}
+
+void DrawModeTool::toggleReplaceMode()
+{
+    if (!buffer_) return;
+    if (!qobject_cast<Brush *>(buffer_->pen())) return;
+    bool on = !buffer_->replaceMode();
+    buffer_->setReplaceMode(on);
+    if (ui_) ui_->replaceModeBtn->setChecked(on);
 }
 
 

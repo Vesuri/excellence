@@ -96,6 +96,8 @@ private slots:
     void openMagnifiedViewAt(int zoomLevel, QPoint point);
     void updateStatusBarStatic();
     void updateCursorStatus(QPoint point, bool valid);
+    void squashDialogs();
+    void toggleAllDialogs();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };
@@ -103,6 +105,7 @@ private:
     void updateWindowTitle();
     QImage convertToIndexed(const QImage &source) const;
     class Brush *brushForTransform();
+    QVector<QWidget *> collectAndHideToolDialogs();
 
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
@@ -129,6 +132,8 @@ private:
 
     QPoint lastCursorPoint_;
     bool lastCursorValid_ = false;
+    QVector<QWidget *> squashedDialogs_;
+    QVector<QWidget *> hiddenDialogs_;
 };
 
 #endif // MAINWINDOW_H

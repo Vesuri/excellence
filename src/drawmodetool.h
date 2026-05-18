@@ -18,6 +18,8 @@ class DrawModeTool : public Tool
     Q_OBJECT
 
 public:
+    static DrawModeTool instance;
+
     explicit DrawModeTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
@@ -25,6 +27,8 @@ public:
     QRect move(const QPoint &) override { return {}; }
     QRect release(const QPoint &) override { return {}; }
     void addButtonToGridLayout(QGridLayout *layout) override;
+    void activateModeByKey(Buffer::PaintMode mode);
+    void toggleReplaceMode();
 
 protected:
     void registerTool() override;
@@ -45,13 +49,13 @@ private:
     bool isModeAvailable(Buffer::PaintMode mode) const;
 
     Buffer::PaintMode previousMode_;
+    bool brushModeActive_ = false;
     bool fillModeSelected_ = false;
     void setFillModeSelected(bool v) { fillModeSelected_ = fillModeSelected = v; }
     Ui::DrawModeToolOptions *ui_ = nullptr;
     QList<QRadioButton *> generalModeBtns_;    // disabled when restrictToColorAndRandom
     QList<QRadioButton *> fillSensitiveBtns_;  // disabled when restrictToColorAndRandom or hasFill
     QList<QPair<QRadioButton *, GradientFillMode>> fillModeBtns_;
-    static DrawModeTool instance;
 };
 
 inline QString effectiveDrawModeName(Buffer::PaintMode paintMode)
