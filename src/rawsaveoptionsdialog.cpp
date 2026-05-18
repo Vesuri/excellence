@@ -20,6 +20,6 @@ RawSaveOptions RawSaveOptionsDialog::options() const
     opts.interleave       = ui->checkBoxInterleave->isChecked();
     opts.wordAlign        = ui->checkBoxWordAlign->isChecked();
     opts.paletteDepth     = ui->radioButton24bit->isChecked() ? 24 : 12;
-    opts.palettePlacement = ui->comboBoxPlacement->currentIndex();
+    opts.palettePlacement = static_cast<RawOption::Placement>(ui->comboBoxPlacement->currentIndex());
     return opts;
 }

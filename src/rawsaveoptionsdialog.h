@@ -2,16 +2,17 @@
 #define RAWSAVEOPTIONSDIALOG_H
 
 #include <QDialog>
+#include "plugins/raw/rawplugin.h"
 
 namespace Ui {
 class RawSaveOptionsDialog;
 }
 
 struct RawSaveOptions {
-    bool interleave       = true;
-    bool wordAlign        = true;
-    int  paletteDepth     = 24;
-    int  palettePlacement = 2; // RawOption::PlacementEnd
+    bool                    interleave       = true;
+    bool                    wordAlign        = true;
+    int                     paletteDepth     = 24;
+    RawOption::Placement    palettePlacement = RawOption::PlacementEnd;
 };
 
 class RawSaveOptionsDialog : public QDialog
