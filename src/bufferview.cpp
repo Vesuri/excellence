@@ -261,7 +261,8 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 bool isBrushRect = bt && bt->mode() == BrushTool::Rectangle;
                 bool isRectOrEllipse = qobject_cast<RectangleTool *>(tool)
                                     || qobject_cast<EllipseTool *>(tool);
-                bool showGuides = isBrushRect || (isRectOrEllipse && !mouseDown);
+                bool inRubberBand = tool && tool->isInRubberBandMode();
+                bool showGuides = isBrushRect || (isRectOrEllipse && !mouseDown && !inRubberBand);
                 scene->setGuides(showGuides, point, buffer->image().size());
                 scene->setStartGuide(isBrushRect && mouseDown, guideStartPoint_);
             }
