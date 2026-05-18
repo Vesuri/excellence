@@ -61,7 +61,6 @@ public:
     void setBuffer(Buffer *buffer) override;
     QString name() const override;
     bool showGuides() const override { return mode_ == Rectangle; }
-    bool showStartGuide() const override { return mode_ == Rectangle && mouseButton_ != Qt::NoButton; }
     QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;

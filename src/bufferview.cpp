@@ -230,13 +230,15 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             }
 
             switch (event->type()) {
-            case QEvent::GraphicsSceneMousePress:
-                pendingZoom_ = buffer->tool() && buffer->tool()->type() == Tool::Zoom;
-                if (buffer->tool() && buffer->tool()->showGuides())
+            case QEvent::GraphicsSceneMousePress: {
+                Tool *pressTool = buffer->tool();
+                pendingZoom_ = pressTool && pressTool->type() == Tool::Zoom;
+                if (pressTool && pressTool->showGuides())
                     guideStartPoint_ = point;
                 buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
                 pendingZoom_ = false;
                 break;
+            }
             case QEvent::GraphicsSceneMouseMove:
                 mouseOverCanvas_ = true;
                 buffer->move(point);
@@ -252,7 +254,6 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
                 break;
             }
 
-            // Update crosshair position guides
             {
                 Tool *tool = buffer->tool();
                 scene->setGuides(tool && tool->showGuides(), point, buffer->image().size());
