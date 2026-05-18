@@ -25,16 +25,16 @@ qmake Excellence.pro
 make -j4
 ```
 
-On macOS the application builds as `Excellence.app`. Run it with:
+On macOS the application builds as `src/Excellence.app`. Run it with:
 
 ```bash
-open Excellence.app
+open src/Excellence.app
 ```
 
 On Linux:
 
 ```bash
-./Excellence
+./src/excellence
 ```
 
 ## Project Structure
@@ -42,7 +42,4 @@ On Linux:
 ```
 src/             Application source
 src/plugins/     File format plugins (ilbm, raw)
-Brilliance.md    Feature reference from the original Amiga application
-Features.md      Prioritized feature list for this project
-TODO.md          Outstanding work items
 ```
