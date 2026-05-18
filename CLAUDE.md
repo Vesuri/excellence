@@ -53,7 +53,7 @@ When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may
 
 ### Palette System
 
-Images are indexed-color. The palette is part of `Buffer`. `PaletteButton` shows individual palette entries; `PaletteQuantizer` / `spatial_color_quant.h` handle color reduction. Palette operations (copy, swap, remap) live in `mainwindow.cpp` under the Palette menu. The default buffer is 320×256 with 32 colors (bit depth 5). `buffer.cpp` contains Brilliance-style default palettes for each bit depth (1–8); `defaultPaletteForColors(n)` selects the right one.
+Images are indexed-color. The palette is part of `Buffer`. `PaletteButton` shows individual palette entries; `PaletteQuantizer` / `spatial_color_quant.h` handle color reduction. Palette operations (copy, swap, remap) live in `mainwindow.cpp` under the Palette menu. The default buffer is 320×256 with 32 colors (bit depth 5). Brilliance-style default palettes for each bit depth (1–8) live in `defaultpalette.{h,cpp}`; `defaultPaletteForColors(n)` selects the right one.
 
 ### File Format Plugins
 
