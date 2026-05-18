@@ -3,9 +3,9 @@
 
 #include <QDialog>
 
-class QCheckBox;
-class QRadioButton;
-class QComboBox;
+namespace Ui {
+class RawSaveOptionsDialog;
+}
 
 struct RawSaveOptions {
     bool interleave       = true;
@@ -20,15 +20,12 @@ class RawSaveOptionsDialog : public QDialog
 
 public:
     explicit RawSaveOptionsDialog(QWidget *parent = nullptr);
+    ~RawSaveOptionsDialog();
 
     RawSaveOptions options() const;
 
 private:
-    QCheckBox    *interleaveCheck_;
-    QCheckBox    *wordAlignCheck_;
-    QRadioButton *depth12_;
-    QRadioButton *depth24_;
-    QComboBox    *placementCombo_;
+    Ui::RawSaveOptionsDialog *ui;
 };
 
 #endif // RAWSAVEOPTIONSDIALOG_H

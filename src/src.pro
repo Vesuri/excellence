@@ -107,7 +107,8 @@ FORMS    += mainwindow.ui \
     pentiptool.ui \
     brushtool.ui \
     drawmodetool.ui \
-    gradienttool.ui
+    gradienttool.ui \
+    rawsaveoptionsdialog.ui
 
 RESOURCES += \
     icons/icons.qrc

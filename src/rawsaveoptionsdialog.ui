@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RawSaveOptionsDialog</class>
+ <widget class="QDialog" name="RawSaveOptionsDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>280</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Raw Save Options</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing">
+    <number>8</number>
+   </property>
+   <property name="leftMargin"><number>8</number></property>
+   <property name="topMargin"><number>8</number></property>
+   <property name="rightMargin"><number>8</number></property>
+   <property name="bottomMargin"><number>8</number></property>
+   <item>
+    <widget class="QGroupBox" name="groupBitplanes">
+     <property name="title">
+      <string>Bitplanes</string>
+     </property>
+     <layout class="QVBoxLayout" name="layoutBitplanes">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin"><number>6</number></property>
+      <property name="topMargin"><number>4</number></property>
+      <property name="rightMargin"><number>6</number></property>
+      <property name="bottomMargin"><number>6</number></property>
+      <item>
+       <widget class="QCheckBox" name="checkBoxInterleave">
+        <property name="text">
+         <string>Interleave bitplanes</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBoxWordAlign">
+        <property name="text">
+         <string>Word-align rows (pad to 16-bit boundary)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupDepth">
+     <property name="title">
+      <string>Palette depth</string>
+     </property>
+     <layout class="QVBoxLayout" name="layoutDepth">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin"><number>6</number></property>
+      <property name="topMargin"><number>4</number></property>
+      <property name="rightMargin"><number>6</number></property>
+      <property name="bottomMargin"><number>6</number></property>
+      <item>
+       <widget class="QRadioButton" name="radioButton12bit">
+        <property name="text">
+         <string>12-bit (4 bits per channel)</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="radioButton24bit">
+        <property name="text">
+         <string>24-bit (8 bits per channel)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupPlacement">
+     <property name="title">
+      <string>Palette placement</string>
+     </property>
+     <layout class="QFormLayout" name="layoutPlacement">
+      <property name="spacing">
+       <number>4</number>
+      </property>
+      <property name="leftMargin"><number>6</number></property>
+      <property name="topMargin"><number>4</number></property>
+      <property name="rightMargin"><number>6</number></property>
+      <property name="bottomMargin"><number>6</number></property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelPosition">
+        <property name="text">
+         <string>Position:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="comboBoxPlacement">
+        <property name="currentIndex">
+         <number>2</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>None (omit palette)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Start (before data)</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>End (after data)</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>RawSaveOptionsDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel"><x>140</x><y>280</y></hint>
+    <hint type="destinationlabel"><x>140</x><y>150</y></hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>RawSaveOptionsDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel"><x>140</x><y>280</y></hint>
+    <hint type="destinationlabel"><x>140</x><y>150</y></hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
