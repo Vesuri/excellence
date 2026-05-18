@@ -29,6 +29,7 @@ public:
     QRect hover(const QPoint &point) override;
     void cancel() override;
     bool isInRubberBandMode() const override { return rubberBand_.pending; }
+    bool showGuides() const override { return mouseButton_ == Qt::NoButton && !rubberBand_.pending; }
     QString status() const override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 

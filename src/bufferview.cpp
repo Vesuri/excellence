@@ -232,9 +232,8 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             switch (event->type()) {
             case QEvent::GraphicsSceneMousePress:
                 pendingZoom_ = buffer->tool() && buffer->tool()->type() == Tool::Zoom;
-                if (auto *bt = qobject_cast<BrushTool *>(buffer->tool()))
-                    if (bt->mode() == BrushTool::Rectangle)
-                        guideStartPoint_ = point;
+                if (buffer->tool() && buffer->tool()->showGuides())
+                    guideStartPoint_ = point;
                 buffer->press(point, mouseEvent->button(), mouseEvent->modifiers());
                 pendingZoom_ = false;
                 break;
@@ -256,15 +255,8 @@ bool BufferView::eventFilter(QObject *watched, QEvent *event)
             // Update crosshair position guides
             {
                 Tool *tool = buffer->tool();
-                bool mouseDown = tool && tool->mouseButton() != Qt::NoButton;
-                auto *bt = qobject_cast<BrushTool *>(tool);
-                bool isBrushRect = bt && bt->mode() == BrushTool::Rectangle;
-                bool isRectOrEllipse = qobject_cast<RectangleTool *>(tool)
-                                    || qobject_cast<EllipseTool *>(tool);
-                bool inRubberBand = tool && tool->isInRubberBandMode();
-                bool showGuides = isBrushRect || (isRectOrEllipse && !mouseDown && !inRubberBand);
-                scene->setGuides(showGuides, point, buffer->image().size());
-                scene->setStartGuide(isBrushRect && mouseDown, guideStartPoint_);
+                scene->setGuides(tool && tool->showGuides(), point, buffer->image().size());
+                scene->setStartGuide(tool && tool->showStartGuide(), guideStartPoint_);
             }
 
             updateWindowTitle(point);

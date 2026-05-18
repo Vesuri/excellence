@@ -31,6 +31,8 @@ public:
     virtual QRect doubleClick(const QPoint &point) { Q_UNUSED(point) return QRect(); }
     virtual void cancel() {}
     virtual bool isInRubberBandMode() const { return false; }
+    virtual bool showGuides() const { return false; }
+    virtual bool showStartGuide() const { return false; }
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
     virtual Type type() const;
     virtual QString name() const;
