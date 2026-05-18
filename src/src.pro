@@ -49,7 +49,8 @@ SOURCES += main.cpp\
     gradienttool.cpp \
     gradientrenderer.cpp \
     mirrortool.cpp \
-    segmenttool.cpp
+    segmenttool.cpp \
+    defaultpalette.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -88,7 +89,8 @@ HEADERS  += mainwindow.h \
     gradientrenderer.h \
     mirrortool.h \
     segmenttool.h \
-    spatial_color_quant.h
+    spatial_color_quant.h \
+    defaultpalette.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui \
