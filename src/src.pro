@@ -50,7 +50,8 @@ SOURCES += main.cpp\
     gradientrenderer.cpp \
     mirrortool.cpp \
     segmenttool.cpp \
-    defaultpalette.cpp
+    defaultpalette.cpp \
+    rawsaveoptionsdialog.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -90,7 +91,8 @@ HEADERS  += mainwindow.h \
     mirrortool.h \
     segmenttool.h \
     spatial_color_quant.h \
-    defaultpalette.h
+    defaultpalette.h \
+    rawsaveoptionsdialog.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui \

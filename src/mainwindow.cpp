@@ -31,6 +31,8 @@
 #include "tool.h"
 #include "pickcolortool.h"
 #include "mainwindow.h"
+#include "plugins/raw/rawplugin.h"
+#include "rawsaveoptionsdialog.h"
 #include "ui_mainwindow.h"
 
 
@@ -341,7 +343,7 @@ void MainWindow::openFile(const QString &path)
     openDialog->setDirectory(path);
 }
 
-void MainWindow::saveFile(const QString &savePath)
+void MainWindow::saveFile(const QString &savePath, const RawSaveOptions &rawOptions)
 {
     if (!savePath.isEmpty()) {
         buffer->setPath(savePath);
@@ -357,10 +359,32 @@ void MainWindow::saveFile(const QString &savePath)
             QRgb c = saveImage.color(eraseIdx);
             saveImage.setColor(eraseIdx, qRgba(qRed(c), qGreen(c), qBlue(c), 0));
         }
-        QImageWriter imageWriter(path);
-        if (!imageWriter.write(saveImage)) {
+        bool writeOk = false;
+        QString errorString;
+        if (path.toLower().endsWith(".raw")) {
+            QFile file(path);
+            if (!file.open(QIODevice::WriteOnly)) {
+                errorString = file.errorString();
+            } else {
+                RawHandler handler;
+                handler.setDevice(&file);
+                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::Interleave),       rawOptions.interleave);
+                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::WordAlign),        rawOptions.wordAlign);
+                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::PaletteDepth),     rawOptions.paletteDepth);
+                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::PalettePlacement), rawOptions.palettePlacement);
+                writeOk = handler.write(saveImage);
+                if (!writeOk)
+                    errorString = tr("Failed to write raw file.");
+            }
+        } else {
+            QImageWriter imageWriter(path);
+            writeOk = imageWriter.write(saveImage);
+            if (!writeOk)
+                errorString = imageWriter.errorString();
+        }
+        if (!writeOk) {
             QMessageBox msgBox;
-            msgBox.setText(imageWriter.errorString());
+            msgBox.setText(errorString);
             msgBox.exec();
         } else {
             buffer->clearDirty();
@@ -370,11 +394,19 @@ void MainWindow::saveFile(const QString &savePath)
 
 void MainWindow::saveAs()
 {
-    QString path = QFileDialog::getSaveFileName(nullptr, tr("Open file"), buffer->path());
+    QString path = QFileDialog::getSaveFileName(nullptr, tr("Save file"), buffer->path());
+    if (path.isEmpty())
+        return;
 
-    if (!path.isEmpty()) {
-        saveFile(path);
+    RawSaveOptions options;
+    if (path.toLower().endsWith(".raw")) {
+        RawSaveOptionsDialog dlg(this);
+        if (dlg.exec() != QDialog::Accepted)
+            return;
+        options = dlg.options();
     }
+
+    saveFile(path, options);
 }
 
 void MainWindow::newWindow()

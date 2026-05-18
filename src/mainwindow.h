@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "rawsaveoptionsdialog.h"
 #include <QVector>
 #include <QRgb>
 #include <QPoint>
@@ -39,7 +40,7 @@ private slots:
     void runPaletteActionForPaintColor(unsigned paletteIndex);
     void runPaletteActionForEraseColor(unsigned paletteIndex);
     void openFile(const QString &path = QString());
-    void saveFile(const QString &path = QString());
+    void saveFile(const QString &path = QString(), const RawSaveOptions &rawOptions = RawSaveOptions());
     void saveAs();
     void newWindow();
     void closeWindow();
