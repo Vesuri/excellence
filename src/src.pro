@@ -37,7 +37,7 @@ SOURCES += main.cpp\
     rectangletool.cpp \
     curvetool.cpp \
     ellipsetool.cpp \
-    airtool.cpp \
+    airbrushtool.cpp \
     filltool.cpp \
     texttool.cpp \
     pentiptool.cpp \
@@ -76,7 +76,7 @@ HEADERS  += mainwindow.h \
     rectangletool.h \
     curvetool.h \
     ellipsetool.h \
-    airtool.h \
+    airbrushtool.h \
     filltool.h \
     texttool.h \
     pentiptool.h \
@@ -95,7 +95,7 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     bufferview.ui \
     propertiesdialog.ui \
-    airtool.ui \
+    airbrushtool.ui \
     ellipsetool.ui \
     rectangletool.ui \
     zoomtool.ui \

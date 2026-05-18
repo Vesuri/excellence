@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AirToolOptions</class>
- <widget class="QWidget" name="AirToolOptions">
+ <class>AirbrushToolOptions</class>
+ <widget class="QWidget" name="AirbrushToolOptions">
   <property name="windowTitle">
    <string>Airbrush</string>
   </property>

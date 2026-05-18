@@ -16,7 +16,7 @@
 #include "pickcolortool.h"
 #include "curvetool.h"
 #include "ellipsetool.h"
-#include "airtool.h"
+#include "airbrushtool.h"
 #include "filltool.h"
 #include "texttool.h"
 #include "cleartool.h"
@@ -386,7 +386,7 @@ void BufferView::handleKey(QKeyEvent *event)
         break;
     case Qt::Key_A:
         for (Tool *tool : tools) {
-            if (auto *at = qobject_cast<AirTool *>(tool)) {
+            if (auto *at = qobject_cast<AirbrushTool *>(tool)) {
                 if (event->modifiers() & Qt::ShiftModifier)
                     at->toggleOptionsWidget();
                 else

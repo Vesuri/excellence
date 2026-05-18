@@ -5,32 +5,32 @@
 #include <QSpinBox>
 #include <QSlider>
 #include <QRandomGenerator>
-#include "ui_airtool.h"
+#include "ui_airbrushtool.h"
 #include <QtCore/qmath.h>
 #include <cmath>
 #include "pen.h"
 #include "pentip.h"
 #include "brush.h"
 #include "buffer.h"
-#include "airtool.h"
+#include "airbrushtool.h"
 
-AirTool AirTool::instance;
-const char *AirTool::icons[] = {
+AirbrushTool AirbrushTool::instance;
+const char *AirbrushTool::icons[] = {
     ":/finesprayairbrush.png",
     ":/splatter.png",
     ":/shapeairbrush.png"
 };
 
-AirTool::AirTool(QObject *parent) : Tool(parent),
+AirbrushTool::AirbrushTool(QObject *parent) : Tool(parent),
     sprayMode_(FineSpray), erasing_(false),
     timer_(new QTimer(this)),
     nozzleRadius_(20), flow_(50), focus_(0)
 {
     timer_->setInterval(16);
-    connect(timer_, &QTimer::timeout, this, &AirTool::sprayTick);
+    connect(timer_, &QTimer::timeout, this, &AirbrushTool::sprayTick);
 }
 
-void AirTool::setMode(SprayMode mode)
+void AirbrushTool::setMode(SprayMode mode)
 {
     sprayMode_ = mode;
     button_->setIcon(QIcon(icons[mode]));
@@ -43,7 +43,7 @@ void AirTool::setMode(SprayMode mode)
     button_->setToolTip(tips[mode]);
 }
 
-QString AirTool::name() const
+QString AirbrushTool::name() const
 {
     switch (sprayMode_) {
     case FineSpray:     return "Fine Spray Airbrush";
@@ -53,17 +53,19 @@ QString AirTool::name() const
     return QString();
 }
 
-void AirTool::setBuffer(Buffer *buffer)
+void AirbrushTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();
     timer_->stop();
+    sprayBrush_ = nullptr;
+    sprayTip_ = nullptr;
     Tool::setBuffer(buffer);
     connectToolChecked();
 }
 
 // ── Spray helpers ──────────────────────────────────────────────────────────
 
-QPoint AirTool::randomNozzlePoint() const
+QPoint AirbrushTool::randomNozzlePoint() const
 {
     QRandomGenerator *rng = QRandomGenerator::global();
     double theta = rng->generateDouble() * 2.0 * M_PI;
@@ -73,7 +75,7 @@ QPoint AirTool::randomNozzlePoint() const
                   center_.y() + qRound(r * std::sin(theta)));
 }
 
-QRect AirTool::paintDot(const QPoint &point)
+QRect AirbrushTool::paintDot(const QPoint &point)
 {
     QImage &img = buffer_->image();
     if (!img.rect().contains(point))
@@ -92,13 +94,14 @@ QRect AirTool::paintDot(const QPoint &point)
 
     case ShapeAirbrush: {
         const uint color = erasing_ ? buffer_->eraseColor() : buffer_->paintColor();
+        auto *rng = QRandomGenerator::global();
 
-        if (Brush *brush = qobject_cast<Brush *>(buffer_->pen())) {
-            const QImage &bimg = brush->image();
+        if (sprayBrush_) {
+            const QImage &bimg = sprayBrush_->image();
             for (int attempt = 0; attempt < 16; attempt++) {
-                int bx = QRandomGenerator::global()->bounded(bimg.width());
-                int by = QRandomGenerator::global()->bounded(bimg.height());
-                if (bimg.pixelIndex(bx, by) == brush->transparentIndex())
+                int bx = rng->bounded(bimg.width());
+                int by = rng->bounded(bimg.height());
+                if (bimg.pixelIndex(bx, by) == sprayBrush_->transparentIndex())
                     continue;
                 QPoint cp(point.x() + bx - bimg.width() / 2,
                           point.y() + by - bimg.height() / 2);
@@ -110,17 +113,16 @@ QRect AirTool::paintDot(const QPoint &point)
             return QRect();
         }
 
-        if (PenTip *tip = qobject_cast<PenTip *>(buffer_->pen())) {
-            if (tip->width() == 1 && tip->height() == 1) {
-                if (!img.rect().contains(point)) return QRect();
+        if (sprayTip_) {
+            if (sprayTip_->width() == 1 && sprayTip_->height() == 1) {
                 img.setPixel(point, color);
                 return QRect(point, point);
             }
-            const int hw = tip->width() / 2, hh = tip->height() / 2;
+            const int hw = sprayTip_->width() / 2, hh = sprayTip_->height() / 2;
             for (int attempt = 0; attempt < 16; attempt++) {
-                int dx = static_cast<int>(QRandomGenerator::global()->bounded(2 * hw + 1)) - hw;
-                int dy = static_cast<int>(QRandomGenerator::global()->bounded(2 * hh + 1)) - hh;
-                if (tip->shape() == PenTip::Circle && dx * dx + dy * dy > hw * hw + hw / 2)
+                int dx = static_cast<int>(rng->bounded(2 * hw + 1)) - hw;
+                int dy = static_cast<int>(rng->bounded(2 * hh + 1)) - hh;
+                if (sprayTip_->shape() == PenTip::Circle && dx * dx + dy * dy > hw * hw + hw / 2)
                     continue;
                 QPoint cp(point.x() + dx, point.y() + dy);
                 if (img.rect().contains(cp)) {
@@ -131,18 +133,14 @@ QRect AirTool::paintDot(const QPoint &point)
             return QRect();
         }
 
-        // Fallback: fine spray
-        if (img.rect().contains(point)) {
-            img.setPixel(point, color);
-            return QRect(point, point);
-        }
-        return QRect();
+        img.setPixel(point, color);
+        return QRect(point, point);
     }
     }
     return QRect();
 }
 
-QRect AirTool::sprayDots()
+QRect AirbrushTool::sprayDots()
 {
     int dots = qMax(1, flow_ * qMax(1, nozzleRadius_) / 100);
     QRect changedRect;
@@ -153,7 +151,7 @@ QRect AirTool::sprayDots()
     return changedRect;
 }
 
-void AirTool::sprayTick()
+void AirbrushTool::sprayTick()
 {
     if (mouseButton_ == Qt::NoButton || buffer_ == nullptr)
         return;
@@ -164,15 +162,19 @@ void AirTool::sprayTick()
 
 // ── press / move / release ─────────────────────────────────────────────────
 
-QRect AirTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect AirbrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
     erasing_ = (mouseButton_ == Qt::RightButton);
+    if (sprayMode_ == ShapeAirbrush) {
+        sprayBrush_ = qobject_cast<Brush *>(buffer_->pen());
+        sprayTip_ = sprayBrush_ ? nullptr : qobject_cast<PenTip *>(buffer_->pen());
+    }
     center_ = point;
     timer_->start();
     return sprayDots();
 }
 
-QRect AirTool::move(const QPoint &point)
+QRect AirbrushTool::move(const QPoint &point)
 {
     if (mouseButton_ == Qt::NoButton)
         return QRect();
@@ -180,18 +182,20 @@ QRect AirTool::move(const QPoint &point)
     return sprayDots();
 }
 
-QRect AirTool::release(const QPoint &)
+QRect AirbrushTool::release(const QPoint &)
 {
     timer_->stop();
+    sprayBrush_ = nullptr;
+    sprayTip_ = nullptr;
     return QRect();
 }
 
 // ── options window ─────────────────────────────────────────────────────────
 
-QWidget* AirTool::createOptionsWidget()
+QWidget* AirbrushTool::createOptionsWidget()
 {
     QWidget *w = new QWidget;
-    ui_ = new Ui::AirToolOptions;
+    ui_ = new Ui::AirbrushToolOptions;
     ui_->setupUi(w);
     ui_->sizeBox->setValue(nozzleRadius_);
     ui_->flowSlider->setValue(flow_);
@@ -205,14 +209,9 @@ QWidget* AirTool::createOptionsWidget()
     return w;
 }
 
-void AirTool::setSprayMode(SprayMode mode)
-{
-    setMode(mode);
-}
-
 // ── Tool registration ──────────────────────────────────────────────────────
 
-void AirTool::registerTool()
+void AirbrushTool::registerTool()
 {
     Tool::registerTool();
     button_->setCheckable(true);
@@ -220,7 +219,7 @@ void AirTool::registerTool()
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
 }
 
-void AirTool::activate()
+void AirbrushTool::activate()
 {
     timer_->stop();
     if (buffer_->tool() == this) {
@@ -230,7 +229,7 @@ void AirTool::activate()
     Tool::activate();
 }
 
-void AirTool::addButtonToGridLayout(QGridLayout *layout)
+void AirbrushTool::addButtonToGridLayout(QGridLayout *layout)
 {
     layout->addWidget(button_, 0, 7);
 }

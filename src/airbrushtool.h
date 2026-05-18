@@ -1,20 +1,22 @@
-#ifndef AIRTOOL_H
-#define AIRTOOL_H
+#ifndef AIRBRUSHTOOL_H
+#define AIRBRUSHTOOL_H
 
 #include <QPoint>
 #include <QTimer>
 #include "tool.h"
 
-namespace Ui { class AirToolOptions; }
+class Brush;
+class PenTip;
+namespace Ui { class AirbrushToolOptions; }
 
-class AirTool : public Tool
+class AirbrushTool : public Tool
 {
     Q_OBJECT
 
 public:
     enum SprayMode { FineSpray, Splatter, ShapeAirbrush };
 
-    explicit AirTool(QObject *parent = nullptr);
+    explicit AirbrushTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
     QString name() const override;
@@ -32,7 +34,6 @@ protected:
 
 private slots:
     void sprayTick();
-    void setSprayMode(SprayMode mode);
 
 private:
     void setMode(SprayMode mode);
@@ -44,15 +45,17 @@ private:
     bool erasing_;
     QPoint center_;
     QTimer *timer_;
+    Brush *sprayBrush_ = nullptr;
+    PenTip *sprayTip_ = nullptr;
 
     int nozzleRadius_;  // pixels
     int flow_;          // 0–100
     int focus_;         // 0–100 (100 = all at center)
 
-    Ui::AirToolOptions *ui_ = nullptr;
+    Ui::AirbrushToolOptions *ui_ = nullptr;
 
-    static AirTool instance;
+    static AirbrushTool instance;
     static const char *icons[];
 };
 
-#endif // AIRTOOL_H
+#endif // AIRBRUSHTOOL_H

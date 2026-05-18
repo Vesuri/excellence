@@ -29,7 +29,7 @@ There are no automated tests; testing is manual UI interaction.
 
 All tools inherit from `Tool` (two subtypes: `Modify` and `Zoom`). The active tool is set on `BufferView` and receives mouse press/move/release events.
 
-Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `EllipseTool`, `BrushTool`, `CurveTool`, `AirTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`, `PickColorTool`, `GradientTool`, `GridLockTool`, `MirrorTool`, `SegmentTool`, `PenTipTool`, `DrawModeTool`.
+Current tools: `DrawTool`, `LineTool`, `RectangleTool`, `EllipseTool`, `BrushTool`, `CurveTool`, `AirbrushTool`, `FillTool`, `TextTool`, `PaletteTool`, `ZoomTool`, `UndoTool`, `ClearTool`, `PickColorTool`, `GradientTool`, `GridLockTool`, `MirrorTool`, `SegmentTool`, `PenTipTool`, `DrawModeTool`.
 
 When adding a new tool, follow the pattern in `rectangletool.{h,cpp}`. Tools may draw a temporary preview during mouse movement (before the mouse button is released) using the temporary-result drawing mechanism: `hover()` returns the rect to save/restore, and `move()` with `mouseButton_ == Qt::NoButton` draws the preview.
 
@@ -155,7 +155,7 @@ Currently wired tool-activation keys (plain key activates; repeated press cycles
 | `R` / `Shift+R` | RectangleTool (Outline / Filled) |
 | `C` / `Shift+C` | EllipseTool (Outline / Filled) |
 | `F` | FillTool |
-| `A` / `Shift+A` | AirTool / open options |
+| `A` / `Shift+A` | AirbrushTool / open options |
 | `T` | TextTool |
 | `B` | BrushTool (cycles Rectangle ↔ Freehand) |
 | `,` | PickColorTool (persistent) |
