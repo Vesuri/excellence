@@ -47,6 +47,8 @@ public:
     QDockWidget *dockWidget() const { return dockWidget_; }
 
     static void setMainWindow(QMainWindow *mainWindow);
+    static void setFloatPanelsByDefault(bool f) { floatPanelsByDefault_ = f; }
+    static bool floatPanelsByDefault() { return floatPanelsByDefault_; }
 
 public slots:
     void toggleOptionsWidget();
@@ -70,6 +72,7 @@ protected:
 
 private:
     static QMainWindow *mainWindow_;
+    static bool floatPanelsByDefault_;
 };
 
 extern QList<Tool *> tools;

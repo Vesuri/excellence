@@ -44,6 +44,7 @@ private slots:
     void saveAs();
     void newWindow();
     void closeWindow();
+    void toggleFloatPanels(bool checked);
     void loadPalette(const QString &path = QString());
     void showProperties();
     void setBuffer(Buffer *buffer);

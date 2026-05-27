@@ -78,6 +78,8 @@
     </property>
     <addaction name="actionWindowNewWindow"/>
     <addaction name="actionWindowCloseWindow"/>
+    <addaction name="separator"/>
+    <addaction name="actionWindowFloatPanels"/>
    </widget>
    <widget class="QMenu" name="menuPalette">
     <property name="title">
@@ -211,6 +213,17 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionWindowFloatPanels">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Float Tool Panels</string>
    </property>
   </action>
   <action name="actionWindowNewWindow">

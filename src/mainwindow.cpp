@@ -157,6 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushRestore, SIGNAL(triggered()), this, SLOT(brushRestore()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
+    connect(ui->actionWindowFloatPanels, &QAction::toggled, this, &MainWindow::toggleFloatPanels);
     connect(ui->actionHelpAbout, &QAction::triggered, this, &MainWindow::about);
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
     connect(penTip, &PenTip::sizeChanged, this, [this](int, int) { updateStatusBarStatic(); });
@@ -471,6 +472,11 @@ void MainWindow::closeWindow()
     } else {
         openFile();
     }
+}
+
+void MainWindow::toggleFloatPanels(bool checked)
+{
+    Tool::setFloatPanelsByDefault(checked);
 }
 
 void MainWindow::loadPalette(const QString &path)

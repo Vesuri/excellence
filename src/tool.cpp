@@ -8,6 +8,7 @@
 
 QList<Tool *> tools;
 QMainWindow *Tool::mainWindow_ = nullptr;
+bool Tool::floatPanelsByDefault_ = true;
 
 Tool::Tool(QObject *parent) : QObject(parent),
     mouseButton_(Qt::NoButton),
@@ -98,9 +99,11 @@ void Tool::toggleOptionsWidget()
         dockWidget_ = new QDockWidget(name());
         dockWidget_->setWidget(optionsWidget_);
         QDockWidget *splitFrom = nullptr;
-        for (Tool *t : tools) {
-            if (t->dockWidget_ && !t->dockWidget_->isFloating() && t->dockWidget_->isVisible())
-                splitFrom = t->dockWidget_;
+        if (!floatPanelsByDefault_) {
+            for (Tool *t : tools) {
+                if (t->dockWidget_ && !t->dockWidget_->isFloating() && t->dockWidget_->isVisible())
+                    splitFrom = t->dockWidget_;
+            }
         }
         if (splitFrom)
             mainWindow_->splitDockWidget(splitFrom, dockWidget_, Qt::Vertical);
@@ -119,7 +122,15 @@ void Tool::toggleOptionsWidget()
             }
             shrink();
         });
+        if (floatPanelsByDefault_)
+            dockWidget_->setFloating(true);
     } else {
+        if (!dockWidget_->isVisible()) {
+            if (floatPanelsByDefault_ && !dockWidget_->isFloating())
+                dockWidget_->setFloating(true);
+            else if (!floatPanelsByDefault_ && dockWidget_->isFloating())
+                dockWidget_->setFloating(false);
+        }
         dockWidget_->setVisible(!dockWidget_->isVisible());
     }
 }
