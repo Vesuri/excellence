@@ -527,6 +527,12 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         // Reparenting hides the view; show it so the layout counts its size.
         activeBufferView->show();
 
+        // QAbstractScrollArea (which BufferView inherits) defaults to Expanding
+        // size policy. Left unconstrained in the gridLayout it would claim all
+        // available vertical space and squeeze the palette row to its 1px minimum.
+        // Fixed policy makes the layout give the view exactly its sizeHint().
+        activeBufferView->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
         // Grow the window to fit the buffer.
         int left, top, right, bottom;
         ui->gridLayout->getContentsMargins(&left, &top, &right, &bottom);
@@ -564,6 +570,9 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         }
         ui->gridLayout->addItem(toolsItem, 0, 0);
         ui->gridLayout->addItem(paletteItem, 1, 0);
+
+        // Restore the default Expanding policy before making the view standalone again.
+        activeBufferView->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
         // bvItem is a QWidgetItem wrapper; delete it after reparenting the widget
         activeBufferView->setParent(nullptr);
