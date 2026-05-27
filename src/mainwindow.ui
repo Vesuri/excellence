@@ -79,6 +79,7 @@
     <addaction name="actionWindowNewWindow"/>
     <addaction name="actionWindowCloseWindow"/>
     <addaction name="separator"/>
+    <addaction name="actionWindowSingleWindow"/>
     <addaction name="actionWindowFloatPanels"/>
    </widget>
    <widget class="QMenu" name="menuPalette">
@@ -213,6 +214,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionWindowSingleWindow">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Single Window</string>
    </property>
   </action>
   <action name="actionWindowFloatPanels">

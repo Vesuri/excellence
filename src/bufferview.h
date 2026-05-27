@@ -25,6 +25,7 @@ public:
     void setZoomLevel(int level);
     void centerOn(const QPoint &point);
     QSize idealSize(int zoomLevel) const;
+    QSize sizeHint() const override;
     bool eventFilter(QObject *watched, QEvent *event) override;
     void handleKey(QKeyEvent *event);
     void handleKeyRelease(QKeyEvent *event);

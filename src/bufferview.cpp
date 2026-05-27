@@ -617,6 +617,12 @@ QSize BufferView::idealSize(int zoomLevel) const
                  qCeil(buffer->image().height() * aspectY_ * zoomLevel));
 }
 
+QSize BufferView::sizeHint() const
+{
+    QSize ideal = idealSize(zoomLevel_);
+    return ideal.isValid() ? ideal : QWidget::sizeHint();
+}
+
 void BufferView::setZoomLevel(int level)
 {
     zoomLevel_ = qBound(1, level, 32);
@@ -629,6 +635,9 @@ void BufferView::applyTransform()
         QTransform::fromScale(zoomLevel_ * aspectX_, zoomLevel_ * aspectY_));
     scene->setZoomLevel(zoomLevel_);
     updateWindowTitle();
+    updateGeometry();
+    if (!isWindow())
+        window()->adjustSize();
 }
 
 

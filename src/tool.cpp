@@ -9,6 +9,7 @@
 QList<Tool *> tools;
 QMainWindow *Tool::mainWindow_ = nullptr;
 bool Tool::floatPanelsByDefault_ = true;
+bool Tool::singleWindowMode_ = false;
 
 Tool::Tool(QObject *parent) : QObject(parent),
     mouseButton_(Qt::NoButton),
@@ -122,7 +123,9 @@ void Tool::toggleOptionsWidget()
             }
             shrink();
         });
-        if (floatPanelsByDefault_)
+        if (singleWindowMode_)
+            dockWidget_->setFeatures(dockWidget_->features() & ~QDockWidget::DockWidgetFloatable);
+        else if (floatPanelsByDefault_)
             dockWidget_->setFloating(true);
     } else {
         if (!dockWidget_->isVisible()) {

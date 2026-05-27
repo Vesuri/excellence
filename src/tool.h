@@ -49,6 +49,8 @@ public:
     static void setMainWindow(QMainWindow *mainWindow);
     static void setFloatPanelsByDefault(bool f) { floatPanelsByDefault_ = f; }
     static bool floatPanelsByDefault() { return floatPanelsByDefault_; }
+    static void setSingleWindowMode(bool m) { singleWindowMode_ = m; }
+    static bool singleWindowMode() { return singleWindowMode_; }
 
 public slots:
     void toggleOptionsWidget();
@@ -73,6 +75,7 @@ protected:
 private:
     static QMainWindow *mainWindow_;
     static bool floatPanelsByDefault_;
+    static bool singleWindowMode_;
 };
 
 extern QList<Tool *> tools;

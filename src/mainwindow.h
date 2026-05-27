@@ -99,6 +99,7 @@ private slots:
     void updateCursorStatus(QPoint point, bool valid);
     void squashDialogs();
     void toggleAllDialogs();
+    void toggleSingleWindowMode(bool checked);
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };

@@ -158,6 +158,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
     connect(ui->actionWindowFloatPanels, &QAction::toggled, this, &MainWindow::toggleFloatPanels);
+    connect(ui->actionWindowSingleWindow, &QAction::toggled, this, &MainWindow::toggleSingleWindowMode);
     connect(ui->actionHelpAbout, &QAction::triggered, this, &MainWindow::about);
     connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
     connect(penTip, &PenTip::sizeChanged, this, [this](int, int) { updateStatusBarStatic(); });
@@ -430,6 +431,8 @@ void MainWindow::newWindow()
     bufferViews.append(bufferView);
     if (!activeBufferView)
         activeBufferView = bufferView;
+    if (bufferViews.count() > 1)
+        ui->actionWindowSingleWindow->setEnabled(false);
 }
 
 void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
@@ -469,6 +472,8 @@ void MainWindow::closeWindow()
             delete activeBufferView;
             activeBufferView = nullptr;
         }
+        if (bufferViews.count() <= 1)
+            ui->actionWindowSingleWindow->setEnabled(true);
     } else {
         openFile();
     }
@@ -477,6 +482,85 @@ void MainWindow::closeWindow()
 void MainWindow::toggleFloatPanels(bool checked)
 {
     Tool::setFloatPanelsByDefault(checked);
+}
+
+void MainWindow::toggleSingleWindowMode(bool checked)
+{
+    if (checked) {
+        // Dock all open panels and strip their floatable feature
+        for (Tool *tool : tools) {
+            QDockWidget *dw = tool->dockWidget();
+            if (dw) {
+                dw->setFloating(false);
+                dw->setFeatures(dw->features() & ~QDockWidget::DockWidgetFloatable);
+            }
+        }
+        Tool::setFloatPanelsByDefault(false);
+        Tool::setSingleWindowMode(true);
+        ui->actionWindowFloatPanels->setEnabled(false);
+        ui->actionWindowNewWindow->setEnabled(false);
+
+        // Rearrange widgetMain's gridLayout to insert the BufferView above the tools/palette.
+        // Remove the two sub-layouts by searching for them to avoid index-order assumptions.
+        QLayoutItem *toolsItem = nullptr;
+        QLayoutItem *paletteItem = nullptr;
+        for (int i = ui->gridLayout->count() - 1; i >= 0; --i) {
+            QLayoutItem *item = ui->gridLayout->itemAt(i);
+            if (item->layout() == ui->toolsLayout)
+                toolsItem = ui->gridLayout->takeAt(i);
+            else if (item->layout() == ui->paletteLayout)
+                paletteItem = ui->gridLayout->takeAt(i);
+        }
+        ui->gridLayout->addWidget(activeBufferView, 0, 0);
+        ui->gridLayout->addItem(toolsItem, 1, 0);
+        ui->gridLayout->addItem(paletteItem, 2, 0);
+
+        // Reparenting hides the view; show it so the layout counts its size.
+        activeBufferView->show();
+
+        // Grow the window to fit the buffer. Use explicit arithmetic rather than
+        // gridLayout->sizeHint() because the layout cache may not have updated yet.
+        int left, top, right, bottom;
+        ui->gridLayout->getContentsMargins(&left, &top, &right, &bottom);
+        QSize bvSize = activeBufferView->sizeHint();
+        resize(qMax(width(),  bvSize.width()  + left + right),
+               height() + bvSize.height() + ui->gridLayout->verticalSpacing());
+
+    } else {
+        // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
+        QLayoutItem *toolsItem = nullptr;
+        QLayoutItem *paletteItem = nullptr;
+        QLayoutItem *bvItem = nullptr;
+        for (int i = ui->gridLayout->count() - 1; i >= 0; --i) {
+            QLayoutItem *item = ui->gridLayout->itemAt(i);
+            if (item->layout() == ui->toolsLayout)
+                toolsItem = ui->gridLayout->takeAt(i);
+            else if (item->layout() == ui->paletteLayout)
+                paletteItem = ui->gridLayout->takeAt(i);
+            else if (item->widget() == activeBufferView)
+                bvItem = ui->gridLayout->takeAt(i);
+        }
+        ui->gridLayout->addItem(toolsItem, 0, 0);
+        ui->gridLayout->addItem(paletteItem, 1, 0);
+
+        // bvItem is a QWidgetItem wrapper; delete it after reparenting the widget
+        activeBufferView->setParent(nullptr);
+        delete bvItem;
+        activeBufferView->show();
+
+        resize(minimumSizeHint());
+
+        // Restore floatable feature on existing panels
+        for (Tool *tool : tools) {
+            QDockWidget *dw = tool->dockWidget();
+            if (dw)
+                dw->setFeatures(dw->features() | QDockWidget::DockWidgetFloatable);
+        }
+        Tool::setSingleWindowMode(false);
+        Tool::setFloatPanelsByDefault(ui->actionWindowFloatPanels->isChecked());
+        ui->actionWindowFloatPanels->setEnabled(true);
+        ui->actionWindowNewWindow->setEnabled(true);
+    }
 }
 
 void MainWindow::loadPalette(const QString &path)
