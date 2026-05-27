@@ -543,8 +543,10 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         int newFrameH = newH + (frame.height() - geo.height());
         int nx = qMax(av.left(), qMin(frame.x(), av.right()  - newFrameW + 1));
         int ny = qMax(av.top(),  qMin(frame.y(), av.bottom() - newFrameH + 1));
+        // On macOS, move() sets the frame origin (not the content origin), so
+        // pass nx/ny directly — no border offset needed.
         if (nx != frame.x() || ny != frame.y())
-            move(nx + (geo.x() - frame.x()), ny + (geo.y() - frame.y()));
+            move(nx, ny);
 
     } else {
         // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
