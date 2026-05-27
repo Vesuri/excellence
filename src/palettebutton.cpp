@@ -12,6 +12,7 @@ PaletteButton::PaletteButton(QWidget *parent) : QAbstractButton(parent),
     eraseButtonDown(false)
 {
     setAcceptDrops(false);
+    setMinimumHeight(16);
 }
 
 void PaletteButton::paintEvent(QPaintEvent *)
