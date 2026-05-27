@@ -16,6 +16,7 @@ public:
     void setColor(const QColor &color);
     void setIsPaintColor(bool isPaintColor);
     void setIsEraseColor(bool isEraseColor);
+    QSize minimumSizeHint() const override { return sizeHint(); }
 
 signals:
     void paintColorSelected(unsigned paletteIndex);
