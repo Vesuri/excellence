@@ -437,6 +437,9 @@ void MainWindow::newWindow()
 
 void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
 {
+    if (Tool::singleWindowMode())
+        return;
+
     BufferView *bufferView = new BufferView();
     bufferView->installEventFilter(this);
     bufferView->setBuffer(buffer);
@@ -462,6 +465,8 @@ void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
     connect(bufferView, &BufferView::toggleAllDialogsRequested, this, &MainWindow::toggleAllDialogs);
     bufferView->show();
     bufferViews.append(bufferView);
+    if (bufferViews.count() > 1)
+        ui->actionWindowSingleWindow->setEnabled(false);
 }
 
 void MainWindow::closeWindow()
@@ -470,7 +475,8 @@ void MainWindow::closeWindow()
         if (activeBufferView) {
             bufferViews.removeAll(activeBufferView);
             delete activeBufferView;
-            activeBufferView = nullptr;
+            // Reassign so embedded views (which never send WindowActivate) stay active.
+            activeBufferView = bufferViews.isEmpty() ? nullptr : bufferViews.first();
         }
         if (bufferViews.count() <= 1)
             ui->actionWindowSingleWindow->setEnabled(true);
@@ -520,6 +526,7 @@ void MainWindow::toggleSingleWindowMode(bool checked)
             else if (item->layout() == ui->paletteLayout)
                 paletteItem = ui->gridLayout->takeAt(i);
         }
+        Q_ASSERT(toolsItem && paletteItem);
         ui->gridLayout->addWidget(activeBufferView, 0, 0);
         ui->gridLayout->addItem(toolsItem, 1, 0);
         ui->gridLayout->addItem(paletteItem, 2, 0);
@@ -562,6 +569,7 @@ void MainWindow::toggleSingleWindowMode(bool checked)
             else if (item->widget() == activeBufferView)
                 bvItem = ui->gridLayout->takeAt(i);
         }
+        Q_ASSERT(toolsItem && paletteItem);
         ui->gridLayout->addItem(toolsItem, 0, 0);
         ui->gridLayout->addItem(paletteItem, 1, 0);
 
@@ -583,6 +591,7 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         Tool::setFloatPanelsByDefault(ui->actionWindowFloatPanels->isChecked());
         ui->actionWindowFloatPanels->setEnabled(true);
         ui->actionWindowNewWindow->setEnabled(true);
+        ui->actionWindowSingleWindow->setEnabled(bufferViews.count() <= 1);
     }
 }
 

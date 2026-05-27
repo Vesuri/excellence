@@ -625,7 +625,10 @@ QSize BufferView::sizeHint() const
 
 void BufferView::setZoomLevel(int level)
 {
-    zoomLevel_ = qBound(1, level, 32);
+    int clamped = qBound(1, level, 32);
+    if (clamped == zoomLevel_)
+        return;
+    zoomLevel_ = clamped;
     applyTransform();
 }
 
@@ -635,7 +638,6 @@ void BufferView::applyTransform()
         QTransform::fromScale(zoomLevel_ * aspectX_, zoomLevel_ * aspectY_));
     scene->setZoomLevel(zoomLevel_);
     updateWindowTitle();
-    updateGeometry();
     if (!isWindow())
         window()->adjustSize();
 }
