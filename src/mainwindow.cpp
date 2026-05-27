@@ -497,6 +497,7 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         }
         Tool::setFloatPanelsByDefault(false);
         Tool::setSingleWindowMode(true);
+        setAttribute(Qt::WA_QuitOnClose, true);
         ui->actionWindowFloatPanels->setEnabled(false);
         ui->actionWindowNewWindow->setEnabled(false);
 
@@ -557,6 +558,7 @@ void MainWindow::toggleSingleWindowMode(bool checked)
                 dw->setFeatures(dw->features() | QDockWidget::DockWidgetFloatable);
         }
         Tool::setSingleWindowMode(false);
+        setAttribute(Qt::WA_QuitOnClose, false);
         Tool::setFloatPanelsByDefault(ui->actionWindowFloatPanels->isChecked());
         ui->actionWindowFloatPanels->setEnabled(true);
         ui->actionWindowNewWindow->setEnabled(true);
@@ -1132,7 +1134,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
         }
     }
     for (BufferView *view : bufferViews)
-        view->close();
+        if (view->isWindow())
+            view->close();
     event->accept();
 }
 
