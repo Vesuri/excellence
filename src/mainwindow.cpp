@@ -1,6 +1,7 @@
 #include "colorutils.h"
 #include "palettebutton.h"
 #include <QAbstractSpinBox>
+#include <QDockWidget>
 #include <QCloseEvent>
 #include <QFrame>
 #include <QLabel>
@@ -239,6 +240,8 @@ void MainWindow::runPaletteActionForEraseColor(unsigned paletteIndex)
 
 void MainWindow::initialize()
 {
+    Tool::setMainWindow(this);
+
     QStringList arguments = qApp->arguments();
     openFile(arguments.length() > 1 ? arguments.last() : QString());
 
@@ -260,6 +263,10 @@ void MainWindow::initialize()
     for (Tool *tool : tools) {
         if (qobject_cast<DrawTool *>(tool)) { buffer->setTool(tool); break; }
     }
+
+    QTimer::singleShot(0, this, [this]() {
+        centralWidget()->setMinimumHeight(centralWidget()->height());
+    });
 }
 
 void MainWindow::setBuffer(Buffer *newBuffer)
@@ -1052,7 +1059,7 @@ QVector<QWidget *> MainWindow::collectAndHideToolDialogs()
 {
     QVector<QWidget *> result;
     for (Tool *tool : tools) {
-        QWidget *w = tool->optionsWidget();
+        QWidget *w = tool->dockWidget();
         if (w && w->isVisible()) {
             result.append(w);
             w->hide();

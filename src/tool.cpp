@@ -1,3 +1,5 @@
+#include <QDockWidget>
+#include <QMainWindow>
 #include <QSizePolicy>
 #include <QTimer>
 #include <QToolButton>
@@ -5,13 +7,20 @@
 #include "tool.h"
 
 QList<Tool *> tools;
+QMainWindow *Tool::mainWindow_ = nullptr;
 
 Tool::Tool(QObject *parent) : QObject(parent),
     mouseButton_(Qt::NoButton),
     buffer_(nullptr),
-    optionsWidget_(nullptr)
+    optionsWidget_(nullptr),
+    dockWidget_(nullptr)
 {
     QTimer::singleShot(0, this, SLOT(registerTool()));
+}
+
+void Tool::setMainWindow(QMainWindow *mainWindow)
+{
+    mainWindow_ = mainWindow;
 }
 
 void Tool::setMouseButton(const Qt::MouseButton &mouseButton)
@@ -83,14 +92,33 @@ void Tool::registerTool()
 
 void Tool::toggleOptionsWidget()
 {
-    if (optionsWidget_ == nullptr) {
+    if (dockWidget_ == nullptr) {
         optionsWidget_ = createOptionsWidget();
-        if (optionsWidget_ == nullptr) {
-            return;
+        if (optionsWidget_ == nullptr) return;
+        dockWidget_ = new QDockWidget(name());
+        dockWidget_->setWidget(optionsWidget_);
+        QDockWidget *splitFrom = nullptr;
+        for (Tool *t : tools) {
+            if (t->dockWidget_ && !t->dockWidget_->isFloating() && t->dockWidget_->isVisible())
+                splitFrom = t->dockWidget_;
         }
-        optionsWidget_->setWindowFlags(Qt::Tool);
+        if (splitFrom)
+            mainWindow_->splitDockWidget(splitFrom, dockWidget_, Qt::Vertical);
+        else
+            mainWindow_->addDockWidget(Qt::BottomDockWidgetArea, dockWidget_);
+        QMainWindow *mw = mainWindow_;
+        auto shrink = [mw]() { QTimer::singleShot(0, mw, &QWidget::adjustSize); };
+        connect(dockWidget_, &QDockWidget::visibilityChanged, [shrink](bool visible) { if (!visible) shrink(); });
+        connect(dockWidget_, &QDockWidget::topLevelChanged, [shrink](bool) { shrink(); });
+    } else {
+        dockWidget_->setVisible(!dockWidget_->isVisible());
     }
-    optionsWidget_->setVisible(!optionsWidget_->isVisible());
+}
+
+void Tool::hideOptionsPanel()
+{
+    if (dockWidget_)
+        dockWidget_->hide();
 }
 
 QWidget* Tool::createOptionsWidget()

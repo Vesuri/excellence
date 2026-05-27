@@ -72,7 +72,7 @@ QWidget *ZoomTool::createOptionsWidget()
         magnifierZoom_ = ui_->zoomSpin->value();
         placeMagnifierMode_ = true;
         activate();
-        if (optionsWidget_) optionsWidget_->hide();
+        hideOptionsPanel();
     });
     return w;
 }

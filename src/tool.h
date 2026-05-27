@@ -7,6 +7,8 @@
 #include <QWidget>
 
 class Buffer;
+class QDockWidget;
+class QMainWindow;
 class QToolButton;
 class QGridLayout;
 
@@ -42,6 +44,9 @@ public:
     virtual bool allowsBrushModeButton() const { return true; }
 
     QWidget *optionsWidget() const { return optionsWidget_; }
+    QDockWidget *dockWidget() const { return dockWidget_; }
+
+    static void setMainWindow(QMainWindow *mainWindow);
 
 public slots:
     void toggleOptionsWidget();
@@ -55,11 +60,16 @@ protected:
     virtual QWidget* createOptionsWidget();
     void connectToolChecked();
     void disconnectToolChecked();
+    void hideOptionsPanel();
 
     Qt::MouseButton mouseButton_;
     Buffer *buffer_;
     QToolButton *button_;
     QWidget *optionsWidget_;
+    QDockWidget *dockWidget_;
+
+private:
+    static QMainWindow *mainWindow_;
 };
 
 extern QList<Tool *> tools;
