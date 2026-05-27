@@ -487,6 +487,14 @@ void MainWindow::toggleFloatPanels(bool checked)
 void MainWindow::toggleSingleWindowMode(bool checked)
 {
     if (checked) {
+        // Capture geometry before any layout changes. On macOS the frame origin
+        // equals the content origin (frame.y() == pos().y()), but the frame
+        // extends past the content on the bottom by a fixed amount (resize
+        // handle/shadow). Reading both rects here, while the window is still
+        // compact, gives a reliable overhead for the screen-fit calculation.
+        QRect geo   = geometry();
+        QRect frame = frameGeometry();
+
         // Dock all open panels and strip their floatable feature
         for (Tool *tool : tools) {
             QDockWidget *dw = tool->dockWidget();
@@ -519,25 +527,24 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         // Reparenting hides the view; show it so the layout counts its size.
         activeBufferView->show();
 
-        // Grow the window to fit the buffer. Use explicit arithmetic rather than
-        // gridLayout->sizeHint() because the layout cache may not have updated yet.
+        // Grow the window to fit the buffer.
         int left, top, right, bottom;
         ui->gridLayout->getContentsMargins(&left, &top, &right, &bottom);
         QSize bvSize = activeBufferView->sizeHint();
-        int newW = qMax(width(),  bvSize.width()  + left + right);
-        int newH = height() + bvSize.height() + ui->gridLayout->verticalSpacing();
+        int newW = qMax(geo.width(), bvSize.width()  + left + right);
+        int newH = geo.height() + bvSize.height() + ui->gridLayout->verticalSpacing();
         resize(newW, newH);
 
-        // Defer the repositioning by one event-loop iteration so the OS has
-        // processed the resize before we read pos(). The title bar is above
-        // pos().y() so it does not affect the bottom-edge calculation.
-        QTimer::singleShot(0, this, [this, newW, newH]() {
-            QRect av = screen()->availableGeometry();
-            int nx = qMax(av.left(), qMin(x(), av.right()  - newW + 1));
-            int ny = qMax(av.top(),  qMin(y(), av.bottom() - newH + 1));
-            if (nx != x() || ny != y())
-                move(nx, ny);
-        });
+        // Reposition so the full frame fits the screen. The frame overhead
+        // (frame size minus content size, read before the resize) accounts for
+        // the bottom shadow/handle that extends past the content on macOS.
+        QRect av = screen()->availableGeometry();
+        int newFrameW = newW + (frame.width()  - geo.width());
+        int newFrameH = newH + (frame.height() - geo.height());
+        int nx = qMax(av.left(), qMin(frame.x(), av.right()  - newFrameW + 1));
+        int ny = qMax(av.top(),  qMin(frame.y(), av.bottom() - newFrameH + 1));
+        if (nx != frame.x() || ny != frame.y())
+            move(nx + (geo.x() - frame.x()), ny + (geo.y() - frame.y()));
 
     } else {
         // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
