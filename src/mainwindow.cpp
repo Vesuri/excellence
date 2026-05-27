@@ -527,6 +527,13 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         resize(qMax(width(),  bvSize.width()  + left + right),
                height() + bvSize.height() + ui->gridLayout->verticalSpacing());
 
+        // Move the window if the resize pushed any edge off-screen.
+        QRect available = screen()->availableGeometry();
+        QPoint newPos(qMax(available.left(), qMin(x(), available.right()  - width())),
+                      qMax(available.top(),  qMin(y(), available.bottom() - height())));
+        if (newPos != pos())
+            move(newPos);
+
     } else {
         // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
         QLayoutItem *toolsItem = nullptr;
