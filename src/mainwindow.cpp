@@ -528,11 +528,19 @@ void MainWindow::toggleSingleWindowMode(bool checked)
                height() + bvSize.height() + ui->gridLayout->verticalSpacing());
 
         // Move the window if the resize pushed any edge off-screen.
+        // Use frameGeometry() overhead (title bar etc.) so the comparison is against
+        // the full window extent, not just the content area.
         QRect available = screen()->availableGeometry();
-        QPoint newPos(qMax(available.left(), qMin(x(), available.right()  - width())),
-                      qMax(available.top(),  qMin(y(), available.bottom() - height())));
-        if (newPos != pos())
-            move(newPos);
+        QRect geo   = geometry();
+        QRect frame = frameGeometry();
+        int frameOverheadW = frame.width()  - geo.width();
+        int frameOverheadH = frame.height() - geo.height();
+        int newFrameW = width()  + frameOverheadW;
+        int newFrameH = height() + frameOverheadH;
+        int newFrameX = qMax(available.left(), qMin(frame.x(), available.right()  + 1 - newFrameW));
+        int newFrameY = qMax(available.top(),  qMin(frame.y(), available.bottom() + 1 - newFrameH));
+        if (newFrameX != frame.x() || newFrameY != frame.y())
+            move(newFrameX + (geo.x() - frame.x()), newFrameY + (geo.y() - frame.y()));
 
     } else {
         // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
