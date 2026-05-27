@@ -519,33 +519,25 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         // Reparenting hides the view; show it so the layout counts its size.
         activeBufferView->show();
 
-        // Read frame geometry BEFORE resize: geometry() and frameGeometry() are
-        // consistent here. After resize(), Qt updates geometry() synchronously but
-        // frameGeometry() may still reflect the old OS frame size.
-        QRect geo   = geometry();
-        QRect frame = frameGeometry();
-        int frameOverheadW = frame.width()  - geo.width();
-        int frameOverheadH = frame.height() - geo.height();
-        int borderLeft = geo.x() - frame.x();
-        int borderTop  = geo.y() - frame.y();
-
         // Grow the window to fit the buffer. Use explicit arithmetic rather than
         // gridLayout->sizeHint() because the layout cache may not have updated yet.
         int left, top, right, bottom;
         ui->gridLayout->getContentsMargins(&left, &top, &right, &bottom);
         QSize bvSize = activeBufferView->sizeHint();
-        resize(qMax(width(),  bvSize.width()  + left + right),
-               height() + bvSize.height() + ui->gridLayout->verticalSpacing());
+        int newW = qMax(width(),  bvSize.width()  + left + right);
+        int newH = height() + bvSize.height() + ui->gridLayout->verticalSpacing();
+        resize(newW, newH);
 
-        // Move the window if the resize pushed any edge off-screen, using the
-        // pre-resize frame overhead to compute the true full-window extent.
-        QRect available = screen()->availableGeometry();
-        int newFrameW = width()  + frameOverheadW;
-        int newFrameH = height() + frameOverheadH;
-        int newFrameX = qMax(available.left(), qMin(frame.x(), available.right()  + 1 - newFrameW));
-        int newFrameY = qMax(available.top(),  qMin(frame.y(), available.bottom() + 1 - newFrameH));
-        if (newFrameX != frame.x() || newFrameY != frame.y())
-            move(newFrameX + borderLeft, newFrameY + borderTop);
+        // Defer the repositioning by one event-loop iteration so the OS has
+        // processed the resize before we read pos(). The title bar is above
+        // pos().y() so it does not affect the bottom-edge calculation.
+        QTimer::singleShot(0, this, [this, newW, newH]() {
+            QRect av = screen()->availableGeometry();
+            int nx = qMax(av.left(), qMin(x(), av.right()  - newW + 1));
+            int ny = qMax(av.top(),  qMin(y(), av.bottom() - newH + 1));
+            if (nx != x() || ny != y())
+                move(nx, ny);
+        });
 
     } else {
         // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
