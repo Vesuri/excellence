@@ -13,7 +13,7 @@
 GradientMarkerBox::GradientMarkerBox(QWidget *parent) : QWidget(parent)
 {
     setAcceptDrops(true);
-    setFixedHeight(kMarkerRowHeight + 2 + kPreviewHeight);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 }
 
 void GradientMarkerBox::setRange(GradientRange *range)

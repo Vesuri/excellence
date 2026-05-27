@@ -164,11 +164,11 @@ void BufferView::setBuffer(Buffer *buffer)
             qreal aspectRatio = buffer->image().dotsPerMeterX() / static_cast<qreal>(buffer->image().dotsPerMeterY());
             aspectX_ = aspectRatio > 1.0 ? 1.0 : (1.0 / aspectRatio);
             aspectY_ = aspectRatio > 1.0 ? aspectRatio : 1.0;
-            setGeometry(geometry().x(), geometry().y(), qCeil(buffer->image().width() * aspectX_), qCeil(buffer->image().height() * aspectY_));
+            resize(qCeil(buffer->image().width() * aspectX_), qCeil(buffer->image().height() * aspectY_));
         } else {
             aspectX_ = 1.0;
             aspectY_ = 1.0;
-            setGeometry(geometry().x(), geometry().y(), buffer->image().width(), buffer->image().height());
+            resize(buffer->image().width(), buffer->image().height());
         }
         zoomLevel_ = 1;
         applyTransform();
