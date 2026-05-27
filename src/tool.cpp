@@ -108,8 +108,12 @@ void Tool::toggleOptionsWidget()
             mainWindow_->addDockWidget(Qt::BottomDockWidgetArea, dockWidget_);
         QMainWindow *mw = mainWindow_;
         auto shrink = [mw]() { QTimer::singleShot(0, mw, &QWidget::adjustSize); };
-        connect(dockWidget_, &QDockWidget::visibilityChanged, [shrink](bool visible) { if (!visible) shrink(); });
-        connect(dockWidget_, &QDockWidget::topLevelChanged, [shrink](bool) { shrink(); });
+        QDockWidget *dw = dockWidget_;
+        connect(dw, &QDockWidget::visibilityChanged, [shrink](bool visible) { if (!visible) shrink(); });
+        connect(dw, &QDockWidget::topLevelChanged, [dw, shrink](bool floating) {
+            if (floating) QTimer::singleShot(0, dw, &QWidget::adjustSize);
+            shrink();
+        });
     } else {
         dockWidget_->setVisible(!dockWidget_->isVisible());
     }
