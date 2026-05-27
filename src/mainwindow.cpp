@@ -519,6 +519,16 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         // Reparenting hides the view; show it so the layout counts its size.
         activeBufferView->show();
 
+        // Read frame geometry BEFORE resize: geometry() and frameGeometry() are
+        // consistent here. After resize(), Qt updates geometry() synchronously but
+        // frameGeometry() may still reflect the old OS frame size.
+        QRect geo   = geometry();
+        QRect frame = frameGeometry();
+        int frameOverheadW = frame.width()  - geo.width();
+        int frameOverheadH = frame.height() - geo.height();
+        int borderLeft = geo.x() - frame.x();
+        int borderTop  = geo.y() - frame.y();
+
         // Grow the window to fit the buffer. Use explicit arithmetic rather than
         // gridLayout->sizeHint() because the layout cache may not have updated yet.
         int left, top, right, bottom;
@@ -527,20 +537,15 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         resize(qMax(width(),  bvSize.width()  + left + right),
                height() + bvSize.height() + ui->gridLayout->verticalSpacing());
 
-        // Move the window if the resize pushed any edge off-screen.
-        // Use frameGeometry() overhead (title bar etc.) so the comparison is against
-        // the full window extent, not just the content area.
+        // Move the window if the resize pushed any edge off-screen, using the
+        // pre-resize frame overhead to compute the true full-window extent.
         QRect available = screen()->availableGeometry();
-        QRect geo   = geometry();
-        QRect frame = frameGeometry();
-        int frameOverheadW = frame.width()  - geo.width();
-        int frameOverheadH = frame.height() - geo.height();
         int newFrameW = width()  + frameOverheadW;
         int newFrameH = height() + frameOverheadH;
         int newFrameX = qMax(available.left(), qMin(frame.x(), available.right()  + 1 - newFrameW));
         int newFrameY = qMax(available.top(),  qMin(frame.y(), available.bottom() + 1 - newFrameH));
         if (newFrameX != frame.x() || newFrameY != frame.y())
-            move(newFrameX + (geo.x() - frame.x()), newFrameY + (geo.y() - frame.y()));
+            move(newFrameX + borderLeft, newFrameY + borderTop);
 
     } else {
         // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
