@@ -167,6 +167,8 @@ MainWindow::MainWindow(QWidget *parent) :
     installEventFilter(this);
     qApp->installEventFilter(this);
 
+    setWindowFlag(Qt::Tool);
+
     QTimer::singleShot(1, this, SLOT(initialize()));
 }
 
@@ -511,6 +513,8 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         }
         Tool::setFloatPanelsByDefault(false);
         Tool::setSingleWindowMode(true);
+        setWindowFlag(Qt::Tool, false);
+        show();
         setAttribute(Qt::WA_QuitOnClose, true);
         ui->actionWindowFloatPanels->setEnabled(false);
         ui->actionWindowNewWindow->setEnabled(false);
@@ -587,6 +591,8 @@ void MainWindow::toggleSingleWindowMode(bool checked)
                 dw->setFeatures(dw->features() | QDockWidget::DockWidgetFloatable);
         }
         Tool::setSingleWindowMode(false);
+        setWindowFlag(Qt::Tool, true);
+        show();
         setAttribute(Qt::WA_QuitOnClose, false);
         Tool::setFloatPanelsByDefault(ui->actionWindowFloatPanels->isChecked());
         ui->actionWindowFloatPanels->setEnabled(true);
