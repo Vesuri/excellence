@@ -296,12 +296,15 @@ void MainWindow::setBuffer(Buffer *newBuffer)
     }
 
     static const int paletteButtonPerRow = 16;
+    int firstButtonH = 0;
     for (int i = 0, row = 0, column = 0; i < buffer->image().colorCount(); i++) {
         PaletteButton *button = new PaletteButton();
         connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(runPaletteActionForPaintColor(unsigned)));
         connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(runPaletteActionForEraseColor(unsigned)));
         button->setPaletteIndex(static_cast<unsigned>(i));
         button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+        if (i == 0)
+            firstButtonH = button->sizeHint().height();
         ui->paletteLayout->addWidget(button, row, column);
         column++;
         if (column >= paletteButtonPerRow) {
@@ -309,6 +312,15 @@ void MainWindow::setBuffer(Buffer *newBuffer)
             row++;
         }
     }
+
+    // Ensure every palette row has a minimum height equal to one button's natural
+    // height so the buttons remain clickable when the layout is constrained.
+    // Reset rows up to the maximum (256 colours / 16 per row = 16 rows) first so
+    // stale minimums from a previous larger palette don't inflate the layout.
+    static const int maxPaletteRows = 16;
+    int numRows = (buffer->image().colorCount() + paletteButtonPerRow - 1) / paletteButtonPerRow;
+    for (int r = 0; r < maxPaletteRows; r++)
+        ui->paletteLayout->setRowMinimumHeight(r, r < numRows ? firstButtonH : 0);
 
     updatePalette();
     connect(buffer, SIGNAL(paletteModified()), this, SLOT(updatePalette()));
