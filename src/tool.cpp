@@ -111,7 +111,12 @@ void Tool::toggleOptionsWidget()
         QDockWidget *dw = dockWidget_;
         connect(dw, &QDockWidget::visibilityChanged, [shrink](bool visible) { if (!visible) shrink(); });
         connect(dw, &QDockWidget::topLevelChanged, [dw, shrink](bool floating) {
-            if (floating) QTimer::singleShot(0, dw, &QWidget::adjustSize);
+            if (floating) {
+                dw->setMinimumSize(0, 0);
+                if (QWidget *w = dw->widget())
+                    dw->setMaximumSize(w->sizeHint());
+                QTimer::singleShot(0, dw, [dw]() { dw->setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX); });
+            }
             shrink();
         });
     } else {
