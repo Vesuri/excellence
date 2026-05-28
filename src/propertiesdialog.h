@@ -22,6 +22,7 @@ public:
 private slots:
     void setProperties();
     void setRetainImageState(int state);
+    void setToScreenSize();
 
 signals:
     void bufferChanged(Buffer *buffer);

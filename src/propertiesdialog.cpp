@@ -1,4 +1,7 @@
 #include <QtMath>
+#include <QGuiApplication>
+#include <QPushButton>
+#include <QScreen>
 #include "palettequantizer.h"
 #include "buffer.h"
 #include "propertiesdialog.h"
@@ -13,6 +16,7 @@ PropertiesDialog::PropertiesDialog(QWidget *parent) :
 
     connect(this, SIGNAL(accepted()), this, SLOT(setProperties()));
     connect(ui->checkBoxRetainImage, SIGNAL(stateChanged(int)), this, SLOT(setRetainImageState(int)));
+    connect(ui->pushButtonScreenSize, &QPushButton::clicked, this, &PropertiesDialog::setToScreenSize);
 }
 
 PropertiesDialog::~PropertiesDialog()
@@ -82,6 +86,13 @@ void PropertiesDialog::setProperties()
     }
 
     emit bufferChanged(newBuffer);
+}
+
+void PropertiesDialog::setToScreenSize()
+{
+    QSize s = QGuiApplication::primaryScreen()->size();
+    ui->spinBoxWidth->setValue(s.width());
+    ui->spinBoxHeight->setValue(s.height());
 }
 
 void PropertiesDialog::setRetainImageState(int state)
