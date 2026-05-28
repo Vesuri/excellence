@@ -35,10 +35,12 @@ signals:
     void cursorMoved(QPoint point, bool valid);
     void squashDialogsRequested();
     void toggleAllDialogsRequested();
+    void fullScreenEntered();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+    void changeEvent(QEvent *e) override;
 
 private slots:
     void setPixmap(const QRect &area);

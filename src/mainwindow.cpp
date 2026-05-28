@@ -434,6 +434,7 @@ void MainWindow::newWindow()
     connect(bufferView, &BufferView::cursorMoved, this, &MainWindow::updateCursorStatus);
     connect(bufferView, &BufferView::squashDialogsRequested, this, &MainWindow::squashDialogs);
     connect(bufferView, &BufferView::toggleAllDialogsRequested, this, &MainWindow::toggleAllDialogs);
+    connect(bufferView, &BufferView::fullScreenEntered, this, &MainWindow::handleBufferViewFullScreen);
     bufferView->show();
     bufferViews.append(bufferView);
     if (!activeBufferView)
@@ -470,6 +471,7 @@ void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
     connect(bufferView, &BufferView::cursorMoved, this, &MainWindow::updateCursorStatus);
     connect(bufferView, &BufferView::squashDialogsRequested, this, &MainWindow::squashDialogs);
     connect(bufferView, &BufferView::toggleAllDialogsRequested, this, &MainWindow::toggleAllDialogs);
+    connect(bufferView, &BufferView::fullScreenEntered, this, &MainWindow::handleBufferViewFullScreen);
     bufferView->show();
     bufferViews.append(bufferView);
     if (bufferViews.count() > 1)
@@ -1161,18 +1163,24 @@ void MainWindow::changeEvent(QEvent *e)
     if (e->type() == QEvent::WindowStateChange) {
         int m = isFullScreen() ? 0 : 4;
         ui->gridLayout->setContentsMargins(m, m, m, m);
-        if (isFullScreen()) {
-            if (!Tool::singleWindowMode() && ui->actionWindowSingleWindow->isEnabled()) {
-                fullScreenActivatedSingleWindowMode_ = true;
-                ui->actionWindowSingleWindow->setChecked(true);
-            }
-        } else {
-            if (fullScreenActivatedSingleWindowMode_) {
-                fullScreenActivatedSingleWindowMode_ = false;
-                ui->actionWindowSingleWindow->setChecked(false);
-            }
+        if (!isFullScreen() && fullScreenActivatedSingleWindowMode_) {
+            fullScreenActivatedSingleWindowMode_ = false;
+            ui->actionWindowSingleWindow->setChecked(false);
         }
     }
+}
+
+void MainWindow::handleBufferViewFullScreen()
+{
+    BufferView *bv = qobject_cast<BufferView *>(sender());
+    if (!bv || Tool::singleWindowMode()) return;
+    activeBufferView = bv;
+    bv->showNormal();
+    if (ui->actionWindowSingleWindow->isEnabled()) {
+        fullScreenActivatedSingleWindowMode_ = true;
+        ui->actionWindowSingleWindow->setChecked(true);
+    }
+    showFullScreen();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)

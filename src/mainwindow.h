@@ -101,6 +101,7 @@ private slots:
     void squashDialogs();
     void toggleAllDialogs();
     void toggleSingleWindowMode(bool checked);
+    void handleBufferViewFullScreen();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };

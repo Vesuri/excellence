@@ -642,6 +642,13 @@ void BufferView::applyTransform()
         window()->adjustSize();
 }
 
+void BufferView::changeEvent(QEvent *e)
+{
+    QWidget::changeEvent(e);
+    if (e->type() == QEvent::WindowStateChange && isFullScreen())
+        emit fullScreenEntered();
+}
+
 
 void BufferView::updateWindowTitle(const QPoint &mouseCoordinates)
 {
