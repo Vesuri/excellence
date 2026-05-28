@@ -291,25 +291,30 @@ void MainWindow::setBuffer(Buffer *newBuffer)
         bufferView->setBuffer(buffer);
     }
 
-    while (ui->paletteLayout->count() > 0) {
-        QLayoutItem *item = ui->paletteLayout->takeAt(0);
-        delete item->widget();
-        delete item;
-    }
-
-    static const int paletteButtonPerRow = 16;
-    for (int i = 0, row = 0, column = 0; i < buffer->image().colorCount(); i++) {
-        PaletteButton *button = new PaletteButton();
-        connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(runPaletteActionForPaintColor(unsigned)));
-        connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(runPaletteActionForEraseColor(unsigned)));
-        button->setPaletteIndex(static_cast<unsigned>(i));
-        button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
-        ui->paletteLayout->addWidget(button, row, column);
-        column++;
-        if (column >= paletteButtonPerRow) {
-            column = 0;
-            row++;
+    if (ui->paletteLayout->count() != buffer->image().colorCount()) {
+        while (ui->paletteLayout->count() > 0) {
+            QLayoutItem *item = ui->paletteLayout->takeAt(0);
+            delete item->widget();
+            delete item;
         }
+
+        static const int paletteButtonPerRow = 16;
+        for (int i = 0, row = 0, column = 0; i < buffer->image().colorCount(); i++) {
+            PaletteButton *button = new PaletteButton();
+            connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(runPaletteActionForPaintColor(unsigned)));
+            connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(runPaletteActionForEraseColor(unsigned)));
+            button->setPaletteIndex(static_cast<unsigned>(i));
+            button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
+            ui->paletteLayout->addWidget(button, row, column);
+            column++;
+            if (column >= paletteButtonPerRow) {
+                column = 0;
+                row++;
+            }
+        }
+
+        if (Tool::singleWindowMode())
+            resize(width(), sizeHint().height());
     }
 
     updatePalette();
