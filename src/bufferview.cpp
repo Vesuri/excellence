@@ -638,7 +638,7 @@ void BufferView::applyTransform()
         QTransform::fromScale(zoomLevel_ * aspectX_, zoomLevel_ * aspectY_));
     scene->setZoomLevel(zoomLevel_);
     updateWindowTitle();
-    if (!isWindow())
+    if (!isWindow() && !window()->isFullScreen())
         window()->adjustSize();
 }
 

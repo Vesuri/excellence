@@ -313,7 +313,7 @@ void MainWindow::setBuffer(Buffer *newBuffer)
             }
         }
 
-        if (Tool::singleWindowMode() && !isFullScreen())
+        if (Tool::singleWindowMode())
             resize(width(), sizeHint().height());
     }
 
