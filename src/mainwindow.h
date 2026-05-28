@@ -135,6 +135,7 @@ private:
 
     QPoint lastCursorPoint_;
     bool lastCursorValid_ = false;
+    bool fullScreenActivatedSingleWindowMode_ = false;
     QVector<QWidget *> squashedDialogs_;
     QVector<QWidget *> hiddenDialogs_;
 };
