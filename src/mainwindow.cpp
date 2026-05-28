@@ -1163,9 +1163,15 @@ void MainWindow::changeEvent(QEvent *e)
     if (e->type() == QEvent::WindowStateChange) {
         int m = isFullScreen() ? 0 : 4;
         ui->gridLayout->setContentsMargins(m, m, m, m);
-        if (!isFullScreen() && fullScreenActivatedSingleWindowMode_) {
-            fullScreenActivatedSingleWindowMode_ = false;
-            ui->actionWindowSingleWindow->setChecked(false);
+        if (isFullScreen()) {
+            setFixedSize(size());
+        } else {
+            setMinimumSize(0, 0);
+            setMaximumSize(QWIDGETSIZE_MAX, QWIDGETSIZE_MAX);
+            if (fullScreenActivatedSingleWindowMode_) {
+                fullScreenActivatedSingleWindowMode_ = false;
+                ui->actionWindowSingleWindow->setChecked(false);
+            }
         }
     }
 }
