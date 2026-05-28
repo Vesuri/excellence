@@ -33,6 +33,7 @@ public:
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
     void closeEvent(QCloseEvent *event) override;
+    void changeEvent(QEvent *e) override;
 
 private slots:
     void initialize();

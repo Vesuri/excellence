@@ -1155,6 +1155,15 @@ void MainWindow::onDirtyChanged(bool)
     updateWindowTitle();
 }
 
+void MainWindow::changeEvent(QEvent *e)
+{
+    QMainWindow::changeEvent(e);
+    if (e->type() == QEvent::WindowStateChange) {
+        int m = isFullScreen() ? 0 : 4;
+        ui->gridLayout->setContentsMargins(m, m, m, m);
+    }
+}
+
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     if (buffer && buffer->isDirty()) {
