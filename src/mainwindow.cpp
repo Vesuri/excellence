@@ -412,6 +412,7 @@ void MainWindow::saveFile(const QString &savePath, const RawSaveOptions &rawOpti
     if (path.isEmpty()) {
         saveAs();
     } else {
+        buffer->clearHoverPreview();
         QImage saveImage = buffer->image();
         if (saveWithTransparency_ && path.toLower().endsWith(".png")) {
             int eraseIdx = static_cast<int>(buffer->eraseColor());
@@ -684,6 +685,7 @@ void MainWindow::imageHistogram()
 
 void MainWindow::imageCopy()
 {
+    buffer->clearHoverPreview();
     QApplication::clipboard()->setImage(buffer->image().convertToFormat(QImage::Format_RGB32));
 }
 
