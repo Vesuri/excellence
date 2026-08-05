@@ -1260,8 +1260,9 @@ void MainWindow::closeEvent(QCloseEvent *event)
     for (BufferView *view : bufferViews)
         if (view->isWindow())
             view->close();
-    for (Tool *tool : tools)
-        tool->closeAuxiliaryWindows();
+    for (QWidget *widget : QApplication::topLevelWidgets())
+        if (widget != this && widget->isVisible())
+            widget->close();
     event->accept();
 }
 
