@@ -47,8 +47,12 @@ void PaletteTool::registerTool()
     Tool::registerTool();
 
     button_->setIcon(QIcon(":/palette.png"));
-    button_->setToolTip("Palette – Edit active color");
+    button_->setToolTip("Palette – Edit active color\nRight-click: open palette window");
     connect(button_, SIGNAL(clicked(bool)), this, SLOT(toggleColorDialogVisibility()));
+
+    // Override default right-click (options widget) with palette window toggle
+    disconnect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
+    connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleColorDialogVisibility()));
 
     colorDialog = new QColorDialog;
     colorDialog->setOption(QColorDialog::DontUseNativeDialog);
