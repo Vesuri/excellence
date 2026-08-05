@@ -65,6 +65,7 @@ public:
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     void cancel() override;
+    QString status() const override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
@@ -116,6 +117,7 @@ private:
 
     Mode mode_;
     QPoint startPoint_;
+    QPoint currentPoint_;
     UndoBuffer *undoBuffer_;
 
     // Freehand (carve) mode state

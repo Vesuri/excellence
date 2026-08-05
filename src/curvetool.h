@@ -22,6 +22,7 @@ public:
     QRect hover(const QPoint &point) override;
     QRect doubleClick(const QPoint &point) override;
     void cancel() override;
+    QString status() const override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
@@ -51,6 +52,7 @@ private:
     int phase_;
     bool erasing_;
     QPoint p0_, p1_, p2_, p3_;
+    QPoint currentPoint_;
     int draggedHandle_;
     UndoBuffer *undoBuffer_;
 

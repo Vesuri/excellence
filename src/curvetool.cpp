@@ -1,3 +1,4 @@
+#include <cmath>
 #include <QGridLayout>
 #include <QtCore/qmath.h>
 #include "pen.h"
@@ -114,6 +115,8 @@ QRect CurveTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 
 QRect CurveTool::move(const QPoint &point)
 {
+    currentPoint_ = point;
+
     if (curveMode_ == Quadratic) {
         if (mouseButton_ != Qt::NoButton) {
             if (phase_ == 1) {
@@ -238,6 +241,29 @@ QRect CurveTool::hover(const QPoint &point)
     }
 
     return bezierBoundingRect(point).intersected(buffer_->image().rect());
+}
+
+QString CurveTool::status() const
+{
+    QPoint anchor;
+    if (curveMode_ == Quadratic) {
+        if (phase_ != 1 || mouseButton_ == Qt::NoButton)
+            return QString();
+        anchor = p0_;
+    } else {
+        switch (phase_) {
+        case 1: anchor = p0_; break;
+        case 2: anchor = p0_; break;
+        case 3: anchor = p3_; break;
+        default: return QString();
+        }
+    }
+    int dx = currentPoint_.x() - anchor.x();
+    int dy = currentPoint_.y() - anchor.y();
+    double angle = qRadiansToDegrees(std::atan2(static_cast<double>(dy), static_cast<double>(dx)));
+    if (angle < 0) angle += 360.0;
+    double length = std::sqrt(static_cast<double>(dx * dx + dy * dy));
+    return QString("%1° %2px").arg(angle, 0, 'f', 1).arg(qRound(length));
 }
 
 // ── Quadratic helpers ──────────────────────────────────────────────────────

@@ -51,6 +51,7 @@ private:
     DrawMode drawMode;
     AnchorMode anchorMode_;
     QPoint startPoint;
+    QPoint currentPoint_;
     UndoBuffer *undoBuffer;
     GradientRubberBand rubberBand_;
     QRect pendingFillRect_;

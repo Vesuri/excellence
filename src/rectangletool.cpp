@@ -65,6 +65,7 @@ QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     }
 
     startPoint = point;
+    currentPoint_ = point;
 
     QRect rect = changes(point);
     undoBuffer = new UndoBuffer(rect.topLeft(), buffer_->image().copy(rect), this);
@@ -91,6 +92,7 @@ QRect RectangleTool::move(const QPoint &point)
     if (!undoBuffer)
         return QRect();
 
+    currentPoint_ = point;
     undoBuffer->apply(buffer_);
     delete undoBuffer;
 
@@ -235,7 +237,14 @@ void RectangleTool::cancel()
 
 QString RectangleTool::status() const
 {
-    return rubberBand_.status();
+    if (rubberBand_.pending)
+        return rubberBand_.status();
+    if (mouseButton_ == Qt::NoButton || !undoBuffer)
+        return QString();
+    QPoint p0, p1;
+    cornerPoints(currentPoint_, p0, p1);
+    QRect r = QRect(p0, p1).normalized();
+    return QString("%1 × %2").arg(r.width() + 1).arg(r.height() + 1);
 }
 
 QRect RectangleTool::changes(const QPoint &point)

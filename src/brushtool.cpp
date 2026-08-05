@@ -192,6 +192,7 @@ QRect BrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     }
 
     startPoint_ = point;
+    currentPoint_ = point;
     QRect rect = changes(point);
     undoBuffer_ = new UndoBuffer(rect.topLeft(), buffer_->image().copy(rect), this);
     return draw(point);
@@ -214,6 +215,7 @@ QRect BrushTool::move(const QPoint &point)
 
     // No rectangle preview — guides show the selection area instead.
     // Restore the initial press dot but keep undoBuffer_ for release().
+    currentPoint_ = point;
     if (undoBuffer_)
         undoBuffer_->apply(buffer_);
     return QRect();
@@ -275,6 +277,14 @@ QRect BrushTool::release(const QPoint &point)
         Algorithms::fillRectangle(startPoint_, point, [this](const QPoint &p) { draw(p); });
 
     return changedRect;
+}
+
+QString BrushTool::status() const
+{
+    if (mode_ != Rectangle || mouseButton_ == Qt::NoButton || !undoBuffer_)
+        return QString();
+    QRect r = QRect(startPoint_, currentPoint_).normalized();
+    return QString("%1 × %2").arg(r.width() + 1).arg(r.height() + 1);
 }
 
 QRect BrushTool::changes(const QPoint &point)

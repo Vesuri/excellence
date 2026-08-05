@@ -308,6 +308,7 @@ QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     erasing_ = (mouseButton_ == Qt::RightButton);
     phase_ = 1;
     startPoint_ = point;
+    computeEllipseParams(point, point);
     Pen *p = drawMode_ == FilledEllipse ? buffer_->toolPen() : buffer_->pen();
     QRect dotRect = p->rect(point).intersected(buffer_->image().rect());
     if (dotRect.isEmpty()) return QRect();
@@ -438,7 +439,11 @@ void EllipseTool::setRotateMode(bool rotate)
 
 QString EllipseTool::status() const
 {
-    return rubberBand_.status();
+    if (rubberBand_.pending)
+        return rubberBand_.status();
+    if (phase_ != 1 || !undoBuffer_)
+        return QString();
+    return QString("%1 × %2").arg(2 * rx_ + 1).arg(2 * ry_ + 1);
 }
 
 
