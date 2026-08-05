@@ -102,6 +102,7 @@ private slots:
     void toggleAllDialogs();
     void toggleSingleWindowMode(bool checked);
     void handleBufferViewFullScreen();
+    void fitWindowToImage();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };

@@ -55,6 +55,7 @@ QWidget *ZoomTool::createOptionsWidget()
     ui_ = new Ui::ZoomToolOptions;
     ui_->setupUi(w);
     ui_->gridCheck->setChecked(buffer_ && buffer_->pixelGrid());
+    ui_->autoFitCheck->setChecked(buffer_ && buffer_->autoFitZoom());
     ui_->zoomSpin->setValue(magnifierZoom_);
     connect(ui_->gridCheck, &QCheckBox::toggled, [this](bool checked) {
         if (buffer_) buffer_->setPixelGrid(checked);
@@ -63,6 +64,15 @@ QWidget *ZoomTool::createOptionsWidget()
         connect(buffer_, &Buffer::pixelGridChanged, ui_->gridCheck, [this](bool enabled) {
             QSignalBlocker b(ui_->gridCheck);
             ui_->gridCheck->setChecked(enabled);
+        });
+    }
+    connect(ui_->autoFitCheck, &QCheckBox::toggled, [this](bool checked) {
+        if (buffer_) buffer_->setAutoFitZoom(checked);
+    });
+    if (buffer_) {
+        connect(buffer_, &Buffer::autoFitZoomChanged, ui_->autoFitCheck, [this](bool enabled) {
+            QSignalBlocker b(ui_->autoFitCheck);
+            ui_->autoFitCheck->setChecked(enabled);
         });
     }
     connect(ui_->zoomSpin, QOverload<int>::of(&QSpinBox::valueChanged), [this](int v) {

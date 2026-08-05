@@ -79,6 +79,8 @@
     <addaction name="actionWindowNewWindow"/>
     <addaction name="actionWindowCloseWindow"/>
     <addaction name="separator"/>
+    <addaction name="actionWindowFitToImage"/>
+    <addaction name="separator"/>
     <addaction name="actionWindowSingleWindow"/>
     <addaction name="actionWindowFloatPanels"/>
    </widget>
@@ -246,6 +248,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+W</string>
+   </property>
+  </action>
+  <action name="actionWindowFitToImage">
+   <property name="text">
+    <string>Fit Window to Image</string>
    </property>
   </action>
   <action name="actionFileNew">

@@ -23,9 +23,11 @@ public:
 
     void setBuffer(Buffer *buffer);
     void setZoomLevel(int level);
+    int zoomLevel() const { return zoomLevel_; }
     void centerOn(const QPoint &point);
     QSize idealSize(int zoomLevel) const;
     QSize sizeHint() const override;
+    void fitWindowToImage();
     bool eventFilter(QObject *watched, QEvent *event) override;
     void handleKey(QKeyEvent *event);
     void handleKeyRelease(QKeyEvent *event);

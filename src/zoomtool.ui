@@ -21,6 +21,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="autoFitCheck">
+     <property name="text">
+      <string>Fit Window to Image on Zoom</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <layout class="QFormLayout" name="formLayout">
      <property name="spacing">
       <number>4</number>

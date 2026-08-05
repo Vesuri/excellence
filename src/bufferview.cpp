@@ -638,8 +638,51 @@ void BufferView::applyTransform()
         QTransform::fromScale(zoomLevel_ * aspectX_, zoomLevel_ * aspectY_));
     scene->setZoomLevel(zoomLevel_);
     updateWindowTitle();
-    if (!isWindow() && !window()->isFullScreen())
-        window()->adjustSize();
+    if (window()->isFullScreen())
+        return;
+    if (!isWindow())
+        fitWindowToImage();
+    else if (buffer && buffer->autoFitZoom())
+        fitWindowToImage();
+}
+
+void BufferView::fitWindowToImage()
+{
+    QWidget *win = window();
+
+    if (isWindow()) {
+        // This BufferView is its own top-level window; resize it directly to the
+        // content size that shows the whole image without scrollbars.
+        QSize ideal = idealSize(zoomLevel_);
+        if (!ideal.isValid())
+            return;
+        QRect screen = win->screen()->availableGeometry();
+        QRect frame = win->frameGeometry();
+        int overW = frame.width()  - win->width();
+        int overH = frame.height() - win->height();
+        QSize target = ideal.boundedTo(QSize(qMax(1, screen.width() - overW), qMax(1, screen.height() - overH)));
+        win->resize(target);
+    } else {
+        // Embedded (e.g. Single Window mode): let the layout compute the natural
+        // size for the current zoom level, then clamp it to the screen.
+        win->adjustSize();
+        QRect screen = win->screen()->availableGeometry();
+        QRect frame = win->frameGeometry();
+        int overW = frame.width()  - win->width();
+        int overH = frame.height() - win->height();
+        int maxW = qMax(1, screen.width()  - overW);
+        int maxH = qMax(1, screen.height() - overH);
+        if (win->width() > maxW || win->height() > maxH)
+            win->resize(qMin(win->width(), maxW), qMin(win->height(), maxH));
+    }
+
+    // Keep the window fully on screen after resizing.
+    QRect screen = win->screen()->availableGeometry();
+    QRect frame = win->frameGeometry();
+    int nx = qMax(screen.left(), qMin(frame.x(), screen.right()  - frame.width()  + 1));
+    int ny = qMax(screen.top(),  qMin(frame.y(), screen.bottom() - frame.height() + 1));
+    if (nx != frame.x() || ny != frame.y())
+        win->move(nx, ny);
 }
 
 void BufferView::changeEvent(QEvent *e)

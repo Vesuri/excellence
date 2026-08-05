@@ -636,6 +636,13 @@ void Buffer::setPixelGrid(bool enabled)
 }
 bool Buffer::pixelGrid() const { return pixelGrid_; }
 
+void Buffer::setAutoFitZoom(bool enabled)
+{
+    autoFitZoom_ = enabled;
+    emit autoFitZoomChanged(enabled);
+}
+bool Buffer::autoFitZoom() const { return autoFitZoom_; }
+
 void Buffer::setGridSpacing(int w, int h)
 {
     gridW_ = qMax(1, w);

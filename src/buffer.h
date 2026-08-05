@@ -69,6 +69,8 @@ public:
     bool gridEnabled() const;
     void setPixelGrid(bool enabled);
     bool pixelGrid() const;
+    void setAutoFitZoom(bool enabled);
+    bool autoFitZoom() const;
     void setGridSpacing(int w, int h);
     int gridW() const;
     int gridH() const;
@@ -120,6 +122,7 @@ signals:
     void eraseColorChanged(unsigned colorIndex, QColor color);
     void gridChanged();
     void pixelGridChanged(bool enabled);
+    void autoFitZoomChanged(bool enabled);
     void mirrorChanged();
     void dirtyChanged(bool dirty);
     void paintModeChanged(PaintMode mode);
@@ -155,6 +158,7 @@ private:
     bool transparentMixHSV_;
     bool gridEnabled_;
     bool pixelGrid_;
+    bool autoFitZoom_ = false;
     int gridW_, gridH_;
     int gridOffsetX_, gridOffsetY_;
     bool mirrorX_, mirrorY_;

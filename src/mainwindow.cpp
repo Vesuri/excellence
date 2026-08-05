@@ -157,6 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushRestore, SIGNAL(triggered()), this, SLOT(brushRestore()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
+    connect(ui->actionWindowFitToImage, SIGNAL(triggered()), this, SLOT(fitWindowToImage()));
     connect(ui->actionWindowFloatPanels, &QAction::toggled, this, &MainWindow::toggleFloatPanels);
     connect(ui->actionWindowSingleWindow, &QAction::toggled, this, &MainWindow::toggleSingleWindowMode);
     connect(ui->actionHelpAbout, &QAction::triggered, this, &MainWindow::about);
@@ -1187,6 +1188,12 @@ void MainWindow::handleBufferViewFullScreen()
         ui->actionWindowSingleWindow->setChecked(true);
     }
     showFullScreen();
+}
+
+void MainWindow::fitWindowToImage()
+{
+    if (activeBufferView)
+        activeBufferView->fitWindowToImage();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
