@@ -51,7 +51,8 @@ SOURCES += main.cpp\
     mirrortool.cpp \
     segmenttool.cpp \
     defaultpalette.cpp \
-    rawsaveoptionsdialog.cpp
+    rawsaveoptionsdialog.cpp \
+    importimagedialog.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -92,7 +93,8 @@ HEADERS  += mainwindow.h \
     segmenttool.h \
     spatial_color_quant.h \
     defaultpalette.h \
-    rawsaveoptionsdialog.h
+    rawsaveoptionsdialog.h \
+    importimagedialog.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui \
@@ -108,7 +110,8 @@ FORMS    += mainwindow.ui \
     brushtool.ui \
     drawmodetool.ui \
     gradienttool.ui \
-    rawsaveoptionsdialog.ui
+    rawsaveoptionsdialog.ui \
+    importimagedialog.ui
 
 RESOURCES += \
     icons/icons.qrc

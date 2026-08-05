@@ -41,6 +41,7 @@ private slots:
     void runPaletteActionForPaintColor(unsigned paletteIndex);
     void runPaletteActionForEraseColor(unsigned paletteIndex);
     void openFile(const QString &path = QString());
+    void importFile(const QString &path);
     void saveFile(const QString &path = QString(), const RawSaveOptions &rawOptions = RawSaveOptions());
     void saveAs();
     void newWindow();
@@ -114,6 +115,7 @@ private:
 
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
+    QFileDialog *importDialog;
     QFileDialog *loadPaletteDialog;
     QFileDialog *savePaletteDialog;
     PropertiesDialog *propertiesDialog;

@@ -23,6 +23,8 @@
 #include <QScreen>
 #include <QClipboard>
 #include "brush.h"
+#include "importimagedialog.h"
+#include "palettequantizer.h"
 #include "propertiesdialog.h"
 #include "buffer.h"
 #include "bufferview.h"
@@ -41,6 +43,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     openDialog(new QFileDialog(nullptr, tr("Open file"))),
+    importDialog(new QFileDialog(nullptr, tr("Import image"))),
     loadPaletteDialog(new QFileDialog(nullptr, tr("Load palette"))),
     savePaletteDialog(new QFileDialog(nullptr, tr("Save palette"))),
     propertiesDialog(new PropertiesDialog),
@@ -100,12 +103,14 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
 
     connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
+    connect(importDialog, SIGNAL(fileSelected(QString)), this, SLOT(importFile(QString)));
     connect(loadPaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(loadPalette(QString)));
     savePaletteDialog->setAcceptMode(QFileDialog::AcceptSave);
     connect(savePaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(paletteSave(QString)));
     connect(ui->actionFileQuit, &QAction::triggered, this, &QWidget::close);
     connect(ui->actionFileNew, SIGNAL(triggered()), this, SLOT(openFile()));
     connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
+    connect(ui->actionFileImport, SIGNAL(triggered()), importDialog, SLOT(show()));
     connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
     connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
     connect(ui->actionFileSaveWithTransparency, &QAction::toggled, [this](bool checked) {
@@ -358,6 +363,43 @@ void MainWindow::openFile(const QString &path)
 {
     setBuffer(new Buffer(path, this));
     openDialog->setDirectory(path);
+}
+
+void MainWindow::importFile(const QString &path)
+{
+    if (path.isEmpty())
+        return;
+
+    QImage loaded(path);
+    if (loaded.isNull()) {
+        QMessageBox msgBox;
+        msgBox.setText("Could not load image.");
+        msgBox.exec();
+        return;
+    }
+
+    ImportImageDialog dlg(this);
+    dlg.setImageSize(loaded.width(), loaded.height());
+    dlg.setCurrentColorCount(buffer->image().colorCount());
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    QImage source = loaded;
+    if (dlg.width() != loaded.width() || dlg.height() != loaded.height()) {
+        source = loaded.scaled(dlg.width(), dlg.height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    }
+
+    QImage indexed;
+    if (dlg.useOptimalPalette()) {
+        indexed = PaletteQuantizer::quantize(source, dlg.colors());
+    } else {
+        indexed = convertToIndexed(source);
+    }
+    indexed.setDotsPerMeterX(loaded.dotsPerMeterX());
+    indexed.setDotsPerMeterY(loaded.dotsPerMeterY());
+
+    setBuffer(new Buffer(indexed, path, this));
+    importDialog->setDirectory(path);
 }
 
 void MainWindow::saveFile(const QString &savePath, const RawSaveOptions &rawOptions)

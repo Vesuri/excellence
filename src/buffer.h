@@ -24,6 +24,7 @@ public:
 
     explicit Buffer(int width = 640, int height = 512, int colors = 32, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);
+    Buffer(const QImage &image, const QString &path, QObject *parent = nullptr);
 
     void setPath(const QString &path);
     QString path() const;

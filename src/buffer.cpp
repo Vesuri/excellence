@@ -80,6 +80,39 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     mirrorCenterY_ = image_.height() / 2;
 }
 
+Buffer::Buffer(const QImage &image, const QString &path, QObject *parent) : QObject(parent),
+    path_(path),
+    image_(image),
+    moveUndoBuffer(nullptr),
+    pen_(nullptr),
+    toolPen_(nullptr),
+    penTip_(nullptr),
+    brush_(nullptr),
+    paintColor_(1),
+    eraseColor_(0),
+    paintMode_(Color),
+    replaceMode_(false),
+    smearDirection_(0, 0),
+    cycleIndex_(0),
+    lastCycleColor_(0),
+    cycleUsed_(false),
+    drawModeAmount_(50),
+    transparentMixHSV_(false),
+    gridEnabled_(false),
+    pixelGrid_(false),
+    gridW_(8), gridH_(8),
+    gridOffsetX_(0), gridOffsetY_(0),
+    mirrorX_(false), mirrorY_(false),
+    mirrorCenterX_(0), mirrorCenterY_(0),
+    brushTransparentIndex_(-1)
+{
+    if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
+        initialize();
+    }
+    mirrorCenterX_ = image_.width() / 2;
+    mirrorCenterY_ = image_.height() / 2;
+}
+
 void Buffer::initialize(int width, int height, int colors)
 {
     image_ = QImage(width, height, QImage::Format_Indexed8);
