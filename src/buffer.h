@@ -158,7 +158,7 @@ private:
     bool transparentMixHSV_;
     bool gridEnabled_;
     bool pixelGrid_;
-    bool autoFitZoom_ = false;
+    bool autoFitZoom_ = true;
     int gridW_, gridH_;
     int gridOffsetX_, gridOffsetY_;
     bool mirrorX_, mirrorY_;
