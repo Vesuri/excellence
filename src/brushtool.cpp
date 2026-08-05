@@ -274,7 +274,9 @@ QRect BrushTool::release(const QPoint &point)
     buffer_->setTool(tools.at(0));
 
     if (mouseButton_ == Qt::RightButton)
-        Algorithms::fillRectangle(startPoint_, point, [this](const QPoint &p) { draw(p); });
+        Algorithms::fillRectangle(startPoint_, point, [this, &changedRect](const QPoint &p) {
+            changedRect = changedRect.united(draw(p));
+        });
 
     return changedRect;
 }
