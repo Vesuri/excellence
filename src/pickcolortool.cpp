@@ -29,14 +29,6 @@ QRect PickColorTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
     else
         buffer_->setEraseColor(index);
 
-    if (oneShotTarget_ != None) {
-        Tool *prev = previousTool_;
-        oneShotTarget_ = None;
-        previousTool_ = nullptr;
-        if (prev)
-            buffer_->setTool(prev);
-    }
-
     return QRect();
 }
 
@@ -47,6 +39,17 @@ QRect PickColorTool::move(const QPoint &)
 
 QRect PickColorTool::release(const QPoint &)
 {
+    // Restore the previous tool only after the release half of the click has been
+    // handled here, so Buffer::release() doesn't hand the release event to the
+    // restored tool (which could otherwise act on stale drag state).
+    if (oneShotTarget_ != None) {
+        Tool *prev = previousTool_;
+        oneShotTarget_ = None;
+        previousTool_ = nullptr;
+        if (prev)
+            buffer_->setTool(prev);
+    }
+
     return QRect();
 }
 

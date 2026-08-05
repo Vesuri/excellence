@@ -17,6 +17,7 @@ public:
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     void addButtonToGridLayout(QGridLayout *layout) override;
+    void closeAuxiliaryWindows() override;
 
 protected:
     void registerTool() override;

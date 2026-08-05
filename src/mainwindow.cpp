@@ -1211,6 +1211,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     for (BufferView *view : bufferViews)
         if (view->isWindow())
             view->close();
+    for (Tool *tool : tools)
+        tool->closeAuxiliaryWindows();
     event->accept();
 }
 

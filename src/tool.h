@@ -32,6 +32,7 @@ public:
     virtual QRect hover(const QPoint &point);
     virtual QRect doubleClick(const QPoint &point) { Q_UNUSED(point) return QRect(); }
     virtual void cancel() {}
+    virtual void closeAuxiliaryWindows() {}
     virtual bool isInRubberBandMode() const { return false; }
     virtual bool showGuides() const { return false; }
     virtual bool showStartGuide() const { return showGuides() && mouseButton_ != Qt::NoButton; }

@@ -64,6 +64,11 @@ void PaletteTool::addButtonToGridLayout(QGridLayout *layout)
     layout->addWidget(button_, 0, 1);
 }
 
+void PaletteTool::closeAuxiliaryWindows()
+{
+    colorDialog->hide();
+}
+
 void PaletteTool::toggleColorDialogVisibility()
 {
     colorDialog->setVisible(!colorDialog->isVisible());
