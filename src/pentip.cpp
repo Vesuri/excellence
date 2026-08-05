@@ -158,13 +158,13 @@ QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
     QPoint pts[4]; bool active[4];
     collectMirrorPoints(point, buffer, pts, active);
 
+    // Erase: Brush mode treated as Normal (use eraseColor, not brush pixel)
+    Buffer::PaintMode eraseMode = (mode == Buffer::BrushMode) ? Buffer::Color : mode;
+
     QRect changed;
     for (int i = 0; i < 4; i++) {
         if (!active[i]) continue;
-        if (mode == Buffer::BrushMode)
-            applyBrushMode(pts[i], buffer);
-        else
-            applyTipAt(pts[i], buffer, mode, isErase, paintC, eraseColor_);
+        applyTipAt(pts[i], buffer, eraseMode, isErase, paintC, eraseColor_);
         changed = changed.united(rect(pts[i]));
     }
     return changed.intersected(buffer->image().rect());
