@@ -757,6 +757,7 @@ void MainWindow::brushLoad()
         return;
     QImage indexed = convertToIndexed(img);
     buffer->setPen(new Brush(indexed, -1, buffer));
+    DrawModeTool::instance.activateModeByKey(Buffer::BrushMode);
 }
 
 void MainWindow::brushSave()
