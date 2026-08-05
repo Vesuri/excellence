@@ -271,12 +271,18 @@ QRect BrushTool::release(const QPoint &point)
     QImage image = buffer_->image().copy(QRect(startPoint_, point));
     buffer_->setPen(new Brush(image, static_cast<int>(buffer_->eraseColor())));
     buffer_->setPaintMode(Buffer::BrushMode);
-    buffer_->setTool(tools.at(0));
 
     if (mouseButton_ == Qt::RightButton)
         Algorithms::fillRectangle(startPoint_, point, [this, &changedRect](const QPoint &p) {
             changedRect = changedRect.united(draw(p));
         });
+
+    // setTool() synchronously emits toolChanged, which BufferView::onToolChanged()
+    // handles by calling buffer_->move() to refresh the new tool's hover preview.
+    // That must happen after the erase above, otherwise the preview's undo snapshot
+    // captures the pre-erase pixels and restores them over the just-cleared area on
+    // the next mouse move.
+    buffer_->setTool(tools.at(0));
 
     return changedRect;
 }
