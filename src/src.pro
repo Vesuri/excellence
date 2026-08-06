@@ -97,7 +97,8 @@ HEADERS  += mainwindow.h \
     rawsaveoptionsdialog.h \
     importimagedialog.h \
     dithermode.h \
-    dither.h
+    dither.h \
+    palettesortmode.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui \

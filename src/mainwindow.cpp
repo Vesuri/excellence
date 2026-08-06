@@ -393,7 +393,7 @@ void MainWindow::importFile(const QString &path)
     DitherMode ditherMode = dlg.ditherMode();
     QImage indexed;
     if (dlg.useOptimalPalette()) {
-        indexed = PaletteQuantizer::quantize(source, dlg.colors(), ditherMode);
+        indexed = PaletteQuantizer::quantize(source, dlg.colors(), ditherMode, dlg.outOf(), dlg.sortMode());
     } else {
         indexed = convertToIndexed(source, ditherMode);
     }

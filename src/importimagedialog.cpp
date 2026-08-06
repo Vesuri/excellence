@@ -58,12 +58,26 @@ int ImportImageDialog::colors() const
     return qRound(qPow(2, ui->comboBoxColors->currentIndex() + 1));
 }
 
+int ImportImageDialog::outOf() const
+{
+    return qRound(qPow(8, ui->comboBoxOutOf->currentIndex() + 1));
+}
+
 DitherMode ImportImageDialog::ditherMode() const
 {
     switch (ui->comboBoxDither->currentIndex()) {
     case 1: return DitherMode::FloydSteinberg;
     case 2: return DitherMode::Pattern;
     default: return DitherMode::None;
+    }
+}
+
+PaletteSortMode ImportImageDialog::sortMode() const
+{
+    switch (ui->comboBoxSorting->currentIndex()) {
+    case 1: return PaletteSortMode::DarkToLight;
+    case 2: return PaletteSortMode::LightToDark;
+    default: return PaletteSortMode::None;
     }
 }
 
@@ -78,4 +92,5 @@ void ImportImageDialog::setPaletteMode(int index)
 
     ui->comboBoxColors->setEnabled(optimal);
     ui->comboBoxOutOf->setEnabled(optimal);
+    ui->comboBoxSorting->setEnabled(optimal);
 }

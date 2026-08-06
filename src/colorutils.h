@@ -7,10 +7,14 @@
 #include <Qt>
 #include <climits>
 
+inline int luma(QRgb color)
+{
+    return (qRed(color) * 299 + qGreen(color) * 587 + qBlue(color) * 114) / 1000;
+}
+
 inline Qt::GlobalColor contrastColor(const QColor &color)
 {
-    int luma = (color.red() * 299 + color.green() * 587 + color.blue() * 114) / 1000;
-    return luma > 128 ? Qt::black : Qt::white;
+    return luma(color.rgb()) > 128 ? Qt::black : Qt::white;
 }
 
 inline int nearestColorIndex(QRgb color, const QVector<QRgb> &palette)

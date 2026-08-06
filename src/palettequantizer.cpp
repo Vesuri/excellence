@@ -1,9 +1,85 @@
+#include <QtMath>
+#include <QSet>
+#include <algorithm>
 #include "spatial_color_quant.h"
 #include "palettequantizer.h"
 #include "dither.h"
+#include "colorutils.h"
 
-QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMode mode)
+namespace {
+
+struct GridColor {
+    int r, g, b;
+};
+
+int packKey(const GridColor &c, int levels)
 {
+    return (c.r * levels + c.g) * levels + c.b;
+}
+
+int roundToLevel(double value, int levels)
+{
+    return qBound(0, qRound(value * (levels - 1)), levels - 1);
+}
+
+// Nearest-neighbor search over the integer RGB grid, expanding outward in
+// Chebyshev shells (Euclidean distance is never smaller than the Chebyshev
+// distance, so once a candidate is found we only need to keep expanding
+// while a closer one is still possible).
+GridColor findNearestUnused(GridColor target, int levels, const QSet<int> &used)
+{
+    if (!used.contains(packKey(target, levels))) {
+        return target;
+    }
+
+    double bestDist = -1.0;
+    GridColor best = target;
+    int maxRadius = 3 * (levels - 1);
+    for (int radius = 1; radius <= maxRadius; radius++) {
+        if (bestDist >= 0.0 && radius > bestDist) {
+            break;
+        }
+
+        int rMin = qMax(0, target.r - radius), rMax = qMin(levels - 1, target.r + radius);
+        int gMin = qMax(0, target.g - radius), gMax = qMin(levels - 1, target.g + radius);
+        int bMin = qMax(0, target.b - radius), bMax = qMin(levels - 1, target.b + radius);
+
+        for (int r = rMin; r <= rMax; r++) {
+            for (int g = gMin; g <= gMax; g++) {
+                for (int b = bMin; b <= bMax; b++) {
+                    int chebyshev = qMax(qAbs(r - target.r), qMax(qAbs(g - target.g), qAbs(b - target.b)));
+                    if (chebyshev != radius) {
+                        continue;
+                    }
+
+                    GridColor candidate{r, g, b};
+                    if (used.contains(packKey(candidate, levels))) {
+                        continue;
+                    }
+
+                    double dr = r - target.r, dg = g - target.g, db = b - target.b;
+                    double dist = qSqrt(dr * dr + dg * dg + db * db);
+                    if (bestDist < 0.0 || dist < bestDist) {
+                        bestDist = dist;
+                        best = candidate;
+                    }
+                }
+            }
+        }
+    }
+    return best;
+}
+
+}
+
+QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMode mode, int outOf, PaletteSortMode sortMode)
+{
+    int levelsPerChannel = qMax(2, qRound(qPow((double)outOf, 1.0 / 3.0)));
+    qint64 maxColors = qint64(levelsPerChannel) * levelsPerChannel * levelsPerChannel;
+    if (num_colors > maxColors) {
+        num_colors = static_cast<int>(maxColors);
+    }
+
     int width = source.width();
     int height = source.height();
     array2d< vector_fixed<double, 3> > image(width, height);
@@ -80,14 +156,32 @@ QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMo
     spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
     //spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
 
+    QSet<int> usedGridColors;
+    QVector<GridColor> gridPalette(num_colors);
+    for (int i = 0; i < num_colors; i++) {
+        GridColor grid{
+            roundToLevel(palette[i](0), levelsPerChannel),
+            roundToLevel(palette[i](1), levelsPerChannel),
+            roundToLevel(palette[i](2), levelsPerChannel)
+        };
+        grid = findNearestUnused(grid, levelsPerChannel, usedGridColors);
+        usedGridColors.insert(packKey(grid, levelsPerChannel));
+        gridPalette[i] = grid;
+    }
+
     QVector<QRgb> paletteRgb(num_colors);
     for (int i = 0; i < num_colors; i++) {
-        QColor color;
-        color.setRedF(palette[i](0));
-        color.setGreenF(palette[i](1));
-        color.setBlueF(palette[i](2));
-        color.setAlphaF(1.0);
-        paletteRgb[i] = color.rgba();
+        int r = qRound(gridPalette[i].r * 255.0 / (levelsPerChannel - 1));
+        int g = qRound(gridPalette[i].g * 255.0 / (levelsPerChannel - 1));
+        int b = qRound(gridPalette[i].b * 255.0 / (levelsPerChannel - 1));
+        paletteRgb[i] = qRgba(r, g, b, 255);
+    }
+
+    if (sortMode != PaletteSortMode::None) {
+        bool darkToLight = sortMode == PaletteSortMode::DarkToLight;
+        std::sort(paletteRgb.begin(), paletteRgb.end(), [darkToLight](QRgb a, QRgb b) {
+            return darkToLight ? luma(a) < luma(b) : luma(a) > luma(b);
+        });
     }
 
     QImage out = ditherToPalette(source.convertToFormat(QImage::Format_RGB32), paletteRgb, mode);

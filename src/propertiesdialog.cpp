@@ -63,7 +63,8 @@ void PropertiesDialog::setProperties()
                 image = image.scaled(width, height);
             }
 
-            newBuffer->setImage(PaletteQuantizer::quantize(image, colors));
+            int outOf = qRound(qPow(8, ui->comboBoxOutOf->currentIndex() + 1));
+            newBuffer->setImage(PaletteQuantizer::quantize(image, colors, DitherMode::None, outOf));
         } else {
             if (ui->comboBoxScaling->currentIndex() == 0) {
                 for (int y = 0; y < qMin(height, buffer->image().height()); y++) {
