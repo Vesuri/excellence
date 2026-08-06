@@ -194,6 +194,32 @@
        </item>
       </widget>
      </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="labelDither">
+       <property name="text">
+        <string>Dither</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1">
+      <widget class="QComboBox" name="comboBoxDither">
+       <item>
+        <property name="text">
+         <string>None</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Floyd-Steinberg</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Pattern</string>
+        </property>
+       </item>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

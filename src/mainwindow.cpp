@@ -1,4 +1,5 @@
 #include "colorutils.h"
+#include "dither.h"
 #include "palettebutton.h"
 #include <QAbstractSpinBox>
 #include <QDockWidget>
@@ -389,11 +390,12 @@ void MainWindow::importFile(const QString &path)
         source = loaded.scaled(dlg.width(), dlg.height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
     }
 
+    DitherMode ditherMode = dlg.ditherMode();
     QImage indexed;
     if (dlg.useOptimalPalette()) {
-        indexed = PaletteQuantizer::quantize(source, dlg.colors());
+        indexed = PaletteQuantizer::quantize(source, dlg.colors(), ditherMode);
     } else {
-        indexed = convertToIndexed(source);
+        indexed = convertToIndexed(source, ditherMode);
     }
     indexed.setDotsPerMeterX(loaded.dotsPerMeterX());
     indexed.setDotsPerMeterY(loaded.dotsPerMeterY());
@@ -737,16 +739,11 @@ void MainWindow::paletteSwapAndRemapColors()
     updateWindowTitle();
 }
 
-QImage MainWindow::convertToIndexed(const QImage &source) const
+QImage MainWindow::convertToIndexed(const QImage &source, DitherMode mode) const
 {
     QImage rgb = source.convertToFormat(QImage::Format_RGB32);
     const QVector<QRgb> palette = buffer->image().colorTable();
-    QImage indexed(rgb.size(), QImage::Format_Indexed8);
-    indexed.setColorTable(palette);
-    for (int y = 0; y < rgb.height(); y++)
-        for (int x = 0; x < rgb.width(); x++)
-            indexed.setPixel(x, y, nearestColorIndex(rgb.pixel(x, y), palette));
-    return indexed;
+    return ditherToPalette(rgb, palette, mode);
 }
 
 void MainWindow::brushLoad()

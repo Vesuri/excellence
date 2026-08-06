@@ -52,7 +52,8 @@ SOURCES += main.cpp\
     segmenttool.cpp \
     defaultpalette.cpp \
     rawsaveoptionsdialog.cpp \
-    importimagedialog.cpp
+    importimagedialog.cpp \
+    dither.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -94,7 +95,9 @@ HEADERS  += mainwindow.h \
     spatial_color_quant.h \
     defaultpalette.h \
     rawsaveoptionsdialog.h \
-    importimagedialog.h
+    importimagedialog.h \
+    dithermode.h \
+    dither.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui \

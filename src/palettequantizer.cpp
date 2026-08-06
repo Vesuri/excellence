@@ -1,7 +1,8 @@
 #include "spatial_color_quant.h"
 #include "palettequantizer.h"
+#include "dither.h"
 
-QImage PaletteQuantizer::quantize(const QImage &source, int num_colors)
+QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMode mode)
 {
     int width = source.width();
     int height = source.height();
@@ -79,22 +80,19 @@ QImage PaletteQuantizer::quantize(const QImage &source, int num_colors)
     spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
     //spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
 
-    QImage out(width, height, QImage::Format_Indexed8);
-    out.setDotsPerMeterX(source.dotsPerMeterX());
-    out.setDotsPerMeterY(source.dotsPerMeterY());
+    QVector<QRgb> paletteRgb(num_colors);
     for (int i = 0; i < num_colors; i++) {
         QColor color;
         color.setRedF(palette[i](0));
         color.setGreenF(palette[i](1));
         color.setBlueF(palette[i](2));
         color.setAlphaF(1.0);
-        out.setColor(i, color.rgba());
+        paletteRgb[i] = color.rgba();
     }
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            out.setPixel(x, y, quantized_image(x,y));
-        }
-    }
+
+    QImage out = ditherToPalette(source.convertToFormat(QImage::Format_RGB32), paletteRgb, mode);
+    out.setDotsPerMeterX(source.dotsPerMeterX());
+    out.setDotsPerMeterY(source.dotsPerMeterY());
 
     return out;
 }

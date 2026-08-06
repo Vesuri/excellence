@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "rawsaveoptionsdialog.h"
+#include "dithermode.h"
 #include <QVector>
 #include <QRgb>
 #include <QPoint>
@@ -109,7 +110,7 @@ private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };
 
     void updateWindowTitle();
-    QImage convertToIndexed(const QImage &source) const;
+    QImage convertToIndexed(const QImage &source, DitherMode mode = DitherMode::None) const;
     class Brush *brushForTransform();
     QVector<QWidget *> collectAndHideToolDialogs();
 

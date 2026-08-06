@@ -2,6 +2,7 @@
 #define IMPORTIMAGEDIALOG_H
 
 #include <QDialog>
+#include "dithermode.h"
 
 namespace Ui {
 class ImportImageDialog;
@@ -26,6 +27,7 @@ public:
     int height() const;
     bool useOptimalPalette() const;
     int colors() const;
+    DitherMode ditherMode() const;
 
 private slots:
     void setPaletteMode(int index);
