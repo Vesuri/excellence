@@ -44,7 +44,6 @@ void ImportImageDialog::setCurrentColorCount(int colors)
 
     if (ui->comboBoxPalette->currentIndex() == 0) {
         ui->comboBoxColors->setCurrentIndex(currentColorsIndex_);
-        ui->comboBoxOutOf->setCurrentIndex(currentColorsIndex_);
     }
 }
 
@@ -87,7 +86,6 @@ void ImportImageDialog::setPaletteMode(int index)
 
     if (!optimal) {
         ui->comboBoxColors->setCurrentIndex(currentColorsIndex_);
-        ui->comboBoxOutOf->setCurrentIndex(currentColorsIndex_);
     }
 
     ui->comboBoxColors->setEnabled(optimal);
