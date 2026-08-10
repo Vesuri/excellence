@@ -28,6 +28,7 @@
 #include "gradienttool.h"
 #include "mirrortool.h"
 #include "segmenttool.h"
+#include "stenciltool.h"
 #include "zoomtool.h"
 #include "ui_bufferview.h"
 
@@ -451,6 +452,12 @@ void BufferView::handleKey(QKeyEvent *event)
         break;
     case Qt::Key_Slash:
         MirrorTool::instance.toggle();
+        break;
+    case Qt::Key_Apostrophe:
+        StencilTool::instance.toggle();
+        break;
+    case Qt::Key_QuoteLeft:
+        DrawModeTool::instance.activateModeByKey(Buffer::Stencil);
         break;
     case Qt::Key_Escape:
         if (buffer && buffer->tool())

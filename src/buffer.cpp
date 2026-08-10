@@ -158,7 +158,14 @@ void Buffer::clear()
         qDeleteAll(redoStack);
         redoStack.clear();
 
-        image_ = fixedBackground_;
+        if (stencilEnabled_ && !stencilMask_.isNull()) {
+            for (int y = 0; y < image_.height(); y++)
+                for (int x = 0; x < image_.width(); x++)
+                    if (!isStencilProtected(QPoint(x, y)))
+                        image_.setPixel(x, y, fixedBackground_.pixelIndex(x, y));
+        } else {
+            image_ = fixedBackground_;
+        }
 
         emit modified(image_.rect());
         return;
@@ -183,9 +190,148 @@ void Buffer::clearWithColor(unsigned colorIndex)
     qDeleteAll(redoStack);
     redoStack.clear();
 
-    image_.fill(colorIndex);
+    if (stencilEnabled_ && !stencilMask_.isNull()) {
+        for (int y = 0; y < image_.height(); y++)
+            for (int x = 0; x < image_.width(); x++)
+                if (!isStencilProtected(QPoint(x, y)))
+                    image_.setPixel(x, y, colorIndex);
+    } else {
+        image_.fill(colorIndex);
+    }
 
     emit modified(image_.rect());
+}
+
+// ── Stencil ──────────────────────────────────────────────────────────────
+
+static void ensureStencilMask(QImage &mask, const QImage &image)
+{
+    if (!mask.isNull())
+        return;
+    mask = QImage(image.size(), QImage::Format_Mono);
+    mask.setColor(0, qRgb(0, 0, 0));
+    mask.setColor(1, qRgb(255, 255, 255));
+    mask.fill(0);
+}
+
+void Buffer::setStencilEnabled(bool enabled)
+{
+    if (enabled && stencilMask_.isNull())
+        return;
+    if (enabled == stencilEnabled_)
+        return;
+    stencilEnabled_ = enabled;
+    emit stencilChanged();
+}
+
+bool Buffer::isStencilProtected(const QPoint &p) const
+{
+    if (!stencilEnabled_ || stencilMask_.isNull())
+        return false;
+    if (!stencilMask_.rect().contains(p))
+        return false;
+    return stencilMask_.pixelIndex(p) != 0;
+}
+
+void Buffer::setStencilPixel(const QPoint &p, bool protect)
+{
+    bool wasNull = stencilMask_.isNull();
+    ensureStencilMask(stencilMask_, image_);
+    if (!stencilMask_.rect().contains(p))
+        return;
+    stencilMask_.setPixel(p, protect ? 1 : 0);
+    if (wasNull)
+        emit stencilChanged();
+}
+
+void Buffer::stencilFromForeground()
+{
+    ensureStencilMask(stencilMask_, image_);
+    for (int y = 0; y < image_.height(); y++)
+        for (int x = 0; x < image_.width(); x++)
+            stencilMask_.setPixel(x, y, image_.pixelIndex(x, y) != static_cast<int>(eraseColor_) ? 1 : 0);
+    emit stencilChanged();
+}
+
+void Buffer::applyStencilColors(StencilApplyMode mode)
+{
+    ensureStencilMask(stencilMask_, image_);
+    for (int y = 0; y < image_.height(); y++) {
+        for (int x = 0; x < image_.width(); x++) {
+            int idx = image_.pixelIndex(x, y);
+            bool colorSelected = idx >= 0 && idx < stencilSelectedColors_.size() && stencilSelectedColors_[idx];
+            bool current = stencilMask_.pixelIndex(x, y) != 0;
+            bool result = current;
+            switch (mode) {
+            case StencilReplace:  result = colorSelected; break;
+            case StencilAdd:      result = current || colorSelected; break;
+            case StencilSubtract: result = current && !colorSelected; break;
+            }
+            stencilMask_.setPixel(x, y, result ? 1 : 0);
+        }
+    }
+    emit stencilChanged();
+}
+
+void Buffer::invertStencilMask()
+{
+    if (stencilMask_.isNull())
+        return;
+    for (int y = 0; y < stencilMask_.height(); y++)
+        for (int x = 0; x < stencilMask_.width(); x++)
+            stencilMask_.setPixel(x, y, stencilMask_.pixelIndex(x, y) != 0 ? 0 : 1);
+    emit stencilChanged();
+}
+
+void Buffer::deleteStencilMask()
+{
+    stencilMask_ = QImage();
+    stencilEnabled_ = false;
+    emit stencilChanged();
+}
+
+bool Buffer::stencilColorSelected(int colorIndex) const
+{
+    return colorIndex >= 0 && colorIndex < stencilSelectedColors_.size() && stencilSelectedColors_[colorIndex];
+}
+
+void Buffer::setStencilColorSelected(int colorIndex, bool selected)
+{
+    if (colorIndex < 0)
+        return;
+    if (colorIndex >= stencilSelectedColors_.size())
+        stencilSelectedColors_.resize(colorIndex + 1);
+    if (stencilSelectedColors_[colorIndex] == selected)
+        return;
+    stencilSelectedColors_[colorIndex] = selected;
+    emit stencilColorsChanged();
+}
+
+void Buffer::clearStencilSelectedColors()
+{
+    stencilSelectedColors_.fill(false);
+    emit stencilColorsChanged();
+}
+
+void Buffer::invertStencilSelectedColors()
+{
+    int n = image_.colorTable().size();
+    if (stencilSelectedColors_.size() < n)
+        stencilSelectedColors_.resize(n);
+    for (int i = 0; i < n; i++)
+        stencilSelectedColors_[i] = !stencilSelectedColors_[i];
+    emit stencilColorsChanged();
+}
+
+void Buffer::setStencilSelectedColorsRestorePoint()
+{
+    stencilSelectedColorsRestore_ = stencilSelectedColors_;
+}
+
+void Buffer::restoreStencilSelectedColors()
+{
+    stencilSelectedColors_ = stencilSelectedColorsRestore_;
+    emit stencilColorsChanged();
 }
 
 void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers)

@@ -16,6 +16,7 @@ public:
     void setColor(const QColor &color);
     void setIsPaintColor(bool isPaintColor);
     void setIsEraseColor(bool isEraseColor);
+    void setStencilSelected(bool selected);
 
 signals:
     void paintColorSelected(unsigned paletteIndex);
@@ -36,6 +37,7 @@ private:
     bool eraseButtonDown;
     bool isPaintColor_ = false;
     bool isEraseColor_ = false;
+    bool stencilSelected_ = false;
     QPoint dragStartPos_;
 };
 

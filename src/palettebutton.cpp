@@ -35,6 +35,11 @@ void PaletteButton::paintEvent(QPaintEvent *)
         painter.setPen(Qt::white);
         painter.drawRect(r.adjusted(0, 0, -1, -1));
     }
+    if (stencilSelected_) {
+        painter.setPen(QPen(Qt::yellow, 1));
+        painter.setBrush(Qt::NoBrush);
+        painter.drawEllipse(r.adjusted(2, 2, -2, -2));
+    }
 }
 
 void PaletteButton::mousePressEvent(QMouseEvent *event)
@@ -120,4 +125,9 @@ void PaletteButton::setIsPaintColor(bool isPaintColor)
 void PaletteButton::setIsEraseColor(bool isEraseColor)
 {
     setColorFlag(isEraseColor_, isEraseColor);
+}
+
+void PaletteButton::setStencilSelected(bool selected)
+{
+    setColorFlag(stencilSelected_, selected);
 }

@@ -223,6 +223,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     ui_->dither2Btn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Dither2);
     ui_->negativeBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Negative);
     ui_->transpBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Transparent);
+    ui_->stencilBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Stencil);
 
     ui_->fillHorizontal->setChecked(fillModeSelected_ && activeGradientFillMode == FillHorizontal);
     ui_->fillVertical->setChecked(fillModeSelected_ && activeGradientFillMode == FillVertical);
@@ -245,7 +246,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     generalModeBtns_.clear();
     generalModeBtns_ << ui_->tintBtn << ui_->colorizeBtn << ui_->brightenBtn << ui_->darkenBtn
                      << ui_->smoothBtn << ui_->rangeBtn << ui_->dither1Btn << ui_->dither2Btn
-                     << ui_->negativeBtn << ui_->transpBtn;
+                     << ui_->negativeBtn << ui_->transpBtn << ui_->stencilBtn;
     fillSensitiveBtns_.clear();
     fillSensitiveBtns_ << ui_->mixBtn << ui_->smearBtn << ui_->avgSmearBtn << ui_->cycleBtn;
     fillModeBtns_.clear();
@@ -287,6 +288,7 @@ QWidget *DrawModeTool::createOptionsWidget()
     connectMode(ui_->dither2Btn,    Buffer::Dither2);
     connectMode(ui_->negativeBtn,   Buffer::Negative);
     connectMode(ui_->transpBtn,     Buffer::Transparent);
+    connectMode(ui_->stencilBtn,    Buffer::Stencil);
 
     for (auto &fb : fillModeBtns_) {
         connect(fb.first, &QRadioButton::clicked, [this, fm = fb.second]() {

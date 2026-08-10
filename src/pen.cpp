@@ -258,6 +258,8 @@ void Pen::applyPixelMode(const QPoint &p, Buffer *buffer,
                          Buffer::PaintMode mode, bool isErase,
                          unsigned paintColor, unsigned eraseColor)
 {
+    if (buffer->isStencilProtected(p))
+        return;
     unsigned paintC = isErase ? eraseColor : paintColor;
     unsigned eraseC = isErase ? paintColor : eraseColor;
     switch (mode) {

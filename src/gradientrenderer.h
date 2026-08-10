@@ -26,10 +26,11 @@ namespace GradientRenderer {
 
     // Applies a gradient fill with explicit from/to endpoints to a polygon.
     // Computes the bounding-box conformRect from the polygon itself when conform is true.
+    // buffer, when non-null, is consulted so stencil-protected pixels are left untouched.
     QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
                                int fillColor, const GradientRange *range,
                                GradientFillMode mode, const QPoint &gradFrom,
-                               const QPoint &gradTo, bool conform);
+                               const QPoint &gradTo, bool conform, Buffer *buffer = nullptr);
 
     // Computes the t value (0..1) for a pixel based on the fill mode.
     // For Horizontal/Vertical, from/to define the start and end of the gradient span.
@@ -43,11 +44,12 @@ namespace GradientRenderer {
     // gradFrom/gradTo are the gradient endpoints (caller handles hvMode logic).
     // range may be null when useGradient is false.
     // conformRect: when valid, scales the gradient to the bounding rect (see computeT).
+    // buffer, when non-null, is consulted so stencil-protected pixels are left untouched.
     QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
                               int fillColor, bool useGradient, const GradientRange *range,
                               GradientFillMode fillMode,
                               const QPoint &gradFrom, const QPoint &gradTo,
-                              const QRect &conformRect = QRect());
+                              const QRect &conformRect = QRect(), Buffer *buffer = nullptr);
 }
 
 #endif // GRADIENTRENDERER_H

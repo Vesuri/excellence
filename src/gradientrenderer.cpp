@@ -191,7 +191,7 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
                           int fillColor, bool useGradient, const GradientRange *range,
                           GradientFillMode fillMode,
                           const QPoint &gradFrom, const QPoint &gradTo,
-                          const QRect &conformRect)
+                          const QRect &conformRect, Buffer *buffer)
 {
     if (polygon.size() < 3)
         return QRect();
@@ -267,9 +267,11 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
                         }
                         t = computeT(x, y, fillMode, gradFrom, gradTo, pixConform);
                     }
+                    if (buffer && buffer->isStencilProtected(QPoint(x, y))) continue;
                     int ci = colorIndex(t, x, y, range, image);
                     image.setPixel(x, y, static_cast<uint>(ci));
                 } else {
+                    if (buffer && buffer->isStencilProtected(QPoint(x, y))) continue;
                     image.setPixel(x, y, static_cast<uint>(fillColor));
                 }
             }
@@ -283,13 +285,13 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
 QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
                            int fillColor, const GradientRange *range,
                            GradientFillMode mode, const QPoint &gradFrom,
-                           const QPoint &gradTo, bool conform)
+                           const QPoint &gradTo, bool conform, Buffer *buffer)
 {
     QRect polyBbox;
     for (const QPoint &p : polygon) polyBbox = polyBbox.united(QRect(p, p));
     QRect conformRect = conform ? polyBbox : QRect();
     QRect r = polygonFillScanline(image, polygon, fillColor, true, range,
-                                  mode, gradFrom, gradTo, conformRect);
+                                  mode, gradFrom, gradTo, conformRect, buffer);
 
     // Scanline fill may miss boundary pixels due to integer edge-intersection rounding.
     // Re-apply gradient to every polygon edge. For H/V conform, per-row/-column
@@ -301,6 +303,7 @@ QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
         QRect edgeConformRect = (conform && !hvMode && !shapeConform) ? polyBbox : QRect();
         auto applyGrad = [&](const QPoint &p) {
             if (!image.rect().contains(p)) return;
+            if (buffer && buffer->isStencilProtected(p)) return;
             float t;
             if (shapeConform) {
                 t = highlightTPolygon(p.x(), p.y(), gradFrom, polygon);

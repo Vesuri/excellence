@@ -219,16 +219,16 @@
           </widget>
          </item>
          <item>
-          <widget class="QRadioButton" name="stencilStub">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
+          <widget class="QRadioButton" name="stencilBtn">
            <property name="toolTip">
-            <string>General draw mode</string>
+            <string>Paint the stencil mask instead of the canvas [~]</string>
            </property>
            <property name="text">
             <string>Stencil</string>
            </property>
+           <attribute name="buttonGroup">
+            <string notr="true">modeGroup</string>
+           </attribute>
           </widget>
          </item>
         </layout>

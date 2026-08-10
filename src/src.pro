@@ -51,6 +51,7 @@ SOURCES += main.cpp\
     mirrortool.cpp \
     segmenttool.cpp \
     fixbackgroundtool.cpp \
+    stenciltool.cpp \
     defaultpalette.cpp \
     rawsaveoptionsdialog.cpp \
     importimagedialog.cpp \
@@ -97,6 +98,7 @@ HEADERS  += mainwindow.h \
     mirrortool.h \
     segmenttool.h \
     fixbackgroundtool.h \
+    stenciltool.h \
     spatial_color_quant.h \
     defaultpalette.h \
     rawsaveoptionsdialog.h \

@@ -20,7 +20,8 @@ class Buffer : public QObject
 public:
     enum PaintMode { Color, Smear, Smooth, Range, AverageSmear, Cycle, Random,
                      Tint, Colorize, Brighten, Darken, Mix, Negative,
-                     Dither1, Dither2, Transparent, BrushMode };
+                     Dither1, Dither2, Transparent, BrushMode, Stencil };
+    enum StencilApplyMode { StencilReplace, StencilAdd, StencilSubtract };
 
     explicit Buffer(int width = 640, int height = 512, int colors = 32, QObject *parent = nullptr);
     explicit Buffer(const QString &path, QObject *parent = nullptr);
@@ -107,6 +108,27 @@ public:
     bool fixBackgroundLocked() const { return !fixedBackground_.isNull(); }
     void setFixBackgroundLocked(bool locked);
 
+    // Stencil
+    bool hasStencil() const { return !stencilMask_.isNull(); }
+    bool stencilEnabled() const { return stencilEnabled_; }
+    void setStencilEnabled(bool enabled);
+    bool isStencilProtected(const QPoint &p) const;
+    const QImage &stencilMask() const { return stencilMask_; }
+    void setStencilPixel(const QPoint &p, bool protect);
+    void stencilFromForeground();
+    void applyStencilColors(StencilApplyMode mode);
+    void invertStencilMask();
+    void deleteStencilMask();
+
+    // Stencil selected-colors working set (Stencil Tool options, Colors section).
+    // No undo history is kept for this set or for the mask itself, by design.
+    bool stencilColorSelected(int colorIndex) const;
+    void setStencilColorSelected(int colorIndex, bool selected);
+    void clearStencilSelectedColors();
+    void invertStencilSelectedColors();
+    void setStencilSelectedColorsRestorePoint();
+    void restoreStencilSelectedColors();
+
 public slots:
     void clear();
     void clearWithColor(unsigned colorIndex);
@@ -138,6 +160,8 @@ signals:
     void penModified();
     void segmentChanged();
     void fixBackgroundChanged();
+    void stencilChanged();
+    void stencilColorsChanged();
 
 private:
     void initialize(int width = 640, int height = 512, int colors = 32);
@@ -182,6 +206,10 @@ private:
     QPoint segmentLastVisited_;
     QList<QPoint> segmentPath_;
     QImage fixedBackground_;
+    QImage stencilMask_;
+    bool stencilEnabled_ = false;
+    QVector<bool> stencilSelectedColors_;
+    QVector<bool> stencilSelectedColorsRestore_;
 };
 
 inline QString paintModeName(Buffer::PaintMode mode)
@@ -204,6 +232,7 @@ inline QString paintModeName(Buffer::PaintMode mode)
     case Buffer::Dither2:     return "Dither 2";
     case Buffer::Transparent: return "Transparent";
     case Buffer::BrushMode:   return "Brush";
+    case Buffer::Stencil:     return "Stencil";
     }
     return {};
 }

@@ -150,7 +150,7 @@ QRect DrawTool::release(const QPoint &point)
             for (const QPoint &p : pathPoints_) polyBbox = polyBbox.united(QRect(p, p));
             changedRect = changedRect.united(GradientRenderer::polygonFillScanline(
                 buffer_->image(), pathPoints_, fillColor, false, nullptr,
-                FillFlat, QPoint(), QPoint(), QRect()));
+                FillFlat, QPoint(), QPoint(), QRect(), buffer_));
             pendingPathPoints_ = pathPoints_;
             rubberBand_.start(polyBbox.center());
         } else {
@@ -191,7 +191,7 @@ QRect DrawTool::applyPolygonGradient(const QList<QPoint> &path, const QPoint &gr
 {
     return GradientRenderer::applyPolygonGradient(buffer_->image(), path,
         static_cast<int>(buffer_->paintColor()), &gradientRanges[activeGradientRange],
-        activeGradientFillMode, gradFrom, gradTo, conformFill);
+        activeGradientFillMode, gradFrom, gradTo, conformFill, buffer_);
 }
 
 QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
@@ -208,9 +208,9 @@ QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
     if (useGradient)
         return GradientRenderer::applyPolygonGradient(image, pathPoints_, fillColor,
             &gradientRanges[activeGradientRange], activeGradientFillMode,
-            gradFrom, gradTo, conformFill);
+            gradFrom, gradTo, conformFill, buffer_);
     return GradientRenderer::polygonFillScanline(image, pathPoints_, fillColor,
-        false, nullptr, activeGradientFillMode, gradFrom, gradTo, QRect());
+        false, nullptr, activeGradientFillMode, gradFrom, gradTo, QRect(), buffer_);
 }
 
 void DrawTool::registerTool()

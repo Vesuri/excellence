@@ -83,6 +83,8 @@ QRect AirbrushTool::paintDot(const QPoint &point)
 
     switch (sprayMode_) {
     case FineSpray:
+        if (buffer_->isStencilProtected(point))
+            return QRect();
         img.setPixel(point.x(), point.y(),
                      erasing_ ? buffer_->eraseColor() : buffer_->paintColor());
         return QRect(point, point);
@@ -105,7 +107,7 @@ QRect AirbrushTool::paintDot(const QPoint &point)
                     continue;
                 QPoint cp(point.x() + bx - bimg.width() / 2,
                           point.y() + by - bimg.height() / 2);
-                if (img.rect().contains(cp)) {
+                if (img.rect().contains(cp) && !buffer_->isStencilProtected(cp)) {
                     img.setPixel(cp, color);
                     return QRect(cp, cp);
                 }
@@ -115,6 +117,8 @@ QRect AirbrushTool::paintDot(const QPoint &point)
 
         if (sprayTip_) {
             if (sprayTip_->width() == 1 && sprayTip_->height() == 1) {
+                if (buffer_->isStencilProtected(point))
+                    return QRect();
                 img.setPixel(point, color);
                 return QRect(point, point);
             }
@@ -125,7 +129,7 @@ QRect AirbrushTool::paintDot(const QPoint &point)
                 if (sprayTip_->shape() == PenTip::Circle && dx * dx + dy * dy > hw * hw + hw / 2)
                     continue;
                 QPoint cp(point.x() + dx, point.y() + dy);
-                if (img.rect().contains(cp)) {
+                if (img.rect().contains(cp) && !buffer_->isStencilProtected(cp)) {
                     img.setPixel(cp, color);
                     return QRect(cp, cp);
                 }
@@ -133,6 +137,8 @@ QRect AirbrushTool::paintDot(const QPoint &point)
             return QRect();
         }
 
+        if (buffer_->isStencilProtected(point))
+            return QRect();
         img.setPixel(point, color);
         return QRect(point, point);
     }

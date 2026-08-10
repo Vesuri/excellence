@@ -212,6 +212,7 @@ QRect RectangleTool::applyGradientRect(const QRect &fillRect, const QPoint &grad
             } else {
                 t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, conformRect);
             }
+            if (buffer_->isStencilProtected(QPoint(x, y))) continue;
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
         }

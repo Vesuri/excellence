@@ -44,7 +44,8 @@ QRect FillTool::flatFill(const QPoint &seed, int fillColor)
         while (x2 < image.width() - 1 && image.pixelIndex(x2 + 1, p.y()) == targetColor) x2++;
 
         for (int x = x1; x <= x2; x++)
-            image.setPixel(x, p.y(), static_cast<uint>(fillColor));
+            if (!buffer_->isStencilProtected(QPoint(x, p.y())))
+                image.setPixel(x, p.y(), static_cast<uint>(fillColor));
         changedRect = changedRect.united(QRect(x1, p.y(), x2 - x1 + 1, 1));
 
         bool prevAbove = false, prevBelow = false;
@@ -160,6 +161,7 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
                 }
                 if (activeGradientFillMode == FillSpherical)
                     t = sphericalT(t);
+                if (buffer_->isStencilProtected(QPoint(x, y))) continue;
                 int ci = GradientRenderer::colorIndex(t, x, y, range, image);
                 image.setPixel(x, y, static_cast<uint>(ci));
             }
@@ -212,6 +214,7 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
             }
             else if (conformFill)
                 pixConform = visitedRect_;
+            if (buffer_->isStencilProtected(QPoint(x, y))) continue;
             float t = GradientRenderer::computeT(x, y, activeGradientFillMode, gradFrom, gradTo, pixConform);
             int ci = GradientRenderer::colorIndex(t, x, y, range, image);
             image.setPixel(x, y, static_cast<uint>(ci));
@@ -305,7 +308,8 @@ QRect FillTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
             for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
                 for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
                     if (y >= 0 && y < visitedH_ && x >= 0 && x < visitedW_
-                            && visited_[y * visitedW_ + x])
+                            && visited_[y * visitedW_ + x]
+                            && !buffer_->isStencilProtected(QPoint(x, y)))
                         image.setPixel(x, y, static_cast<uint>(fillColor));
                 }
             }

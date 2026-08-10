@@ -45,7 +45,7 @@ bool PenTip::inTip(int dx, int dy, int hw, int hh) const
 void PenTip::applyColor(const QPoint &point, Buffer *buffer, unsigned color) const
 {
     if (width_ == 1 && height_ == 1) {
-        if (buffer->image().rect().contains(point))
+        if (buffer->image().rect().contains(point) && !buffer->isStencilProtected(point))
             buffer->image().setPixel(point, color);
         return;
     }
@@ -55,7 +55,7 @@ void PenTip::applyColor(const QPoint &point, Buffer *buffer, unsigned color) con
         for (int dx = -hw; dx <= hw; dx++) {
             if (inTip(dx, dy, hw, hh)) {
                 QPoint p(point.x() + dx, point.y() + dy);
-                if (imageRect.contains(p))
+                if (imageRect.contains(p) && !buffer->isStencilProtected(p))
                     buffer->image().setPixel(p, color);
             }
         }
@@ -74,12 +74,24 @@ void PenTip::applyBrushMode(const QPoint &point, Buffer *buffer) const
     QRect imageRect = buffer->image().rect();
     auto doPixel = [&](const QPoint &p) {
         if (!imageRect.contains(p)) return;
+        if (buffer->isStencilProtected(p)) return;
         int bx = ((p.x() % bw) + bw) % bw;
         int by = ((p.y() % bh) + bh) % bh;
         int ci = stamp.pixelIndex(bx, by);
         if (ci == transparent) return;
         buffer->image().setPixel(p, static_cast<uint>(ci));
     };
+    if (width_ == 1 && height_ == 1) { doPixel(point); return; }
+    int hw = width_ / 2, hh = height_ / 2;
+    for (int dy = -hh; dy <= hh; dy++)
+        for (int dx = -hw; dx <= hw; dx++)
+            if (inTip(dx, dy, hw, hh))
+                doPixel(QPoint(point.x() + dx, point.y() + dy));
+}
+
+void PenTip::applyStencilTipAt(const QPoint &point, Buffer *buffer, bool erase) const
+{
+    auto doPixel = [&](const QPoint &p) { buffer->setStencilPixel(p, !erase); };
     if (width_ == 1 && height_ == 1) { doPixel(point); return; }
     int hw = width_ / 2, hh = height_ / 2;
     for (int dy = -hh; dy <= hh; dy++)
@@ -127,6 +139,8 @@ QRect PenTip::paint(const QPoint &point, Buffer *buffer) const
         if (!active[i]) continue;
         if (mode == Buffer::BrushMode)
             applyBrushMode(pts[i], buffer);
+        else if (mode == Buffer::Stencil)
+            applyStencilTipAt(pts[i], buffer, false);
         else
             applyTipAt(pts[i], buffer, mode, isErase, paintC, eraseColor_);
         changed = changed.united(rect(pts[i]));
@@ -164,7 +178,10 @@ QRect PenTip::erase(const QPoint &point, Buffer *buffer) const
     QRect changed;
     for (int i = 0; i < 4; i++) {
         if (!active[i]) continue;
-        applyTipAt(pts[i], buffer, eraseMode, isErase, paintC, eraseColor_);
+        if (mode == Buffer::Stencil)
+            applyStencilTipAt(pts[i], buffer, true);
+        else
+            applyTipAt(pts[i], buffer, eraseMode, isErase, paintC, eraseColor_);
         changed = changed.united(rect(pts[i]));
     }
     return changed.intersected(buffer->image().rect());

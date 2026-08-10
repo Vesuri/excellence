@@ -242,6 +242,7 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
             }
             t = GradientRenderer::computeT(p.x(), p.y(), activeGradientFillMode, gradFrom, gradTo, pixConform);
         }
+        if (buffer_->isStencilProtected(p)) return;
         int ci = GradientRenderer::colorIndex(t, p.x(), p.y(), range, image);
         image.setPixel(p.x(), p.y(), static_cast<uint>(ci));
     });

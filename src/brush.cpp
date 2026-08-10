@@ -45,13 +45,16 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
             if (!imageRect.contains(p))
                 continue;
 
-            if (isErase) {
+            if (mode == Buffer::Stencil) {
+                buffer->setStencilPixel(p, !isErase);
+            } else if (isErase) {
                 // Erase: Brush mode treated as Normal (use eraseColor, not brush pixel)
                 Buffer::PaintMode eraseMode = (mode == Buffer::BrushMode) ? Buffer::Color : mode;
                 Pen::applyPixelMode(p, buffer, eraseMode, effectiveErase, paintC, eraseC);
             } else if (mode == Buffer::BrushMode) {
                 // Stamp the brush's own pixel colors
-                buffer->image().setPixel(p, static_cast<uint>(idx));
+                if (!buffer->isStencilProtected(p))
+                    buffer->image().setPixel(p, static_cast<uint>(idx));
             } else {
                 Pen::applyPixelMode(p, buffer, mode, effectiveErase, paintC, eraseC);
             }

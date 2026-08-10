@@ -335,16 +335,16 @@ QRect LineTool::polygonFill()
     if (useGradient)
         return GradientRenderer::applyPolygonGradient(image, vertices_, fillColor,
             &gradientRanges[activeGradientRange], activeGradientFillMode,
-            gradFrom, gradTo, conformFill);
+            gradFrom, gradTo, conformFill, buffer_);
     return GradientRenderer::polygonFillScanline(image, vertices_, fillColor,
-        false, nullptr, activeGradientFillMode, gradFrom, gradTo, QRect());
+        false, nullptr, activeGradientFillMode, gradFrom, gradTo, QRect(), buffer_);
 }
 
 QRect LineTool::applyPolygonGradient(const QList<QPoint> &verts, const QPoint &gradFrom, const QPoint &gradTo)
 {
     return GradientRenderer::applyPolygonGradient(buffer_->image(), verts,
         static_cast<int>(buffer_->paintColor()), &gradientRanges[activeGradientRange],
-        activeGradientFillMode, gradFrom, gradTo, conformFill);
+        activeGradientFillMode, gradFrom, gradTo, conformFill, buffer_);
 }
 
 // Flat-fills `vertices_` with the foreground colour and enters the rubber band phase.
@@ -358,7 +358,7 @@ QRect LineTool::startLinearRubberBand(QRect changedRect)
     changedRect = changedRect.united(GradientRenderer::polygonFillScanline(
         buffer_->image(), pendingVertices_,
         static_cast<int>(buffer_->paintColor()), false, nullptr,
-        FillFlat, QPoint(), QPoint(), QRect()));
+        FillFlat, QPoint(), QPoint(), QRect(), buffer_));
     rubberBand_.start(polyBbox.center());
     return changedRect;
 }

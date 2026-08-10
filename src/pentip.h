@@ -38,6 +38,7 @@ private:
                     unsigned paintColor, unsigned eraseColor) const;
     void applyColor(const QPoint &point, Buffer *buffer, unsigned color) const;
     void applyBrushMode(const QPoint &point, Buffer *buffer) const;
+    void applyStencilTipAt(const QPoint &point, Buffer *buffer, bool erase) const;
 
     unsigned paintColor_;
     unsigned eraseColor_;
