@@ -38,6 +38,10 @@ signals:
     void squashDialogsRequested();
     void toggleAllDialogsRequested();
     void fullScreenEntered();
+    void toggleWorkSpareRequested();
+    void addBufferRequested();
+    void previousBufferRequested();
+    void nextBufferRequested();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

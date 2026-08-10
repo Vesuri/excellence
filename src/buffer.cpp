@@ -63,6 +63,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     gridOffsetX_(0), gridOffsetY_(0),
     mirrorX_(false), mirrorY_(false),
     mirrorCenterX_(0), mirrorCenterY_(0),
+    dirty_(false),
     brushTransparentIndex_(-1)
 {
     if (!path.isEmpty()) {
@@ -104,6 +105,7 @@ Buffer::Buffer(const QImage &image, const QString &path, QObject *parent) : QObj
     gridOffsetX_(0), gridOffsetY_(0),
     mirrorX_(false), mirrorY_(false),
     mirrorCenterX_(0), mirrorCenterY_(0),
+    dirty_(false),
     brushTransparentIndex_(-1)
 {
     if (image_.isNull() || image_.format() != QImage::Format_Indexed8) {
@@ -653,6 +655,39 @@ QRect Buffer::finalizeSegmentStroke()
     }
     segmentActive_ = true;
     return result;
+}
+
+void Buffer::copyFrom(const Buffer *source)
+{
+    if (!source) return;
+    undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
+    qDeleteAll(redoStack); redoStack.clear();
+    const QImage &src = source->image_;
+    int w = qMin(image_.width(), src.width()), h = qMin(image_.height(), src.height());
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            image_.setPixel(x, y, static_cast<uint>(src.pixelIndex(x, y)));
+    notifyModified(image_.rect());
+}
+
+void Buffer::mergeFrom(const Buffer *source, bool front)
+{
+    if (!source) return;
+    undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
+    qDeleteAll(redoStack); redoStack.clear();
+    const QImage &src = source->image_;
+    unsigned srcBg = source->eraseColor();
+    unsigned dstBg = eraseColor_;
+    int w = qMin(image_.width(), src.width()), h = qMin(image_.height(), src.height());
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            unsigned s = static_cast<unsigned>(src.pixelIndex(x, y));
+            if (s == srcBg) continue;
+            if (front) { image_.setPixel(x, y, s); }
+            else if (static_cast<unsigned>(image_.pixelIndex(x, y)) == dstBg) { image_.setPixel(x, y, s); }
+        }
+    }
+    notifyModified(image_.rect());
 }
 
 void Buffer::setGridEnabled(bool enabled)

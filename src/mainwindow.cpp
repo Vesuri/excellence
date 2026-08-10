@@ -16,7 +16,9 @@
 #include <QSizePolicy>
 #include <QTimer>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QImageWriter>
+#include <QPushButton>
 #include <QImageReader>
 #include <QMessageBox>
 #include <QApplication>
@@ -28,6 +30,8 @@
 #include "palettequantizer.h"
 #include "propertiesdialog.h"
 #include "buffer.h"
+#include "bufferlistdialog.h"
+#include "buffertool.h"
 #include "bufferview.h"
 #include "drawtool.h"
 #include "linetool.h"
@@ -49,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent) :
     savePaletteDialog(new QFileDialog(nullptr, tr("Save palette"))),
     propertiesDialog(new PropertiesDialog),
     buffer(nullptr),
+    bufferListDialog_(new BufferListDialog(this)),
     penTip(new PenTip(this)),
     toolPenTip(new PenTip(this)),
     paletteMode(Pick)
@@ -117,6 +122,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionFileSaveWithTransparency, &QAction::toggled, [this](bool checked) {
         saveWithTransparency_ = checked;
     });
+    connect(ui->actionBufferToggleWorkSpare, SIGNAL(triggered()), this, SLOT(toggleWorkSpare()));
+    connect(ui->actionBufferMarkAsSpare,     SIGNAL(triggered()), this, SLOT(markAsSpare()));
+    connect(ui->actionBufferGoToSpare,       SIGNAL(triggered()), this, SLOT(goToSpare()));
+    connect(ui->actionBufferCopySpareToWork, SIGNAL(triggered()), this, SLOT(bufferCopySpareToWork()));
+    connect(ui->actionBufferMergeFront,      SIGNAL(triggered()), this, SLOT(bufferMergeFront()));
+    connect(ui->actionBufferMergeBack,       SIGNAL(triggered()), this, SLOT(bufferMergeBack()));
+    connect(ui->actionBufferShowBuffers,     SIGNAL(triggered()), this, SLOT(showBufferDialog()));
+    connect(this, &MainWindow::bufferListChanged, this, &MainWindow::updateBufferMenuState);
+    connect(&BufferTool::instance, &BufferTool::showBuffersRequested, this, &MainWindow::showBufferDialog);
     connect(ui->actionImageCopy, SIGNAL(triggered()), this, SLOT(imageCopy()));
     connect(ui->actionImagePaste, SIGNAL(triggered()), this, SLOT(imagePaste()));
     connect(ui->actionImageCopyColor, SIGNAL(triggered()), this, SLOT(imageCopyColor()));
@@ -167,7 +181,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionWindowFloatPanels, &QAction::toggled, this, &MainWindow::toggleFloatPanels);
     connect(ui->actionWindowSingleWindow, &QAction::toggled, this, &MainWindow::toggleSingleWindowMode);
     connect(ui->actionHelpAbout, &QAction::triggered, this, &MainWindow::about);
-    connect(propertiesDialog, SIGNAL(bufferChanged(Buffer *)), this, SLOT(setBuffer(Buffer *)));
+    connect(propertiesDialog, &PropertiesDialog::bufferChanged, this, &MainWindow::replaceActiveBufferSlot);
     connect(penTip, &PenTip::sizeChanged, this, [this](int, int) { updateStatusBarStatic(); });
 
     setAttribute(Qt::WA_Hover);
@@ -253,8 +267,16 @@ void MainWindow::initialize()
 {
     Tool::setMainWindow(this);
 
-    QStringList arguments = qApp->arguments();
-    openFile(arguments.length() > 1 ? arguments.last() : QString());
+    QStringList args = qApp->arguments();
+    QString startupPath = args.length() > 1 ? args.last() : QString();
+    Buffer *work = startupPath.isEmpty() ? new Buffer(640, 512, 32, this) : new Buffer(startupPath, this);
+    wireBuffer(work);
+    buffers_ = { work };
+    activeIndex_ = 0;
+    workIndex_ = 0;
+    spareIndex_ = -1;
+    preSpareIndex_ = -1;
+    activateBuffer(work);
 
     penTip->setPaintColor(buffer->paintColor());
     penTip->setEraseColor(buffer->eraseColor());
@@ -265,34 +287,66 @@ void MainWindow::initialize()
     activateWindow();
     raise();
 
-    for (int i = 0; i < tools.count(); i++) {
-        tools.at(i)->addButtonToGridLayout(ui->toolsLayout);
-        tools.at(i)->setBuffer(buffer);
-    }
-
-
-    for (Tool *tool : tools) {
-        if (qobject_cast<DrawTool *>(tool)) { buffer->setTool(tool); break; }
-    }
+    for (Tool *tool : tools)
+        tool->addButtonToGridLayout(ui->toolsLayout);
 
     QTimer::singleShot(0, this, [this]() {
         centralWidget()->setMinimumHeight(centralWidget()->height());
     });
+
+    emit bufferListChanged();
 }
 
-void MainWindow::setBuffer(Buffer *newBuffer)
+int MainWindow::bufferCount() const
 {
-    Buffer *oldBuffer = buffer;
-    buffer = newBuffer;
-    for (int i = 0; i < tools.count(); i++) {
-        tools.at(i)->setBuffer(buffer);
-    }
+    return buffers_.count();
+}
 
-    buffer->setPen(penTip);
-    buffer->setToolPen(toolPenTip);
-    for (Tool *tool : tools) {
-        if (qobject_cast<DrawTool *>(tool)) { buffer->setTool(tool); break; }
-    }
+Buffer *MainWindow::bufferAt(int index) const
+{
+    return buffers_.value(index);
+}
+
+int MainWindow::activeBufferIndex() const
+{
+    return activeIndex_;
+}
+
+int MainWindow::spareBufferIndex() const
+{
+    return spareIndex_;
+}
+
+int MainWindow::workBufferIndex() const
+{
+    return workIndex_;
+}
+
+void MainWindow::disconnectBufferSignals(Buffer *b)
+{
+    if (!b) return;
+    disconnect(b, &Buffer::paletteModified, this, nullptr);
+    disconnect(b, &Buffer::paintColorChanged, this, nullptr);
+    disconnect(b, &Buffer::eraseColorChanged, this, nullptr);
+    disconnect(b, &Buffer::paintColorChanged, penTip, nullptr);
+    disconnect(b, &Buffer::eraseColorChanged, penTip, nullptr);
+    disconnect(b, &Buffer::paintColorChanged, toolPenTip, nullptr);
+    disconnect(b, &Buffer::eraseColorChanged, toolPenTip, nullptr);
+    disconnect(b, &Buffer::dirtyChanged, this, nullptr);
+    disconnect(b, &Buffer::toolChanged, this, nullptr);
+    disconnect(b, &Buffer::penChanged, this, nullptr);
+    disconnect(b, &Buffer::paintModeChanged, this, nullptr);
+    disconnect(b, &Buffer::paintColorChanged, statusColorsButton_, nullptr);
+    disconnect(b, &Buffer::eraseColorChanged, statusColorsButton_, nullptr);
+}
+
+void MainWindow::activateBuffer(Buffer *newBuffer)
+{
+    if (buffer && buffer != newBuffer)
+        disconnectBufferSignals(buffer);
+    buffer = newBuffer;
+    for (Tool *tool : tools)
+        tool->setBuffer(buffer);
 
     foreach (BufferView *bufferView, bufferViews) {
         bufferView->setBuffer(buffer);
@@ -344,8 +398,208 @@ void MainWindow::setBuffer(Buffer *newBuffer)
     connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), statusColorsButton_, SLOT(setPaintColor(unsigned,QColor)));
     connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), statusColorsButton_, SLOT(setEraseColor(unsigned,QColor)));
     updateStatusBarStatic();
+}
 
-    delete oldBuffer;
+void MainWindow::wireBuffer(Buffer *b)
+{
+    b->setPen(penTip);
+    b->setToolPen(toolPenTip);
+    for (Tool *tool : tools) {
+        if (qobject_cast<DrawTool *>(tool)) { b->setTool(tool); break; }
+    }
+}
+
+void MainWindow::setActiveBufferIndex(int index)
+{
+    if (index < 0 || index >= buffers_.count() || index == activeIndex_)
+        return;
+    activeIndex_ = index;
+    if (activeIndex_ != spareIndex_ && activeIndex_ != workIndex_)
+        workIndex_ = activeIndex_;
+    activateBuffer(buffers_[activeIndex_]);
+    emit bufferListChanged();
+}
+
+void MainWindow::replaceActiveBufferSlot(Buffer *newBuffer)
+{
+    wireBuffer(newBuffer);
+    Buffer *old = buffers_[activeIndex_];
+    buffers_[activeIndex_] = newBuffer;
+    activateBuffer(newBuffer);
+    delete old;
+    emit bufferListChanged();
+}
+
+void MainWindow::resetBufferList(Buffer *work, Buffer *spare)
+{
+    wireBuffer(work);
+    wireBuffer(spare);
+    QList<Buffer *> old = buffers_;
+    buffers_ = { work, spare };
+    activeIndex_ = 0;
+    workIndex_ = 0;
+    spareIndex_ = 1;
+    preSpareIndex_ = -1;
+    activateBuffer(work);
+    qDeleteAll(old);
+    emit bufferListChanged();
+}
+
+Buffer *MainWindow::cloneBuffer(Buffer *source)
+{
+    int w = source->image().width(), h = source->image().height(), colors = source->image().colorCount();
+    Buffer *b = new Buffer(w, h, colors, this);
+    for (int i = 0; i < colors; i++)
+        b->image().setColor(i, source->image().color(i));
+    b->image().setDotsPerMeterX(source->image().dotsPerMeterX());
+    b->image().setDotsPerMeterY(source->image().dotsPerMeterY());
+    wireBuffer(b);
+    return b;
+}
+
+void MainWindow::addBuffer()
+{
+    Buffer *b = cloneBuffer(buffer);
+    buffers_.append(b);
+    int newIndex = buffers_.count() - 1;
+    if (spareIndex_ < 0)
+        spareIndex_ = newIndex;
+    setActiveBufferIndex(newIndex);
+}
+
+bool MainWindow::deleteBufferAt(int index)
+{
+    if (index < 0 || index >= buffers_.count() || buffers_.count() <= 1)
+        return false;
+    Buffer *target = buffers_[index];
+    if (!confirmDiscard(target))
+        return false;
+    bool wasActive = (index == activeIndex_);
+    bool wasSpare = (index == spareIndex_);
+    bool wasWork = (index == workIndex_);
+    buffers_.removeAt(index);
+    if (activeIndex_ > index) activeIndex_--;
+    if (spareIndex_ > index) spareIndex_--;
+    if (workIndex_ > index) workIndex_--;
+    if (preSpareIndex_ > index) preSpareIndex_--;
+    else if (preSpareIndex_ == index) preSpareIndex_ = -1;
+    if (wasSpare) spareIndex_ = -1;
+    if (wasWork) workIndex_ = qMin(index, buffers_.count() - 1);
+    if (wasActive) {
+        activeIndex_ = qMin(index, buffers_.count() - 1);
+        activateBuffer(buffers_[activeIndex_]);
+    }
+    delete target;
+    emit bufferListChanged();
+    return true;
+}
+
+void MainWindow::toggleWorkSpare()
+{
+    if (spareIndex_ < 0) {
+        // No spare exists yet — create one from the current buffer and switch to it.
+        Buffer *b = cloneBuffer(buffer);
+        buffers_.append(b);
+        spareIndex_ = buffers_.count() - 1;
+        preSpareIndex_ = activeIndex_;
+        setActiveBufferIndex(spareIndex_);
+        return;
+    }
+    if (activeIndex_ == spareIndex_) {
+        int target = preSpareIndex_;
+        if (target < 0 || target >= buffers_.count() || target == spareIndex_)
+            target = workIndex_;
+        if (target < 0 || target >= buffers_.count() || target == spareIndex_) {
+            target = -1;
+            for (int i = 0; i < buffers_.count(); i++) {
+                if (i != spareIndex_) { target = i; break; }
+            }
+        }
+        if (target >= 0)
+            setActiveBufferIndex(target);
+    } else {
+        preSpareIndex_ = activeIndex_;
+        setActiveBufferIndex(spareIndex_);
+    }
+}
+
+void MainWindow::markAsSpare()
+{
+    if (spareIndex_ == activeIndex_)
+        return;
+    int oldSpare = spareIndex_;
+    spareIndex_ = activeIndex_;
+    if (workIndex_ == activeIndex_)
+        workIndex_ = oldSpare;
+    emit bufferListChanged();
+}
+
+void MainWindow::goToSpare()
+{
+    if (spareIndex_ >= 0 && activeIndex_ != spareIndex_) {
+        preSpareIndex_ = activeIndex_;
+        setActiveBufferIndex(spareIndex_);
+    }
+}
+
+void MainWindow::previousBuffer()
+{
+    if (buffers_.count() > 1)
+        setActiveBufferIndex((activeIndex_ - 1 + buffers_.count()) % buffers_.count());
+}
+
+void MainWindow::nextBuffer()
+{
+    if (buffers_.count() > 1)
+        setActiveBufferIndex((activeIndex_ + 1) % buffers_.count());
+}
+
+void MainWindow::bufferCopySpareToWork()
+{
+    if (workIndex_ >= 0 && spareIndex_ >= 0 && workIndex_ != spareIndex_)
+        buffers_[workIndex_]->copyFrom(buffers_[spareIndex_]);
+}
+
+void MainWindow::bufferMergeFront()
+{
+    if (workIndex_ < 0 || spareIndex_ < 0 || workIndex_ == spareIndex_)
+        return;
+    if (activeIndex_ == workIndex_)
+        buffer->mergeFrom(buffers_[spareIndex_], true);
+    else if (activeIndex_ == spareIndex_)
+        buffer->mergeFrom(buffers_[workIndex_], true);
+}
+
+void MainWindow::bufferMergeBack()
+{
+    if (workIndex_ < 0 || spareIndex_ < 0 || workIndex_ == spareIndex_)
+        return;
+    if (activeIndex_ == workIndex_)
+        buffer->mergeFrom(buffers_[spareIndex_], false);
+    else if (activeIndex_ == spareIndex_)
+        buffer->mergeFrom(buffers_[workIndex_], false);
+}
+
+void MainWindow::showBufferDialog()
+{
+    bufferListDialog_->refresh();
+    bufferListDialog_->show();
+    bufferListDialog_->raise();
+    bufferListDialog_->activateWindow();
+}
+
+void MainWindow::updateBufferMenuState()
+{
+    bool hasSpare = spareIndex_ >= 0;
+    bool hasWork = workIndex_ >= 0;
+    bool onSpare = (activeIndex_ == spareIndex_);
+    bool onWorkOrSpare = (activeIndex_ == workIndex_ || activeIndex_ == spareIndex_);
+    bool enableMergeActions = hasWork && hasSpare && onWorkOrSpare;
+    ui->actionBufferMarkAsSpare->setEnabled(!onSpare);
+    ui->actionBufferGoToSpare->setEnabled(hasSpare && !onSpare);
+    ui->actionBufferCopySpareToWork->setEnabled(hasWork && hasSpare);
+    ui->actionBufferMergeFront->setEnabled(enableMergeActions);
+    ui->actionBufferMergeBack->setEnabled(enableMergeActions);
 }
 
 void MainWindow::updatePalette()
@@ -362,8 +616,61 @@ void MainWindow::updatePalette()
 
 void MainWindow::openFile(const QString &path)
 {
-    setBuffer(new Buffer(path, this));
+    if (!confirmDiscard(buffer))
+        return;
+
+    if (path.isEmpty()) {
+        replaceActiveBufferSlot(new Buffer(640, 512, buffer->image().colorCount(), this));
+        return;
+    }
+
+    Buffer *incoming = new Buffer(path, this);
+    int incomingColors = incoming->image().colorCount();
+    int currentColors = buffer->image().colorCount();
     openDialog->setDirectory(path);
+
+    if (incomingColors == currentColors) {
+        replaceActiveBufferSlot(incoming);
+        return;
+    }
+
+    switch (askChangeMode(incoming->image(), path)) {
+    case ChangeModeChoice::Change: {
+        Buffer *spare = cloneBuffer(incoming);
+        resetBufferList(incoming, spare);
+        break;
+    }
+    case ChangeModeChoice::KeepCurrent: {
+        QImage rgb = incoming->image().convertToFormat(QImage::Format_RGB32);
+        QImage quantized = PaletteQuantizer::quantize(rgb, currentColors, DitherMode::None);
+        replaceActiveBufferSlot(new Buffer(quantized, path, this));
+        delete incoming;
+        break;
+    }
+    case ChangeModeChoice::Cancel:
+    default:
+        delete incoming;
+        break;
+    }
+}
+
+MainWindow::ChangeModeChoice MainWindow::askChangeMode(const QImage &incoming, const QString &incomingPath)
+{
+    QMessageBox box(this);
+    box.setWindowTitle(tr("Change Mode?"));
+    box.setText(tr("\"%1\" is %2\xc3\x97%3 with %4 colors.\nThe current buffer is %5\xc3\x97%6 with %7 colors.\n\n"
+                    "Change adopts the new image's size and color count, and discards all other buffers (including Spare).\n"
+                    "Keep Current preserves the current color count \xe2\x80\x94 the image is requantized to it and loaded at its own size into this buffer only.")
+        .arg(QFileInfo(incomingPath).fileName()).arg(incoming.width()).arg(incoming.height()).arg(incoming.colorCount())
+        .arg(buffer->image().width()).arg(buffer->image().height()).arg(buffer->image().colorCount()));
+    QPushButton *changeBtn = box.addButton(tr("Change"), QMessageBox::AcceptRole);
+    QPushButton *keepBtn   = box.addButton(tr("Keep Current"), QMessageBox::ActionRole);
+    box.addButton(tr("Cancel"), QMessageBox::RejectRole);
+    box.setDefaultButton(changeBtn);
+    box.exec();
+    if (box.clickedButton() == changeBtn) return ChangeModeChoice::Change;
+    if (box.clickedButton() == keepBtn) return ChangeModeChoice::KeepCurrent;
+    return ChangeModeChoice::Cancel;
 }
 
 void MainWindow::importFile(const QString &path)
@@ -400,8 +707,50 @@ void MainWindow::importFile(const QString &path)
     indexed.setDotsPerMeterX(loaded.dotsPerMeterX());
     indexed.setDotsPerMeterY(loaded.dotsPerMeterY());
 
-    setBuffer(new Buffer(indexed, path, this));
+    replaceActiveBufferSlot(new Buffer(indexed, path, this));
     importDialog->setDirectory(path);
+}
+
+bool MainWindow::writeBufferToDisk(Buffer *target, const QString &path, const RawSaveOptions &rawOptions)
+{
+    target->clearHoverPreview();
+    QImage saveImage = target->image();
+    if (saveWithTransparency_ && path.toLower().endsWith(".png")) {
+        int eraseIdx = static_cast<int>(target->eraseColor());
+        QRgb c = saveImage.color(eraseIdx);
+        saveImage.setColor(eraseIdx, qRgba(qRed(c), qGreen(c), qBlue(c), 0));
+    }
+    bool writeOk = false;
+    QString errorString;
+    if (path.toLower().endsWith(".raw")) {
+        QFile file(path);
+        if (!file.open(QIODevice::WriteOnly)) {
+            errorString = file.errorString();
+        } else {
+            RawHandler handler;
+            handler.setDevice(&file);
+            handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::Interleave),       rawOptions.interleave);
+            handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::WordAlign),        rawOptions.wordAlign);
+            handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::PaletteDepth),     rawOptions.paletteDepth);
+            handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::PalettePlacement), rawOptions.palettePlacement);
+            writeOk = handler.write(saveImage);
+            if (!writeOk)
+                errorString = tr("Failed to write raw file.");
+        }
+    } else {
+        QImageWriter imageWriter(path);
+        writeOk = imageWriter.write(saveImage);
+        if (!writeOk)
+            errorString = imageWriter.errorString();
+    }
+    if (!writeOk) {
+        QMessageBox msgBox;
+        msgBox.setText(errorString);
+        msgBox.exec();
+    } else {
+        target->clearDirty();
+    }
+    return writeOk;
 }
 
 void MainWindow::saveFile(const QString &savePath, const RawSaveOptions &rawOptions)
@@ -414,44 +763,43 @@ void MainWindow::saveFile(const QString &savePath, const RawSaveOptions &rawOpti
     if (path.isEmpty()) {
         saveAs();
     } else {
-        buffer->clearHoverPreview();
-        QImage saveImage = buffer->image();
-        if (saveWithTransparency_ && path.toLower().endsWith(".png")) {
-            int eraseIdx = static_cast<int>(buffer->eraseColor());
-            QRgb c = saveImage.color(eraseIdx);
-            saveImage.setColor(eraseIdx, qRgba(qRed(c), qGreen(c), qBlue(c), 0));
-        }
-        bool writeOk = false;
-        QString errorString;
-        if (path.toLower().endsWith(".raw")) {
-            QFile file(path);
-            if (!file.open(QIODevice::WriteOnly)) {
-                errorString = file.errorString();
-            } else {
-                RawHandler handler;
-                handler.setDevice(&file);
-                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::Interleave),       rawOptions.interleave);
-                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::WordAlign),        rawOptions.wordAlign);
-                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::PaletteDepth),     rawOptions.paletteDepth);
-                handler.setOption(static_cast<QImageIOHandler::ImageOption>(RawOption::PalettePlacement), rawOptions.palettePlacement);
-                writeOk = handler.write(saveImage);
-                if (!writeOk)
-                    errorString = tr("Failed to write raw file.");
-            }
-        } else {
-            QImageWriter imageWriter(path);
-            writeOk = imageWriter.write(saveImage);
-            if (!writeOk)
-                errorString = imageWriter.errorString();
-        }
-        if (!writeOk) {
-            QMessageBox msgBox;
-            msgBox.setText(errorString);
-            msgBox.exec();
-        } else {
-            buffer->clearDirty();
-        }
+        writeBufferToDisk(buffer, path, rawOptions);
     }
+}
+
+bool MainWindow::saveBuffer(Buffer *target)
+{
+    QString path = target->path();
+    if (!path.isEmpty())
+        return writeBufferToDisk(target, path, RawSaveOptions());
+
+    QString newPath = QFileDialog::getSaveFileName(nullptr, tr("Save file"), path);
+    if (newPath.isEmpty())
+        return false;
+
+    RawSaveOptions options;
+    if (newPath.toLower().endsWith(".raw")) {
+        RawSaveOptionsDialog dlg(this);
+        if (dlg.exec() != QDialog::Accepted)
+            return false;
+        options = dlg.options();
+    }
+    target->setPath(newPath);
+    return writeBufferToDisk(target, newPath, options);
+}
+
+bool MainWindow::confirmDiscard(Buffer *target)
+{
+    if (!target || !target->isDirty())
+        return true;
+    QMessageBox::StandardButton result = QMessageBox::question(
+        this, tr("Unsaved changes"), tr("Save changes before discarding?"),
+        QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel, QMessageBox::Save);
+    if (result == QMessageBox::Cancel)
+        return false;
+    if (result == QMessageBox::Save && !saveBuffer(target))
+        return false;
+    return true;
 }
 
 void MainWindow::saveAs()
@@ -481,6 +829,10 @@ void MainWindow::newWindow()
     connect(bufferView, &BufferView::squashDialogsRequested, this, &MainWindow::squashDialogs);
     connect(bufferView, &BufferView::toggleAllDialogsRequested, this, &MainWindow::toggleAllDialogs);
     connect(bufferView, &BufferView::fullScreenEntered, this, &MainWindow::handleBufferViewFullScreen);
+    connect(bufferView, &BufferView::toggleWorkSpareRequested, this, &MainWindow::toggleWorkSpare);
+    connect(bufferView, &BufferView::addBufferRequested, this, &MainWindow::addBuffer);
+    connect(bufferView, &BufferView::previousBufferRequested, this, &MainWindow::previousBuffer);
+    connect(bufferView, &BufferView::nextBufferRequested, this, &MainWindow::nextBuffer);
     bufferView->show();
     bufferViews.append(bufferView);
     if (!activeBufferView)
@@ -518,6 +870,10 @@ void MainWindow::openMagnifiedViewAt(int zoomLevel, QPoint point)
     connect(bufferView, &BufferView::squashDialogsRequested, this, &MainWindow::squashDialogs);
     connect(bufferView, &BufferView::toggleAllDialogsRequested, this, &MainWindow::toggleAllDialogs);
     connect(bufferView, &BufferView::fullScreenEntered, this, &MainWindow::handleBufferViewFullScreen);
+    connect(bufferView, &BufferView::toggleWorkSpareRequested, this, &MainWindow::toggleWorkSpare);
+    connect(bufferView, &BufferView::addBufferRequested, this, &MainWindow::addBuffer);
+    connect(bufferView, &BufferView::previousBufferRequested, this, &MainWindow::previousBuffer);
+    connect(bufferView, &BufferView::nextBufferRequested, this, &MainWindow::nextBuffer);
     bufferView->show();
     bufferViews.append(bufferView);
     if (bufferViews.count() > 1)
@@ -1240,22 +1596,9 @@ void MainWindow::fitWindowToImage()
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if (buffer && buffer->isDirty()) {
-        QMessageBox::StandardButton result = QMessageBox::question(
-            this, tr("Unsaved changes"),
-            tr("Save changes before quitting?"),
-            QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel,
-            QMessageBox::Save);
-        if (result == QMessageBox::Save) {
-            saveFile();
-            if (buffer->isDirty()) {
-                event->ignore();
-                return;
-            }
-        } else if (result == QMessageBox::Cancel) {
-            event->ignore();
-            return;
-        }
+    if (!confirmDiscard(buffer)) {
+        event->ignore();
+        return;
     }
     for (BufferView *view : bufferViews)
         if (view->isWindow())

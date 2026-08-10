@@ -105,10 +105,20 @@
     <addaction name="separator"/>
     <addaction name="actionPaletteRemapPage"/>
    </widget>
-   <widget class="QMenu" name="menuImage">
+   <widget class="QMenu" name="menuBuffer">
     <property name="title">
-     <string>Image</string>
+     <string>Buffer</string>
     </property>
+    <addaction name="actionBufferToggleWorkSpare"/>
+    <addaction name="actionBufferMarkAsSpare"/>
+    <addaction name="actionBufferGoToSpare"/>
+    <addaction name="separator"/>
+    <addaction name="actionBufferCopySpareToWork"/>
+    <addaction name="actionBufferMergeFront"/>
+    <addaction name="actionBufferMergeBack"/>
+    <addaction name="separator"/>
+    <addaction name="actionBufferShowBuffers"/>
+    <addaction name="separator"/>
     <addaction name="actionImageCopy"/>
     <addaction name="actionImagePaste"/>
     <addaction name="separator"/>
@@ -168,7 +178,7 @@
     <addaction name="actionHelpAbout"/>
    </widget>
    <addaction name="menu_File"/>
-   <addaction name="menuImage"/>
+   <addaction name="menuBuffer"/>
    <addaction name="menuPalette"/>
    <addaction name="menuBrush"/>
    <addaction name="menuWindow"/>
@@ -278,6 +288,41 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+P</string>
+   </property>
+  </action>
+  <action name="actionBufferToggleWorkSpare">
+   <property name="text">
+    <string>Toggle Work/Spare</string>
+   </property>
+  </action>
+  <action name="actionBufferMarkAsSpare">
+   <property name="text">
+    <string>Mark as Spare</string>
+   </property>
+  </action>
+  <action name="actionBufferGoToSpare">
+   <property name="text">
+    <string>Go to Spare</string>
+   </property>
+  </action>
+  <action name="actionBufferCopySpareToWork">
+   <property name="text">
+    <string>Copy Spare to Work</string>
+   </property>
+  </action>
+  <action name="actionBufferMergeFront">
+   <property name="text">
+    <string>Merge Front</string>
+   </property>
+  </action>
+  <action name="actionBufferMergeBack">
+   <property name="text">
+    <string>Merge Back</string>
+   </property>
+  </action>
+  <action name="actionBufferShowBuffers">
+   <property name="text">
+    <string>Show Buffers...</string>
    </property>
   </action>
   <action name="actionPaletteCopyColor">

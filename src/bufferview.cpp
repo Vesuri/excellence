@@ -296,11 +296,20 @@ void BufferView::handleKey(QKeyEvent *event)
     switch (event->key()) {
     case '+':
     case '>':
-        setZoomLevel(zoomLevel_ + 1);
+        if (event->modifiers() & Qt::KeypadModifier)
+            emit addBufferRequested();
+        else
+            setZoomLevel(zoomLevel_ + 1);
         break;
     case '-':
     case '<':
         setZoomLevel(zoomLevel_ - 1);
+        break;
+    case Qt::Key_ParenLeft:
+        emit previousBufferRequested();
+        break;
+    case Qt::Key_ParenRight:
+        emit nextBufferRequested();
         break;
     case Qt::Key_S:
         if (buffer) {
@@ -521,6 +530,8 @@ void BufferView::handleKey(QKeyEvent *event)
                 GradientTool::instance.setActiveRange((activeGradientRange + kGradientRangeCount - 1) % kGradientRangeCount);
             else
                 GradientTool::instance.setActiveRange((activeGradientRange + 1) % kGradientRangeCount);
+        } else {
+            emit toggleWorkSpareRequested();
         }
         break;
     case Qt::Key_U:

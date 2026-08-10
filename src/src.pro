@@ -53,7 +53,10 @@ SOURCES += main.cpp\
     defaultpalette.cpp \
     rawsaveoptionsdialog.cpp \
     importimagedialog.cpp \
-    dither.cpp
+    dither.cpp \
+    buffertool.cpp \
+    bufferlistdialog.cpp \
+    bufferthumbnailbutton.cpp
 
 HEADERS  += mainwindow.h \
     drawtool.h \
@@ -98,7 +101,10 @@ HEADERS  += mainwindow.h \
     importimagedialog.h \
     dithermode.h \
     dither.h \
-    palettesortmode.h
+    palettesortmode.h \
+    buffertool.h \
+    bufferlistdialog.h \
+    bufferthumbnailbutton.h
 
 FORMS    += mainwindow.ui \
     bufferview.ui \
@@ -115,7 +121,8 @@ FORMS    += mainwindow.ui \
     drawmodetool.ui \
     gradienttool.ui \
     rawsaveoptionsdialog.ui \
-    importimagedialog.ui
+    importimagedialog.ui \
+    bufferlistdialog.ui
 
 RESOURCES += \
     icons/icons.qrc

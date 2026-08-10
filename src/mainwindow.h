@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "rawsaveoptionsdialog.h"
 #include "dithermode.h"
+#include <QList>
 #include <QVector>
 #include <QRgb>
 #include <QPoint>
@@ -22,6 +23,7 @@ class PenTip;
 class QFrame;
 class QLabel;
 class CurrentColorsButton;
+class BufferListDialog;
 
 class MainWindow : public QMainWindow
 {
@@ -30,6 +32,18 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+
+    int bufferCount() const;
+    Buffer *bufferAt(int index) const;
+    int activeBufferIndex() const;
+    int spareBufferIndex() const;
+    int workBufferIndex() const;
+    void setActiveBufferIndex(int index);
+    void addBuffer();
+    bool deleteBufferAt(int index);
+
+signals:
+    void bufferListChanged();
 
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
@@ -50,7 +64,7 @@ private slots:
     void toggleFloatPanels(bool checked);
     void loadPalette(const QString &path = QString());
     void showProperties();
-    void setBuffer(Buffer *buffer);
+    void replaceActiveBufferSlot(Buffer *newBuffer);
     void imageHistogram();
     void imageCopy();
     void imagePaste();
@@ -105,14 +119,35 @@ private slots:
     void toggleSingleWindowMode(bool checked);
     void handleBufferViewFullScreen();
     void fitWindowToImage();
+    void toggleWorkSpare();
+    void markAsSpare();
+    void goToSpare();
+    void previousBuffer();
+    void nextBuffer();
+    void bufferCopySpareToWork();
+    void bufferMergeFront();
+    void bufferMergeBack();
+    void showBufferDialog();
+    void updateBufferMenuState();
 
 private:
     enum PaletteMode { Pick, ImageCopy, ImageSwap, PaletteCopy, PaletteSwap, PaletteSwapAndRemap, PaletteSpread };
+    enum class ChangeModeChoice { Change, KeepCurrent, Cancel };
 
     void updateWindowTitle();
     QImage convertToIndexed(const QImage &source, DitherMode mode = DitherMode::None) const;
     class Brush *brushForTransform();
     QVector<QWidget *> collectAndHideToolDialogs();
+
+    void disconnectBufferSignals(Buffer *b);
+    void activateBuffer(Buffer *newBuffer);
+    void wireBuffer(Buffer *b);
+    Buffer *cloneBuffer(Buffer *source);
+    void resetBufferList(Buffer *work, Buffer *spare);
+    bool confirmDiscard(Buffer *target);
+    bool saveBuffer(Buffer *target);
+    bool writeBufferToDisk(Buffer *target, const QString &path, const RawSaveOptions &rawOptions);
+    ChangeModeChoice askChangeMode(const QImage &incoming, const QString &incomingPath);
 
     Ui::MainWindow *ui;
     QFileDialog *openDialog;
@@ -122,7 +157,13 @@ private:
     PropertiesDialog *propertiesDialog;
     QVector<BufferView *> bufferViews;
     BufferView *activeBufferView = nullptr;
+    QList<Buffer *> buffers_;
+    int activeIndex_ = -1;
+    int spareIndex_ = -1;
+    int workIndex_ = -1;
+    int preSpareIndex_ = -1;
     Buffer *buffer;
+    BufferListDialog *bufferListDialog_;
     PenTip *penTip;
     PenTip *toolPenTip;
     PaletteMode paletteMode;

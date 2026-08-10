@@ -90,6 +90,9 @@ public:
     int nextCycleColor(bool reverse = false);
     void resetCycle();
 
+    void copyFrom(const Buffer *source);
+    void mergeFrom(const Buffer *source, bool front);
+
     // Segment draw
     bool segmentActive() const { return segmentActive_; }
     void setSegmentActive(bool v);
