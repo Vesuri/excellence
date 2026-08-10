@@ -50,6 +50,7 @@ SOURCES += main.cpp\
     gradientrenderer.cpp \
     mirrortool.cpp \
     segmenttool.cpp \
+    fixbackgroundtool.cpp \
     defaultpalette.cpp \
     rawsaveoptionsdialog.cpp \
     importimagedialog.cpp \
@@ -95,6 +96,7 @@ HEADERS  += mainwindow.h \
     gradientrenderer.h \
     mirrortool.h \
     segmenttool.h \
+    fixbackgroundtool.h \
     spatial_color_quant.h \
     defaultpalette.h \
     rawsaveoptionsdialog.h \

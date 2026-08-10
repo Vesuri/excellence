@@ -153,7 +153,28 @@ QImage &Buffer::image()
 
 void Buffer::clear()
 {
+    if (!fixedBackground_.isNull()) {
+        undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
+        qDeleteAll(redoStack);
+        redoStack.clear();
+
+        image_ = fixedBackground_;
+
+        emit modified(image_.rect());
+        return;
+    }
+
     clearWithColor(0);
+}
+
+void Buffer::setFixBackgroundLocked(bool locked)
+{
+    if (locked == fixBackgroundLocked())
+        return;
+
+    fixedBackground_ = locked ? image_ : QImage();
+
+    emit fixBackgroundChanged();
 }
 
 void Buffer::clearWithColor(unsigned colorIndex)

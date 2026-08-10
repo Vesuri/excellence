@@ -103,6 +103,10 @@ public:
     // Called by Pen implementations on each paint/erase point; returns true if stamp should fire.
     bool segmentCheck(const QPoint &point);
 
+    // Fix Background
+    bool fixBackgroundLocked() const { return !fixedBackground_.isNull(); }
+    void setFixBackgroundLocked(bool locked);
+
 public slots:
     void clear();
     void clearWithColor(unsigned colorIndex);
@@ -133,6 +137,7 @@ signals:
     void penChanged(Pen *pen);
     void penModified();
     void segmentChanged();
+    void fixBackgroundChanged();
 
 private:
     void initialize(int width = 640, int height = 512, int colors = 32);
@@ -176,6 +181,7 @@ private:
     float segmentAccum_ = 0.0f;
     QPoint segmentLastVisited_;
     QList<QPoint> segmentPath_;
+    QImage fixedBackground_;
 };
 
 inline QString paintModeName(Buffer::PaintMode mode)
