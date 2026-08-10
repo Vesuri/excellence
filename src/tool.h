@@ -38,6 +38,7 @@ public:
     virtual void addButtonToGridLayout(QGridLayout *layout) = 0;
     virtual Type type() const;
     virtual QString name() const;
+    virtual QString optionsTitle() const { return name(); }
     virtual QString status() const;
     virtual bool hasFill() const { return false; }
     virtual bool restrictToColorAndRandom() const { return false; }

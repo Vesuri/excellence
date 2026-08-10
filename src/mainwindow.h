@@ -93,13 +93,8 @@ private slots:
     void brushHalveX();
     void brushHalveY();
     void brushScaleToSize();
-    void brushShearX();
-    void brushShearY();
-    void brushBendX();
-    void brushBendY();
     void brushOutline();
     void brushTrim();
-    void brushTileCut();
     void brushRestore();
     void pickForegroundColor();
     void pickBackgroundColor();

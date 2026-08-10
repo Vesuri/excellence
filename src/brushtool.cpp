@@ -1,7 +1,9 @@
 #include <QApplication>
+#include <QCheckBox>
 #include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QIcon>
 #include <QImage>
 #include <QLabel>
 #include <QMouseEvent>
@@ -161,6 +163,7 @@ BrushTool::BrushTool(QObject *parent) : Tool(parent),
 
 void BrushTool::cancel()
 {
+    if (distortMode_ != NoDistort) { distortCancel(); return; }
     if (!undoBuffer_) return;
     undoBuffer_->apply(buffer_);
     buffer_->notifyModified(buffer_->image().rect());
@@ -177,12 +180,24 @@ QString BrushTool::name() const
 void BrushTool::setBuffer(Buffer *buffer)
 {
     disconnectToolChecked();
+    if (buffer_) {
+        disconnect(buffer_, &Buffer::penChanged, this, &BrushTool::refreshBrushDisplay);
+        disconnect(buffer_, &Buffer::penModified, this, &BrushTool::refreshBrushDisplay);
+    }
     Tool::setBuffer(buffer);
+    if (buffer_) {
+        connect(buffer_, &Buffer::penChanged, this, &BrushTool::refreshBrushDisplay);
+        connect(buffer_, &Buffer::penModified, this, &BrushTool::refreshBrushDisplay);
+    }
     connectToolChecked();
+    refreshBrushDisplay();
 }
 
 QRect BrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 {
+    if (distortMode_ != NoDistort)
+        return distortPress(point);
+
     if (mode_ == Freehand) {
         polygon_.clear();
         polygon_ << point;
@@ -200,6 +215,9 @@ QRect BrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
 
 QRect BrushTool::move(const QPoint &point)
 {
+    if (distortMode_ != NoDistort)
+        return distortMove(point);
+
     if (mouseButton_ == Qt::NoButton)
         return QRect();
 
@@ -223,6 +241,9 @@ QRect BrushTool::move(const QPoint &point)
 
 QRect BrushTool::release(const QPoint &point)
 {
+    if (distortMode_ != NoDistort)
+        return distortRelease(point);
+
     if (mode_ == Freehand) {
         polygon_ << point;
 
@@ -254,7 +275,10 @@ QRect BrushTool::release(const QPoint &point)
                 if (qAlpha(mask.pixel(x, y)) == 0)
                     areaImage.setPixel(x, y, static_cast<uint>(eraseIdx));
 
-        buffer_->setPen(new Brush(areaImage, eraseIdx, buffer_));
+        Brush *brush = new Brush(areaImage, eraseIdx, buffer_);
+        if (autoBg_) brush->detectBackground();
+        if (tileCut_ && buffer_->gridEnabled()) brush->tileCut();
+        buffer_->setPen(brush);
         buffer_->setPaintMode(Buffer::BrushMode);
         buffer_->setTool(tools.at(0));
         return buffer_->image().rect();
@@ -269,7 +293,10 @@ QRect BrushTool::release(const QPoint &point)
     undoBuffer_ = nullptr;
 
     QImage image = buffer_->image().copy(QRect(startPoint_, point));
-    buffer_->setPen(new Brush(image, static_cast<int>(buffer_->eraseColor())));
+    Brush *brush = new Brush(image, static_cast<int>(buffer_->eraseColor()));
+    if (autoBg_) brush->detectBackground();
+    if (tileCut_ && buffer_->gridEnabled()) brush->tileCut();
+    buffer_->setPen(brush);
     buffer_->setPaintMode(Buffer::BrushMode);
 
     if (mouseButton_ == Qt::RightButton)
@@ -289,7 +316,7 @@ QRect BrushTool::release(const QPoint &point)
 
 QString BrushTool::status() const
 {
-    if (mode_ != Rectangle || mouseButton_ == Qt::NoButton || !undoBuffer_)
+    if (distortMode_ != NoDistort || mode_ != Rectangle || mouseButton_ == Qt::NoButton || !undoBuffer_)
         return QString();
     QRect r = QRect(startPoint_, currentPoint_).normalized();
     return QString("%1 × %2").arg(r.width()).arg(r.height());
@@ -368,12 +395,6 @@ QWidget *BrushTool::createOptionsWidget()
 
     ui_->handleWidget->setTool(this);
 
-    Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
-    QString dimText = brush
-        ? QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height())
-        : QString("– × –");
-    ui_->dimensionsLabel->setText(dimText);
-
     BrushWellButton *wellPtrs[] = {
         ui_->well0, ui_->well1, ui_->well2, ui_->well3,
         ui_->well4, ui_->well5, ui_->well6, ui_->well7
@@ -392,7 +413,15 @@ QWidget *BrushTool::createOptionsWidget()
         connect(wellButtons_[i], SIGNAL(ctrlClicked()), ctrlMapper,  SLOT(map()));
     }
 
-    connect(ui_->tileCutBtn, SIGNAL(clicked()), this, SLOT(brushTileCut()));
+    ui_->tileCutCheck->setChecked(tileCut_);
+    ui_->autoBgCheck->setChecked(autoBg_);
+    connect(ui_->tileCutCheck, &QCheckBox::toggled, this, &BrushTool::setTileCut);
+    connect(ui_->autoBgCheck,  &QCheckBox::toggled, this, &BrushTool::setAutoBg);
+
+    ui_->handleTL->setIcon(QIcon(":/topleft.png"));
+    ui_->handleTR->setIcon(QIcon(":/topright.png"));
+    ui_->handleBL->setIcon(QIcon(":/bottomleft.png"));
+    ui_->handleBR->setIcon(QIcon(":/bottomright.png"));
 
     connect(ui_->handleTL,     SIGNAL(clicked()), this, SLOT(setHandleTopLeft()));
     connect(ui_->handleTR,     SIGNAL(clicked()), this, SLOT(setHandleTopRight()));
@@ -400,24 +429,7 @@ QWidget *BrushTool::createOptionsWidget()
     connect(ui_->handleBL,     SIGNAL(clicked()), this, SLOT(setHandleBottomLeft()));
     connect(ui_->handleBR,     SIGNAL(clicked()), this, SLOT(setHandleBottomRight()));
 
-    connect(ui_->xformFlipH,    SIGNAL(clicked()), this, SLOT(brushFlipH()));
-    connect(ui_->xformFlipV,    SIGNAL(clicked()), this, SLOT(brushFlipV()));
-    connect(ui_->xformRotCW,    SIGNAL(clicked()), this, SLOT(brushRotate90CW()));
-    connect(ui_->xformRotCCW,   SIGNAL(clicked()), this, SLOT(brushRotate90CCW()));
-    connect(ui_->xformDouble,   SIGNAL(clicked()), this, SLOT(brushDouble()));
-    connect(ui_->xformHalve,    SIGNAL(clicked()), this, SLOT(brushHalve()));
-    connect(ui_->xformShearXP,  SIGNAL(clicked()), this, SLOT(brushShearXPlus()));
-    connect(ui_->xformShearXM,  SIGNAL(clicked()), this, SLOT(brushShearXMinus()));
-    connect(ui_->xformShearYP,  SIGNAL(clicked()), this, SLOT(brushShearYPlus()));
-    connect(ui_->xformShearYM,  SIGNAL(clicked()), this, SLOT(brushShearYMinus()));
-    connect(ui_->xformBendXP,   SIGNAL(clicked()), this, SLOT(brushBendXPlus()));
-    connect(ui_->xformBendXM,   SIGNAL(clicked()), this, SLOT(brushBendXMinus()));
-    connect(ui_->xformBendYP,   SIGNAL(clicked()), this, SLOT(brushBendYPlus()));
-    connect(ui_->xformBendYM,   SIGNAL(clicked()), this, SLOT(brushBendYMinus()));
-    connect(ui_->xformOutline,  SIGNAL(clicked()), this, SLOT(brushOutline()));
-    connect(ui_->xformTrim,     SIGNAL(clicked()), this, SLOT(brushTrim()));
-    connect(ui_->xformRestore,  SIGNAL(clicked()), this, SLOT(brushRestore()));
-
+    refreshBrushDisplay();
     return w;
 }
 
@@ -428,36 +440,35 @@ static Brush *currentBrush(Buffer *buf)
     return qobject_cast<Brush *>(buf ? buf->pen() : nullptr);
 }
 
+// Brush::image()-mutating methods all emit imageChanged(), which Buffer relays
+// as penModified(); setPen() itself emits penChanged(). BrushTool listens to
+// both (see setBuffer()) and funnels them here, so no call site needs to
+// manually refresh the preview/size display.
+void BrushTool::refreshBrushDisplay()
+{
+    if (!ui_) return;
+    ui_->handleWidget->update();
+    Brush *brush = currentBrush(buffer_);
+    if (brush) {
+        ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
+        ui_->dimensionsLabel->setVisible(true);
+    } else {
+        ui_->dimensionsLabel->setVisible(false);
+    }
+}
+
 #define BRUSH_TRANSFORM(method) \
     Brush *brush = currentBrush(buffer_); \
     if (!brush) return; \
     brush->storeOriginal(); \
-    brush->method; \
-    if (ui_) ui_->handleWidget->update(); \
-    if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
+    brush->method;
 
-void BrushTool::brushFlipH()       { BRUSH_TRANSFORM(flipHorizontal()) }
-void BrushTool::brushFlipV()       { BRUSH_TRANSFORM(flipVertical()) }
-void BrushTool::brushRotate90CW()  { BRUSH_TRANSFORM(rotate90CW()) }
-void BrushTool::brushRotate90CCW() { BRUSH_TRANSFORM(rotate90CCW()) }
-void BrushTool::brushDouble()      { BRUSH_TRANSFORM(doubleSize()) }
-void BrushTool::brushHalve()       { BRUSH_TRANSFORM(halveSize()) }
-void BrushTool::brushShearXPlus()  { BRUSH_TRANSFORM(shearX(0.25)) }
-void BrushTool::brushShearXMinus() { BRUSH_TRANSFORM(shearX(-0.25)) }
-void BrushTool::brushShearYPlus()  { BRUSH_TRANSFORM(shearY(0.25)) }
-void BrushTool::brushShearYMinus() { BRUSH_TRANSFORM(shearY(-0.25)) }
-void BrushTool::brushBendXPlus()   { BRUSH_TRANSFORM(bendX(4.0)) }
-void BrushTool::brushBendXMinus()  { BRUSH_TRANSFORM(bendX(-4.0)) }
-void BrushTool::brushBendYPlus()   { BRUSH_TRANSFORM(bendY(4.0)) }
-void BrushTool::brushBendYMinus()  { BRUSH_TRANSFORM(bendY(-4.0)) }
 void BrushTool::brushOutline()
 {
     Brush *brush = currentBrush(buffer_);
     if (!brush || !buffer_) return;
     brush->storeOriginal();
     brush->outline(static_cast<int>(buffer_->paintColor()));
-    if (ui_) ui_->handleWidget->update();
-    if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 }
 void BrushTool::brushTrim() { BRUSH_TRANSFORM(trim()) }
 void BrushTool::brushRestore()
@@ -465,13 +476,114 @@ void BrushTool::brushRestore()
     Brush *brush = currentBrush(buffer_);
     if (!brush) return;
     brush->restoreOriginal();
-    if (ui_) ui_->handleWidget->update();
-    if (ui_) ui_->dimensionsLabel->setText(QString("%1 × %2").arg(brush->image().width()).arg(brush->image().height()));
 }
 
-void BrushTool::brushTileCut() { BRUSH_TRANSFORM(tileCut()) }
-
 #undef BRUSH_TRANSFORM
+
+void BrushTool::setTileCut(bool enabled) { tileCut_ = enabled; }
+void BrushTool::setAutoBg(bool enabled)  { autoBg_ = enabled; }
+
+// ── Interactive Shear/Bend (Brush menu) ──────────────────────────────────────
+//
+// Triggered from the Brush menu; drags in the buffer view control the amount
+// while the previous tool is temporarily suspended. The distorted shape is
+// live-previewed by stamping the brush at the drag-start point and reverting
+// on every subsequent move, exactly like the tool-managed drag-preview pattern
+// used by LineTool/CurveTool -- except the "permanent result" here is a
+// mutation of the Brush's own image, not a canvas paint, so release() reverts
+// the preview stamp too and leaves the canvas untouched.
+
+static void applyDistort(Brush *brush, BrushTool::DistortMode mode, const QPoint &delta)
+{
+    brush->restoreOriginal();
+    switch (mode) {
+    case BrushTool::ShearX: brush->shearX(qBound(-2.0, delta.x() / 100.0, 2.0)); break;
+    case BrushTool::ShearY: brush->shearY(qBound(-2.0, delta.y() / 100.0, 2.0)); break;
+    case BrushTool::BendX:  brush->bendX(qBound(-1.0, delta.x() / 100.0, 1.0)); break;
+    case BrushTool::BendY:  brush->bendY(qBound(-1.0, delta.y() / 100.0, 1.0)); break;
+    default: break;
+    }
+}
+
+void BrushTool::startDistort(DistortMode mode)
+{
+    Brush *brush = currentBrush(buffer_);
+    if (!brush || !buffer_) return;
+    brush->storeOriginal();
+    distortMode_ = mode;
+    distortPreviousTool_ = buffer_->tool();
+    buffer_->setTool(this);
+}
+
+void BrushTool::startShearX() { startDistort(ShearX); }
+void BrushTool::startShearY() { startDistort(ShearY); }
+void BrushTool::startBendX()  { startDistort(BendX); }
+void BrushTool::startBendY()  { startDistort(BendY); }
+
+QRect BrushTool::distortPress(const QPoint &point)
+{
+    distortStartPoint_ = point;
+    return QRect();
+}
+
+QRect BrushTool::distortMove(const QPoint &point)
+{
+    if (mouseButton_ == Qt::NoButton)
+        return QRect();
+
+    Brush *brush = currentBrush(buffer_);
+    if (!brush) return QRect();
+    applyDistort(brush, distortMode_, point - distortStartPoint_);
+
+    if (undoBuffer_) {
+        undoBuffer_->apply(buffer_);
+        delete undoBuffer_;
+        undoBuffer_ = nullptr;
+    }
+    QRect stampRect = brush->rect(distortStartPoint_).intersected(buffer_->image().rect());
+    QRect changed = stampRect;
+    if (!stampRect.isEmpty()) {
+        undoBuffer_ = new UndoBuffer(stampRect.topLeft(), buffer_->image().copy(stampRect), this);
+        changed = changed.united(brush->paint(distortStartPoint_, buffer_));
+    }
+    return changed;
+}
+
+QRect BrushTool::distortRelease(const QPoint &point)
+{
+    Brush *brush = currentBrush(buffer_);
+    if (brush)
+        applyDistort(brush, distortMode_, point - distortStartPoint_);
+
+    QRect changed;
+    if (undoBuffer_) {
+        changed = undoBuffer_->rect();
+        undoBuffer_->apply(buffer_);
+        delete undoBuffer_;
+        undoBuffer_ = nullptr;
+    }
+
+    distortMode_ = NoDistort;
+    Tool *prev = distortPreviousTool_;
+    distortPreviousTool_ = nullptr;
+    if (prev) buffer_->setTool(prev);
+    return changed;
+}
+
+void BrushTool::distortCancel()
+{
+    if (undoBuffer_) {
+        undoBuffer_->apply(buffer_);
+        delete undoBuffer_;
+        undoBuffer_ = nullptr;
+    }
+    Brush *brush = currentBrush(buffer_);
+    if (brush) brush->restoreOriginal();
+    distortMode_ = NoDistort;
+    Tool *prev = distortPreviousTool_;
+    distortPreviousTool_ = nullptr;
+    if (prev) buffer_->setTool(prev);
+}
 
 void BrushTool::activate()
 {

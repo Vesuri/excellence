@@ -97,7 +97,7 @@ void Tool::toggleOptionsWidget()
     if (dockWidget_ == nullptr) {
         optionsWidget_ = createOptionsWidget();
         if (optionsWidget_ == nullptr) return;
-        dockWidget_ = new QDockWidget(name());
+        dockWidget_ = new QDockWidget(optionsTitle());
         dockWidget_->setWidget(optionsWidget_);
         QDockWidget *splitFrom = nullptr;
         if (!floatPanelsByDefault_) {

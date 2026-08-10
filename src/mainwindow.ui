@@ -144,6 +144,7 @@
     <addaction name="actionBrushRemap"/>
     <addaction name="actionBrushBgFgSwap"/>
     <addaction name="actionBrushAutoBackground"/>
+    <addaction name="actionBrushAlign"/>
     <addaction name="separator"/>
     <addaction name="actionBrushFlipHorizontal"/>
     <addaction name="actionBrushFlipVertical"/>
@@ -167,7 +168,6 @@
     <addaction name="separator"/>
     <addaction name="actionBrushOutline"/>
     <addaction name="actionBrushTrim"/>
-    <addaction name="actionBrushTileCut"/>
     <addaction name="separator"/>
     <addaction name="actionBrushRestore"/>
    </widget>
@@ -395,6 +395,17 @@
     <string>Auto Background</string>
    </property>
   </action>
+  <action name="actionBrushAlign">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Align</string>
+   </property>
+   <property name="toolTip">
+    <string>Align brush to page</string>
+   </property>
+  </action>
   <action name="actionBrushFlipHorizontal">
    <property name="text">
     <string>Flip Horizontal</string>
@@ -478,22 +489,22 @@
   </action>
   <action name="actionBrushShearX">
    <property name="text">
-    <string>Shear X...</string>
+    <string>Shear X</string>
    </property>
   </action>
   <action name="actionBrushShearY">
    <property name="text">
-    <string>Shear Y...</string>
+    <string>Shear Y</string>
    </property>
   </action>
   <action name="actionBrushBendX">
    <property name="text">
-    <string>Bend X...</string>
+    <string>Bend X</string>
    </property>
   </action>
   <action name="actionBrushBendY">
    <property name="text">
-    <string>Bend Y...</string>
+    <string>Bend Y</string>
    </property>
   </action>
   <action name="actionBrushOutline">
@@ -510,11 +521,6 @@
    </property>
    <property name="shortcut">
     <string>Shift+O</string>
-   </property>
-  </action>
-  <action name="actionBrushTileCut">
-   <property name="text">
-    <string>Tile Cut</string>
    </property>
   </action>
   <action name="actionBrushRestore">

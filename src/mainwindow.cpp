@@ -26,6 +26,7 @@
 #include <QScreen>
 #include <QClipboard>
 #include "brush.h"
+#include "brushtool.h"
 #include "importimagedialog.h"
 #include "palettequantizer.h"
 #include "propertiesdialog.h"
@@ -167,13 +168,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushHalveX, SIGNAL(triggered()), this, SLOT(brushHalveX()));
     connect(ui->actionBrushHalveY, SIGNAL(triggered()), this, SLOT(brushHalveY()));
     connect(ui->actionBrushScaleToSize, SIGNAL(triggered()), this, SLOT(brushScaleToSize()));
-    connect(ui->actionBrushShearX, SIGNAL(triggered()), this, SLOT(brushShearX()));
-    connect(ui->actionBrushShearY, SIGNAL(triggered()), this, SLOT(brushShearY()));
-    connect(ui->actionBrushBendX, SIGNAL(triggered()), this, SLOT(brushBendX()));
-    connect(ui->actionBrushBendY, SIGNAL(triggered()), this, SLOT(brushBendY()));
+    connect(ui->actionBrushShearX, SIGNAL(triggered()), &BrushTool::instance, SLOT(startShearX()));
+    connect(ui->actionBrushShearY, SIGNAL(triggered()), &BrushTool::instance, SLOT(startShearY()));
+    connect(ui->actionBrushBendX, SIGNAL(triggered()), &BrushTool::instance, SLOT(startBendX()));
+    connect(ui->actionBrushBendY, SIGNAL(triggered()), &BrushTool::instance, SLOT(startBendY()));
     connect(ui->actionBrushOutline, SIGNAL(triggered()), this, SLOT(brushOutline()));
     connect(ui->actionBrushTrim, SIGNAL(triggered()), this, SLOT(brushTrim()));
-    connect(ui->actionBrushTileCut, SIGNAL(triggered()), this, SLOT(brushTileCut()));
     connect(ui->actionBrushRestore, SIGNAL(triggered()), this, SLOT(brushRestore()));
     connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
     connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
@@ -1268,42 +1268,6 @@ void MainWindow::brushScaleToSize()
     brush->scale(w, h);
 }
 
-void MainWindow::brushShearX()
-{
-    Brush *brush = brushForTransform();
-    if (!brush) return;
-    bool ok;
-    double factor = QInputDialog::getDouble(this, "Shear X", "Factor (-2.0 to 2.0):", 0.5, -2.0, 2.0, 2, &ok);
-    if (ok) brush->shearX(factor);
-}
-
-void MainWindow::brushShearY()
-{
-    Brush *brush = brushForTransform();
-    if (!brush) return;
-    bool ok;
-    double factor = QInputDialog::getDouble(this, "Shear Y", "Factor (-2.0 to 2.0):", 0.5, -2.0, 2.0, 2, &ok);
-    if (ok) brush->shearY(factor);
-}
-
-void MainWindow::brushBendX()
-{
-    Brush *brush = brushForTransform();
-    if (!brush) return;
-    bool ok;
-    double amount = QInputDialog::getDouble(this, "Bend X", "Amount (-1.0 to 1.0):", 0.3, -1.0, 1.0, 2, &ok);
-    if (ok) brush->bendX(amount);
-}
-
-void MainWindow::brushBendY()
-{
-    Brush *brush = brushForTransform();
-    if (!brush) return;
-    bool ok;
-    double amount = QInputDialog::getDouble(this, "Bend Y", "Amount (-1.0 to 1.0):", 0.3, -1.0, 1.0, 2, &ok);
-    if (ok) brush->bendY(amount);
-}
-
 void MainWindow::brushOutline()
 {
     Brush *brush = brushForTransform();
@@ -1314,12 +1278,6 @@ void MainWindow::brushTrim()
 {
     Brush *brush = brushForTransform();
     if (brush) brush->trim();
-}
-
-void MainWindow::brushTileCut()
-{
-    Brush *brush = brushForTransform();
-    if (brush) brush->tileCut();
 }
 
 void MainWindow::brushRestore()
