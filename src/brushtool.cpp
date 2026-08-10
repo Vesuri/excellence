@@ -292,7 +292,7 @@ QString BrushTool::status() const
     if (mode_ != Rectangle || mouseButton_ == Qt::NoButton || !undoBuffer_)
         return QString();
     QRect r = QRect(startPoint_, currentPoint_).normalized();
-    return QString("%1 × %2").arg(r.width() + 1).arg(r.height() + 1);
+    return QString("%1 × %2").arg(r.width()).arg(r.height());
 }
 
 QRect BrushTool::changes(const QPoint &point)

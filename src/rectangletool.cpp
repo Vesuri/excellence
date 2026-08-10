@@ -244,7 +244,7 @@ QString RectangleTool::status() const
     QPoint p0, p1;
     cornerPoints(currentPoint_, p0, p1);
     QRect r = QRect(p0, p1).normalized();
-    return QString("%1 × %2").arg(r.width() + 1).arg(r.height() + 1);
+    return QString("%1 × %2").arg(r.width()).arg(r.height());
 }
 
 QRect RectangleTool::changes(const QPoint &point)
