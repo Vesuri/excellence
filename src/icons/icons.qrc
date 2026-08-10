@@ -2,6 +2,8 @@
     <qresource prefix="/">
         <file>antialias.png</file>
         <file>beziercurve.png</file>
+        <file>bottomleft.png</file>
+        <file>bottomright.png</file>
         <file>brushdistort.png</file>
         <file>buffer.png</file>
         <file>carvebrush.png</file>
@@ -34,6 +36,8 @@
         <file>splatter.png</file>
         <file>stencil.png</file>
         <file>text.png</file>
+        <file>topleft.png</file>
+        <file>topright.png</file>
         <file>transparent.png</file>
         <file>undo.png</file>
         <file>zoom.png</file>
