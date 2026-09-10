@@ -19,10 +19,10 @@ GridLockTool::GridLockTool(QObject *parent) : Tool(parent)
 void GridLockTool::setBuffer(Buffer *buffer)
 {
     if (buffer_)
-        disconnect(buffer_, SIGNAL(gridChanged()), this, SLOT(syncButtonState()));
+        disconnect(buffer_, &Buffer::gridChanged, this, &GridLockTool::syncButtonState);
     Tool::setBuffer(buffer);
     if (buffer_) {
-        connect(buffer_, SIGNAL(gridChanged()), this, SLOT(syncButtonState()));
+        connect(buffer_, &Buffer::gridChanged, this, &GridLockTool::syncButtonState);
         syncButtonState();
         syncSpinboxes();
     }
@@ -41,7 +41,6 @@ void GridLockTool::activate()
 {
     if (buffer_)
         buffer_->setGridEnabled(!buffer_->gridEnabled());
-    // Do NOT call Tool::activate() — grid lock does not change the active drawing tool.
 }
 
 void GridLockTool::syncButtonState()

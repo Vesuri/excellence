@@ -23,9 +23,6 @@ public:
     explicit DrawModeTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
-    QRect press(const QPoint &, const Qt::KeyboardModifiers &) override { return {}; }
-    QRect move(const QPoint &) override { return {}; }
-    QRect release(const QPoint &) override { return {}; }
     void addButtonToGridLayout(QGridLayout *layout) override;
     void activateModeByKey(Buffer::PaintMode mode);
     void toggleReplaceMode();

@@ -13,9 +13,6 @@ public:
     explicit PaletteTool(QObject *parent = nullptr);
 
     void setBuffer(Buffer *buffer) override;
-    QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
-    QRect move(const QPoint &point) override;
-    QRect release(const QPoint &point) override;
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:
@@ -28,7 +25,7 @@ private slots:
 
 private:
     static PaletteTool instance;
-    QColorDialog *colorDialog;
+    QColorDialog *colorDialog_ = nullptr;
 };
 
 #endif // PALETTETOOL_H

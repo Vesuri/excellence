@@ -1,4 +1,5 @@
 #include <QImage>
+#include <QByteArray>
 
 #include "rawplugin.h"
 
@@ -63,19 +64,19 @@ bool RawHandler::write(const QImage &image)
         dataSize += paletteSize;
     }
 
-    unsigned char *data = new unsigned char[dataSize];
-    memset(data, 0, static_cast<size_t>(dataSize));
+    QByteArray data(dataSize, '\0');
+    auto *bytes = reinterpret_cast<unsigned char *>(data.data());
 
     if (palettePlacement_ != RawOption::PlacementNone) {
         for (int c = 0; c < image.colorCount(); c++) {
             QRgb rgba = image.color(c);
             if (paletteDepth_ == 12) {
-                data[paletteOffset + 2 * c]     = static_cast<unsigned char>(qRed(rgba) >> 4);
-                data[paletteOffset + 2 * c + 1] = static_cast<unsigned char>(qGreen(rgba) & 0xf0) | static_cast<unsigned char>(qBlue(rgba) >> 4);
+                bytes[paletteOffset + 2 * c]     = static_cast<unsigned char>(qRed(rgba) >> 4);
+                bytes[paletteOffset + 2 * c + 1] = static_cast<unsigned char>(qGreen(rgba) & 0xf0) | static_cast<unsigned char>(qBlue(rgba) >> 4);
             } else {
-                data[paletteOffset + 4 * c + 1] = static_cast<unsigned char>(qRed(rgba));
-                data[paletteOffset + 4 * c + 2] = static_cast<unsigned char>(qGreen(rgba));
-                data[paletteOffset + 4 * c + 3] = static_cast<unsigned char>(qBlue(rgba));
+                bytes[paletteOffset + 4 * c + 1] = static_cast<unsigned char>(qRed(rgba));
+                bytes[paletteOffset + 4 * c + 2] = static_cast<unsigned char>(qGreen(rgba));
+                bytes[paletteOffset + 4 * c + 3] = static_cast<unsigned char>(qBlue(rgba));
             }
         }
     }
@@ -87,7 +88,7 @@ bool RawHandler::write(const QImage &image)
 
             if (pixel > 0) {
                 for (int bitplane = 0; bitplane < bitplanes; bitplane++) {
-                    data[dataOffset + bitplane * bitplaneDelta + y * lineDelta + x / 8] |= (pixel & (1 << bitplane)) ? bit : 0;
+                    bytes[dataOffset + bitplane * bitplaneDelta + y * lineDelta + x / 8] |= (pixel & (1 << bitplane)) ? bit : 0;
                 }
             }
         }
@@ -95,17 +96,15 @@ bool RawHandler::write(const QImage &image)
 
     qint64 remainingBytes = dataSize;
     bool writeOk = true;
-    for (char *buffer = reinterpret_cast<char *>(data); remainingBytes > 0;) {
+    for (const char *buffer = data.constData(); remainingBytes > 0;) {
         qint64 result = device()->write(buffer, remainingBytes);
-        if (result < 0) {
+        if (result <= 0) {
             writeOk = false;
             break;
         }
         remainingBytes -= result;
         buffer += result;
     }
-    delete [] data;
-
     return writeOk;
 }
 

@@ -21,7 +21,7 @@ class RawSaveOptionsDialog : public QDialog
 
 public:
     explicit RawSaveOptionsDialog(QWidget *parent = nullptr);
-    ~RawSaveOptionsDialog();
+    ~RawSaveOptionsDialog() override;
 
     RawSaveOptions options() const;
 

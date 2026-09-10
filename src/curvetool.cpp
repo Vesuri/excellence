@@ -58,7 +58,7 @@ void CurveTool::setBuffer(Buffer *buffer)
 
 // ── press ──────────────────────────────────────────────────────────────────
 
-QRect CurveTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect CurveTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (curveMode_ == Quadratic) {
         if (phase_ == 0) {
@@ -463,7 +463,7 @@ void CurveTool::registerTool()
     button_->setCheckable(true);
     setCurveMode(curveMode_);
 
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &CurveTool::activate);
 }
 
 void CurveTool::activate()

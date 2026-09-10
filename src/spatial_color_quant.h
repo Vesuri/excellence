@@ -487,19 +487,18 @@ void sum_coarsen(array2d< vector_fixed<double, 3> >& fine,
 {
     for(int y=0; y<coarse.get_height(); y++) {
     for(int x=0; x<coarse.get_width(); x++) {
-        double divisor = 1.0;
         vector_fixed<double, 3> val = fine(x*2, y*2);
         if (x*2 + 1 < fine.get_width())  {
-        divisor += 1; val += fine(x*2 + 1, y*2);
+        val += fine(x*2 + 1, y*2);
         }
         if (y*2 + 1 < fine.get_height()) {
-        divisor += 1; val += fine(x*2, y*2 + 1);
+        val += fine(x*2, y*2 + 1);
         }
         if (x*2 + 1 < fine.get_width() &&
         y*2 + 1 < fine.get_height()) {
-        divisor += 1; val += fine(x*2 + 1, y*2 + 1);
+        val += fine(x*2 + 1, y*2 + 1);
         }
-        coarse(x, y) = /*(1/divisor)**/val;
+        coarse(x, y) = val;
     }
     }
 }
@@ -804,7 +803,9 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
     int step_counter = 0;
     for(int repeat=0; repeat<repeats_per_temp; repeat++)
     {
-        int pixels_changed = 0, pixels_visited = 0;
+#if TRACE
+        int pixels_changed = 0;
+#endif
         deque< pair<int, int> > visit_queue;
         random_permutation_2d(coarse_variables.get_width(), coarse_variables.get_height(), visit_queue);
 
@@ -880,7 +881,9 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
         int max_v = best_match_color(coarse_variables, i_x, i_y, palette);
         // Only consider it a change if the colors are different enough
         if ((palette[max_v]-palette[old_max_v]).norm_squared() >= 1.0/(255.0*255.0)) {
+#if TRACE
             pixels_changed++;
+#endif
             // We don't add the outer layer of pixels , because
             // there isn't much weight there, and if it does need
             // to be visited, it'll probably be added when we visit
@@ -896,8 +899,6 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
             }
             }
         }
-        pixels_visited++;
-
         // Show progress with dots - in a graphical interface,
         // we'd show progressive refinements of the image instead,
         // and maybe a palette preview.

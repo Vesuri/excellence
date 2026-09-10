@@ -65,7 +65,7 @@ public:
     QString name() const override;
     QString optionsTitle() const override { return "Brush"; }
     bool showGuides() const override { return distortMode_ == NoDistort && mode_ == Rectangle; }
-    QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
+    QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     void cancel() override;
@@ -130,7 +130,7 @@ private:
     Tool *distortPreviousTool_ = nullptr;
     QPoint distortStartPoint_;
 
-    static const int WellCount = 8;
+    static constexpr int WellCount = 8;
     QImage wells_[WellCount];
     BrushWellButton *wellButtons_[WellCount];
 

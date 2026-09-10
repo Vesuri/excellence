@@ -168,7 +168,7 @@ void AirbrushTool::sprayTick()
 
 // ── press / move / release ─────────────────────────────────────────────────
 
-QRect AirbrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect AirbrushTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     erasing_ = (mouseButton_ == Qt::RightButton);
     if (sprayMode_ == ShapeAirbrush) {
@@ -222,7 +222,7 @@ void AirbrushTool::registerTool()
     Tool::registerTool();
     button_->setCheckable(true);
     setMode(sprayMode_);
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &AirbrushTool::activate);
 }
 
 void AirbrushTool::activate()

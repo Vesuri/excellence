@@ -23,7 +23,7 @@ public:
     QString name() const override;
     QString optionsTitle() const override { return "Ellipse"; }
     bool hasFill() const override { return drawMode_ == FilledEllipse; }
-    QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
+    QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;

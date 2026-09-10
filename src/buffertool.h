@@ -12,9 +12,6 @@ public:
 
     explicit BufferTool(QObject *parent = nullptr);
 
-    QRect press(const QPoint &, const Qt::KeyboardModifiers &) override { return QRect(); }
-    QRect move(const QPoint &) override { return QRect(); }
-    QRect release(const QPoint &) override { return QRect(); }
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 signals:

@@ -81,8 +81,8 @@ private:
     Snapshot restorePoint_;
 };
 
-static const int kGradientRangeCount = 8;
-static const int kGradientSlotCount = 128;
+constexpr int kGradientRangeCount = 8;
+constexpr int kGradientSlotCount = 128;
 extern GradientRange gradientRanges[kGradientRangeCount];
 extern int activeGradientRange;
 
@@ -101,8 +101,7 @@ extern bool fillModeSelected;
 extern bool conformFill;
 extern bool centerFill;
 
-// Applies random dither to a gradient slot position. The noise displacement is
-// proportional to span and ditherAmt (0–100), bounded to [minSlot, maxSlot].
+// Apply deterministic positional noise to a gradient slot.
 inline float applyRandomDither(float slotPos, float span, int ditherAmt,
                                 int pixelX, int pixelY,
                                 float minSlot, float maxSlot)
@@ -119,8 +118,6 @@ inline bool gradientFillIsRadial(GradientFillMode mode)
     return mode == FillRadial || mode == FillSpherical || mode == FillHighlight;
 }
 
-// True when the active fill mode requires a rubber band after the shape is drawn
-// so the user can pick the gradient direction (Linear) or center (Radial/etc.).
 inline bool gradientNeedsRubberBand()
 {
     return activeGradientFillMode == FillLinear
@@ -141,8 +138,6 @@ inline QString gradientFillModeName(GradientFillMode mode)
     return {};
 }
 
-// Returns true when draw mode is on, a gradient fill mode is selected, and the
-// active range has markers.
 inline bool gradientFillActive()
 {
     return drawModeActive
@@ -150,9 +145,7 @@ inline bool gradientFillActive()
         && !gradientRanges[activeGradientRange].markers().isEmpty();
 }
 
-// Computes gradient from/to endpoints for a polygon or path fill.
-// For HV modes the gradient spans the shape's bounding box; for other modes
-// the caller's drag start/end points are used as-is.
+// Resolve gradient endpoints for a filled shape.
 inline std::pair<QPoint, QPoint> gradientEndpoints(
     const QRect &bbox, const QPoint &startFallback, const QPoint &endFallback)
 {

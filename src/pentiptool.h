@@ -17,7 +17,7 @@ public:
 
     explicit PenTipTool(QObject *parent = nullptr);
 
-    QRect press(const QPoint &point, const Qt::KeyboardModifiers &) override;
+    QRect press(const QPoint &point, Qt::KeyboardModifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;

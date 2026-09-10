@@ -41,10 +41,10 @@ TextDialog::TextDialog(QWidget *parent) : QDialog(parent),
     layout->addWidget(preview_);
     layout->addWidget(buttons);
 
-    connect(fontButton, SIGNAL(clicked()), this, SLOT(chooseFont()));
-    connect(textEdit_, SIGNAL(textChanged(QString)), this, SLOT(updatePreview()));
-    connect(buttons, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(buttons, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(fontButton, &QPushButton::clicked, this, &TextDialog::chooseFont);
+    connect(textEdit_, &QLineEdit::textChanged, this, &TextDialog::updatePreview);
+    connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
 }
 
 QString TextDialog::text() const
@@ -94,7 +94,7 @@ void TextTool::setBuffer(Buffer *buffer)
     connectToolChecked();
 }
 
-QRect TextTool::press(const QPoint &, const Qt::KeyboardModifiers &)
+QRect TextTool::press(const QPoint &, Qt::KeyboardModifiers)
 {
     return QRect();
 }
@@ -115,7 +115,7 @@ void TextTool::registerTool()
     button_->setIcon(QIcon(":/text.png"));
     button_->setToolTip("Text [T]");
     button_->setCheckable(true);
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &TextTool::activate);
 }
 
 void TextTool::activate()

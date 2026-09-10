@@ -171,8 +171,25 @@ QImage Brush::reindex(const QImage &src) const
 
 // ── Transforms ─────────────────────────────────────────────────────────────
 
-void Brush::flipHorizontal() { image_ = image_.mirrored(true, false);  emit imageChanged(); }
-void Brush::flipVertical()   { image_ = image_.mirrored(false, true); emit imageChanged(); }
+void Brush::flipHorizontal()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+    image_ = image_.flipped(Qt::Horizontal);
+#else
+    image_ = image_.mirrored(true, false);
+#endif
+    emit imageChanged();
+}
+
+void Brush::flipVertical()
+{
+#if QT_VERSION >= QT_VERSION_CHECK(6, 9, 0)
+    image_ = image_.flipped(Qt::Vertical);
+#else
+    image_ = image_.mirrored(false, true);
+#endif
+    emit imageChanged();
+}
 
 void Brush::rotate90CW()
 {

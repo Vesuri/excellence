@@ -39,7 +39,6 @@ void SegmentTool::activate()
 {
     if (!buffer_) return;
     buffer_->setSegmentActive(!buffer_->segmentActive());
-    // Do NOT call Tool::activate() — segment does not change the active drawing tool.
 }
 
 void SegmentTool::syncButtonState()

@@ -129,8 +129,7 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
     QImage &image = buffer_->image();
     const GradientRange *range = &gradientRanges[activeGradientRange];
 
-    // Highlight, and Radial/Spherical with conform: normalize per-direction to the actual
-    // shape boundary. t = dist(center, pixel) / dist(center, boundary in that direction).
+    // Normalize radial modes against the region boundary.
     if (activeGradientFillMode == FillHighlight
             || (conformFill && gradientFillIsRadial(activeGradientFillMode))) {
         for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
@@ -172,7 +171,7 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
     const bool hConform = conformFill && activeGradientFillMode == FillHorizontal;
     const bool vConform = conformFill && activeGradientFillMode == FillVertical;
 
-    // For V conform: pre-scan to collect per-column y ranges.
+    // Precompute vertical extents.
     QVector<int> colY0, colY1;
     if (vConform) {
         const int vw = visitedRect_.width();
@@ -190,7 +189,7 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
     }
 
     for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
-        // For H conform: find this row's x extent.
+        // Find the horizontal extent.
         int rowX0 = visitedRect_.right() + 1, rowX1 = visitedRect_.left() - 1;
         if (hConform) {
             for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
@@ -255,7 +254,7 @@ void FillTool::cancel()
     }
 }
 
-QRect FillTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect FillTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (!buffer_) return QRect();
 
@@ -335,7 +334,7 @@ void FillTool::registerTool()
     button_->setIcon(QIcon(":/fill.png"));
     button_->setToolTip("Fill [F]");
     button_->setCheckable(true);
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &FillTool::activate);
 }
 
 void FillTool::activate()

@@ -25,9 +25,6 @@ public:
     void toggle();
 
     void setBuffer(Buffer *buffer) override;
-    QRect press(const QPoint &, const Qt::KeyboardModifiers &) override { return QRect(); }
-    QRect move(const QPoint &) override { return QRect(); }
-    QRect release(const QPoint &) override { return QRect(); }
     void addButtonToGridLayout(QGridLayout *layout) override;
 
 protected:

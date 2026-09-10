@@ -19,12 +19,12 @@ public:
 
     explicit RectangleTool(QObject *parent = nullptr);
 
-    void setDrawMode(const DrawMode &drawMode);
+    void setDrawMode(DrawMode drawMode);
     void setBuffer(Buffer *buffer) override;
     QString name() const override;
     QString optionsTitle() const override { return "Rectangle"; }
-    bool hasFill() const override { return drawMode == FilledRectangle; }
-    QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
+    bool hasFill() const override { return drawMode_ == FilledRectangle; }
+    QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
@@ -49,11 +49,11 @@ private:
     QRect drawGradientRect(const QRect &fillRect, const QPoint &current);
     void cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const;
 
-    DrawMode drawMode;
+    DrawMode drawMode_;
     AnchorMode anchorMode_;
-    QPoint startPoint;
+    QPoint startPoint_;
     QPoint currentPoint_;
-    UndoBuffer *undoBuffer;
+    UndoBuffer *undoBuffer_;
     GradientRubberBand rubberBand_;
     QRect pendingFillRect_;
 

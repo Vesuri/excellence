@@ -15,15 +15,7 @@ public:
     virtual QRect paintAsColor(const QPoint &point, Buffer *buffer) const = 0;
     virtual QRect rect(const QPoint &point) const = 0;
 
-    // Shared per-pixel paint mode dispatch used by PenTip and Brush.
-    // Handles all modes except BrushMode (caller must handle, e.g. PenTip tiles
-    // the brush stamp) and Cycle/Random (caller must resolve the color first and
-    // pass Buffer::Color as the mode with the resolved color as paintColor).
-    // Resolves Cycle/Random to a concrete color for the current stamp.
-    // If mode is Cycle or Random: sets mode to Color, sets isErase to false
-    // (the returned color already incorporates erase semantics), and returns
-    // the resolved color. For all other modes: returns paintColor unchanged.
-    // Callers can pass the return value directly as paintColor to applyPixelMode.
+    // Resolve stamp-level modes before per-pixel dispatch.
     static unsigned resolveDrawColor(Buffer *buffer, Buffer::PaintMode &mode,
                                      bool &isErase, unsigned paintColor);
 

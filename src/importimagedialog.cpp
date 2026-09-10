@@ -8,7 +8,8 @@ ImportImageDialog::ImportImageDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->comboBoxPalette, SIGNAL(currentIndexChanged(int)), this, SLOT(setPaletteMode(int)));
+    connect(ui->comboBoxPalette, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &ImportImageDialog::setPaletteMode);
 
     ui->comboBoxPalette->setCurrentIndex(1);
     setPaletteMode(1);

@@ -30,7 +30,7 @@ public:
     bool supportsOption(QImageIOHandler::ImageOption option) const override;
 
 private:
-    QVariant compressionRatio;
+    QVariant compressionRatio_;
 };
 
 #endif // ILBMPLUGIN_H

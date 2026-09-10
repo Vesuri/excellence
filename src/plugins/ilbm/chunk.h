@@ -7,11 +7,11 @@ class Chunk {
 public:
     Chunk();
     Chunk(const QByteArray &id, const QByteArray &data);
-    Chunk(const QByteArray &chunkData);
-    Chunk(const Chunk &chunk);
+    explicit Chunk(const QByteArray &chunkData);
+    Chunk(const Chunk &chunk) = default;
 
     bool isNull() const;
-    QByteArray id() const;
+    const QByteArray &id() const;
     unsigned size() const;
     QByteArray data(unsigned offset = 0, int length = -1) const;
     char byte(unsigned offset) const;
@@ -21,7 +21,7 @@ public:
     unsigned ulong(unsigned offset) const;
 
     void setId(const QByteArray &id);
-    void setSize(const unsigned size);
+    void setSize(unsigned size);
     void setData(const QByteArray &data);
     void setByte(unsigned offset, char byte);
     void setUbyte(unsigned offset, unsigned char ubyte);

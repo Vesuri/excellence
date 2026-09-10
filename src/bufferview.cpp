@@ -132,29 +132,23 @@ BufferView::~BufferView()
 
 void BufferView::setBuffer(Buffer *buffer)
 {
-    if (this->buffer != nullptr) {
-        disconnect(this->buffer, SIGNAL(pathChanged(QString)));
-        disconnect(this->buffer, SIGNAL(modified(QRect)));
-        disconnect(this->buffer, SIGNAL(zoomed(QRect)));
-        disconnect(this->buffer, SIGNAL(toolChanged(Tool*)));
-        disconnect(this->buffer, SIGNAL(paintColorChanged(unsigned,QColor)));
-        disconnect(this->buffer, SIGNAL(eraseColorChanged(unsigned,QColor)));
-        disconnect(this->buffer, &Buffer::pixelGridChanged, scene, &CanvasScene::setPixelGrid);
-        disconnect(this->buffer, &Buffer::penModified, this, &BufferView::onToolChanged);
+    if (this->buffer) {
+        disconnect(this->buffer, nullptr, this, nullptr);
+        disconnect(this->buffer, nullptr, scene, nullptr);
     }
 
     this->buffer = buffer;
 
-    if (buffer != nullptr) {
-        connect(buffer, SIGNAL(pathChanged(QString)), this, SLOT(updateWindowTitle()));
-        connect(buffer, SIGNAL(modified(QRect)), this, SLOT(setPixmap(QRect)));
-        connect(buffer, SIGNAL(zoomed(QRect)), this, SLOT(setZoom(QRect)));
-        connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateWindowTitle()));
-        connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(onToolChanged()));
+    if (buffer) {
+        connect(buffer, &Buffer::pathChanged, this, [this]() { updateWindowTitle(); });
+        connect(buffer, &Buffer::modified, this, &BufferView::setPixmap);
+        connect(buffer, &Buffer::zoomed, this, &BufferView::setZoom);
+        connect(buffer, &Buffer::toolChanged, this, [this]() { updateWindowTitle(); });
+        connect(buffer, &Buffer::toolChanged, this, &BufferView::onToolChanged);
         connect(buffer, &Buffer::penModified, this, &BufferView::onToolChanged);
         connect(buffer, &Buffer::paintModeChanged, this, [this](Buffer::PaintMode) { updateWindowTitle(); });
-        connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
-        connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateWindowTitle()));
+        connect(buffer, &Buffer::paintColorChanged, this, [this]() { updateWindowTitle(); });
+        connect(buffer, &Buffer::eraseColorChanged, this, [this]() { updateWindowTitle(); });
         connect(buffer, &Buffer::pixelGridChanged, scene, &CanvasScene::setPixelGrid);
         scene->setPixelGrid(buffer->pixelGrid());
         updateWindowTitle();

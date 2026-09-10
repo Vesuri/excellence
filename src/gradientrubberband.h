@@ -15,9 +15,7 @@ struct GradientRubberBand {
     void start(const QPoint &anchor) { pending = true; from = anchor; }
     void clear()                     { pending = false; }
 
-    // Uses qMin/qMax instead of QRect(p1,p2).normalized() to avoid the Qt off-by-one
-    // where normalized() skips swapping when x2==x1-1 or y2==y1-1, producing a
-    // zero-width/height rect that saves nothing and leaves pixels unrestored.
+    // QRect::normalized() mishandles adjacent reversed coordinates.
     QRect hoverRect(const QPoint &cursor, const QRect &imageRect) const {
         if (!pending) return {};
         return QRect(qMin(from.x(), cursor.x()),

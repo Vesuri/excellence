@@ -17,20 +17,20 @@ class Tool : public QObject
     Q_OBJECT
 
 public:
-    enum Type{ Modify, Zoom };
+    enum Type { Modify, Zoom };
 
     explicit Tool(QObject *parent = nullptr);
 
-    void setMouseButton(const Qt::MouseButton &mouseButton);
+    void setMouseButton(Qt::MouseButton mouseButton);
     Qt::MouseButton mouseButton() const;
     virtual void setBuffer(Buffer *buffer);
 
     void click();
-    virtual QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) = 0;
-    virtual QRect move(const QPoint &point) = 0;
-    virtual QRect release(const QPoint &point) = 0;
+    virtual QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers);
+    virtual QRect move(const QPoint &point);
+    virtual QRect release(const QPoint &point);
     virtual QRect hover(const QPoint &point);
-    virtual QRect doubleClick(const QPoint &point) { Q_UNUSED(point) return QRect(); }
+    virtual QRect doubleClick(const QPoint &point) { Q_UNUSED(point); return {}; }
     virtual void cancel() {}
     virtual bool isInRubberBandMode() const { return false; }
     virtual bool showGuides() const { return false; }
@@ -62,14 +62,14 @@ protected slots:
     virtual void setCheckedIfEqual(Tool *tool);
 
 protected:
-    virtual QWidget* createOptionsWidget();
+    virtual QWidget *createOptionsWidget();
     void connectToolChecked();
     void disconnectToolChecked();
     void hideOptionsPanel();
 
     Qt::MouseButton mouseButton_;
     Buffer *buffer_;
-    QToolButton *button_;
+    QToolButton *button_ = nullptr;
     QWidget *optionsWidget_;
     QDockWidget *dockWidget_;
 

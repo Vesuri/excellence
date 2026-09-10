@@ -15,7 +15,7 @@ class ImportImageDialog : public QDialog
 
 public:
     explicit ImportImageDialog(QWidget *parent = nullptr);
-    ~ImportImageDialog();
+    ~ImportImageDialog() override;
 
     // Default width/height, shown pre-filled with the source image's own size.
     void setImageSize(int width, int height);

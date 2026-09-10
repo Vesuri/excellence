@@ -109,75 +109,75 @@ MainWindow::MainWindow(QWidget *parent) :
     menuBar()->setParent(nullptr);
 #endif
 
-    connect(openDialog, SIGNAL(fileSelected(QString)), this, SLOT(openFile(QString)));
-    connect(importDialog, SIGNAL(fileSelected(QString)), this, SLOT(importFile(QString)));
-    connect(loadPaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(loadPalette(QString)));
+    connect(openDialog, &QFileDialog::fileSelected, this, &MainWindow::openFile);
+    connect(importDialog, &QFileDialog::fileSelected, this, &MainWindow::importFile);
+    connect(loadPaletteDialog, &QFileDialog::fileSelected, this, &MainWindow::loadPalette);
     savePaletteDialog->setAcceptMode(QFileDialog::AcceptSave);
-    connect(savePaletteDialog, SIGNAL(fileSelected(QString)), this, SLOT(paletteSave(QString)));
+    connect(savePaletteDialog, &QFileDialog::fileSelected, this, &MainWindow::paletteSave);
     connect(ui->actionFileQuit, &QAction::triggered, this, &QWidget::close);
-    connect(ui->actionFileNew, SIGNAL(triggered()), this, SLOT(openFile()));
-    connect(ui->actionFileOpen, SIGNAL(triggered()), openDialog, SLOT(show()));
-    connect(ui->actionFileImport, SIGNAL(triggered()), importDialog, SLOT(show()));
-    connect(ui->actionFileSave, SIGNAL(triggered()), this, SLOT(saveFile()));
-    connect(ui->actionFileSaveAs, SIGNAL(triggered()), this, SLOT(saveAs()));
+    connect(ui->actionFileNew, &QAction::triggered, this, [this]() { openFile(); });
+    connect(ui->actionFileOpen, &QAction::triggered, openDialog, &QWidget::show);
+    connect(ui->actionFileImport, &QAction::triggered, importDialog, &QWidget::show);
+    connect(ui->actionFileSave, &QAction::triggered, this, [this]() { saveFile(); });
+    connect(ui->actionFileSaveAs, &QAction::triggered, this, &MainWindow::saveAs);
     connect(ui->actionFileSaveWithTransparency, &QAction::toggled, [this](bool checked) {
         saveWithTransparency_ = checked;
     });
-    connect(ui->actionBufferToggleWorkSpare, SIGNAL(triggered()), this, SLOT(toggleWorkSpare()));
-    connect(ui->actionBufferMarkAsSpare,     SIGNAL(triggered()), this, SLOT(markAsSpare()));
-    connect(ui->actionBufferGoToSpare,       SIGNAL(triggered()), this, SLOT(goToSpare()));
-    connect(ui->actionBufferCopySpareToWork, SIGNAL(triggered()), this, SLOT(bufferCopySpareToWork()));
-    connect(ui->actionBufferMergeFront,      SIGNAL(triggered()), this, SLOT(bufferMergeFront()));
-    connect(ui->actionBufferMergeBack,       SIGNAL(triggered()), this, SLOT(bufferMergeBack()));
-    connect(ui->actionBufferShowBuffers,     SIGNAL(triggered()), this, SLOT(showBufferDialog()));
+    connect(ui->actionBufferToggleWorkSpare, &QAction::triggered, this, &MainWindow::toggleWorkSpare);
+    connect(ui->actionBufferMarkAsSpare, &QAction::triggered, this, &MainWindow::markAsSpare);
+    connect(ui->actionBufferGoToSpare, &QAction::triggered, this, &MainWindow::goToSpare);
+    connect(ui->actionBufferCopySpareToWork, &QAction::triggered, this, &MainWindow::bufferCopySpareToWork);
+    connect(ui->actionBufferMergeFront, &QAction::triggered, this, &MainWindow::bufferMergeFront);
+    connect(ui->actionBufferMergeBack, &QAction::triggered, this, &MainWindow::bufferMergeBack);
+    connect(ui->actionBufferShowBuffers, &QAction::triggered, this, &MainWindow::showBufferDialog);
     connect(this, &MainWindow::bufferListChanged, this, &MainWindow::updateBufferMenuState);
     connect(&BufferTool::instance, &BufferTool::showBuffersRequested, this, &MainWindow::showBufferDialog);
-    connect(ui->actionImageCopy, SIGNAL(triggered()), this, SLOT(imageCopy()));
-    connect(ui->actionImagePaste, SIGNAL(triggered()), this, SLOT(imagePaste()));
-    connect(ui->actionImageCopyColor, SIGNAL(triggered()), this, SLOT(imageCopyColor()));
-    connect(ui->actionImageSwapColors, SIGNAL(triggered()), this, SLOT(imageSwapColors()));
-    connect(ui->actionImageHistogram, SIGNAL(triggered()), this, SLOT(imageHistogram()));
-    connect(ui->actionImageProperties, SIGNAL(triggered()), this, SLOT(showProperties()));
-    connect(ui->actionPaletteLoad, SIGNAL(triggered()), loadPaletteDialog, SLOT(show()));
-    connect(ui->actionPaletteSave, SIGNAL(triggered()), savePaletteDialog, SLOT(show()));
-    connect(ui->actionPaletteSpread, SIGNAL(triggered()), this, SLOT(paletteSpread()));
-    connect(ui->actionPaletteCopyColor, SIGNAL(triggered()), this, SLOT(paletteCopyColor()));
-    connect(ui->actionPaletteSwapColors, SIGNAL(triggered()), this, SLOT(paletteSwapColors()));
-    connect(ui->actionPaletteSwapAndRemapColors, SIGNAL(triggered()), this, SLOT(paletteSwapAndRemapColors()));
-    connect(ui->actionPaletteDefault, SIGNAL(triggered()), this, SLOT(paletteDefault()));
-    connect(ui->actionPaletteRestore, SIGNAL(triggered()), this, SLOT(paletteRestore()));
-    connect(ui->actionPaletteUndo, SIGNAL(triggered()), this, SLOT(paletteUndo()));
-    connect(ui->actionPaletteRemapPage, SIGNAL(triggered()), this, SLOT(paletteRemapPage()));
-    connect(ui->actionBrushLoad, SIGNAL(triggered()), this, SLOT(brushLoad()));
-    connect(ui->actionBrushSave, SIGNAL(triggered()), this, SLOT(brushSave()));
-    connect(ui->actionBrushCopy, SIGNAL(triggered()), this, SLOT(brushCopy()));
-    connect(ui->actionBrushPaste, SIGNAL(triggered()), this, SLOT(brushPaste()));
-    connect(ui->actionBrushDelete, SIGNAL(triggered()), this, SLOT(brushDelete()));
-    connect(ui->actionBrushRemap, SIGNAL(triggered()), this, SLOT(brushRemap()));
-    connect(ui->actionBrushBgFgSwap, SIGNAL(triggered()), this, SLOT(brushBgFgSwap()));
-    connect(ui->actionBrushAutoBackground, SIGNAL(triggered()), this, SLOT(brushAutoBackground()));
-    connect(ui->actionBrushFlipHorizontal, SIGNAL(triggered()), this, SLOT(brushFlipHorizontal()));
-    connect(ui->actionBrushFlipVertical, SIGNAL(triggered()), this, SLOT(brushFlipVertical()));
-    connect(ui->actionBrushRotate90CW, SIGNAL(triggered()), this, SLOT(brushRotate90CW()));
-    connect(ui->actionBrushRotate90CCW, SIGNAL(triggered()), this, SLOT(brushRotate90CCW()));
-    connect(ui->actionBrushRotateNumeric, SIGNAL(triggered()), this, SLOT(brushRotateNumeric()));
-    connect(ui->actionBrushDouble, SIGNAL(triggered()), this, SLOT(brushDouble()));
-    connect(ui->actionBrushDoubleX, SIGNAL(triggered()), this, SLOT(brushDoubleX()));
-    connect(ui->actionBrushDoubleY, SIGNAL(triggered()), this, SLOT(brushDoubleY()));
-    connect(ui->actionBrushHalve, SIGNAL(triggered()), this, SLOT(brushHalve()));
-    connect(ui->actionBrushHalveX, SIGNAL(triggered()), this, SLOT(brushHalveX()));
-    connect(ui->actionBrushHalveY, SIGNAL(triggered()), this, SLOT(brushHalveY()));
-    connect(ui->actionBrushScaleToSize, SIGNAL(triggered()), this, SLOT(brushScaleToSize()));
-    connect(ui->actionBrushShearX, SIGNAL(triggered()), &BrushTool::instance, SLOT(startShearX()));
-    connect(ui->actionBrushShearY, SIGNAL(triggered()), &BrushTool::instance, SLOT(startShearY()));
-    connect(ui->actionBrushBendX, SIGNAL(triggered()), &BrushTool::instance, SLOT(startBendX()));
-    connect(ui->actionBrushBendY, SIGNAL(triggered()), &BrushTool::instance, SLOT(startBendY()));
-    connect(ui->actionBrushOutline, SIGNAL(triggered()), this, SLOT(brushOutline()));
-    connect(ui->actionBrushTrim, SIGNAL(triggered()), this, SLOT(brushTrim()));
-    connect(ui->actionBrushRestore, SIGNAL(triggered()), this, SLOT(brushRestore()));
-    connect(ui->actionWindowNewWindow, SIGNAL(triggered()), this, SLOT(newWindow()));
-    connect(ui->actionWindowCloseWindow, SIGNAL(triggered()), this, SLOT(closeWindow()));
-    connect(ui->actionWindowFitToImage, SIGNAL(triggered()), this, SLOT(fitWindowToImage()));
+    connect(ui->actionImageCopy, &QAction::triggered, this, &MainWindow::imageCopy);
+    connect(ui->actionImagePaste, &QAction::triggered, this, &MainWindow::imagePaste);
+    connect(ui->actionImageCopyColor, &QAction::triggered, this, &MainWindow::imageCopyColor);
+    connect(ui->actionImageSwapColors, &QAction::triggered, this, &MainWindow::imageSwapColors);
+    connect(ui->actionImageHistogram, &QAction::triggered, this, &MainWindow::imageHistogram);
+    connect(ui->actionImageProperties, &QAction::triggered, this, &MainWindow::showProperties);
+    connect(ui->actionPaletteLoad, &QAction::triggered, loadPaletteDialog, &QWidget::show);
+    connect(ui->actionPaletteSave, &QAction::triggered, savePaletteDialog, &QWidget::show);
+    connect(ui->actionPaletteSpread, &QAction::triggered, this, &MainWindow::paletteSpread);
+    connect(ui->actionPaletteCopyColor, &QAction::triggered, this, &MainWindow::paletteCopyColor);
+    connect(ui->actionPaletteSwapColors, &QAction::triggered, this, &MainWindow::paletteSwapColors);
+    connect(ui->actionPaletteSwapAndRemapColors, &QAction::triggered, this, &MainWindow::paletteSwapAndRemapColors);
+    connect(ui->actionPaletteDefault, &QAction::triggered, this, &MainWindow::paletteDefault);
+    connect(ui->actionPaletteRestore, &QAction::triggered, this, &MainWindow::paletteRestore);
+    connect(ui->actionPaletteUndo, &QAction::triggered, this, &MainWindow::paletteUndo);
+    connect(ui->actionPaletteRemapPage, &QAction::triggered, this, &MainWindow::paletteRemapPage);
+    connect(ui->actionBrushLoad, &QAction::triggered, this, &MainWindow::brushLoad);
+    connect(ui->actionBrushSave, &QAction::triggered, this, &MainWindow::brushSave);
+    connect(ui->actionBrushCopy, &QAction::triggered, this, &MainWindow::brushCopy);
+    connect(ui->actionBrushPaste, &QAction::triggered, this, &MainWindow::brushPaste);
+    connect(ui->actionBrushDelete, &QAction::triggered, this, &MainWindow::brushDelete);
+    connect(ui->actionBrushRemap, &QAction::triggered, this, &MainWindow::brushRemap);
+    connect(ui->actionBrushBgFgSwap, &QAction::triggered, this, &MainWindow::brushBgFgSwap);
+    connect(ui->actionBrushAutoBackground, &QAction::triggered, this, &MainWindow::brushAutoBackground);
+    connect(ui->actionBrushFlipHorizontal, &QAction::triggered, this, &MainWindow::brushFlipHorizontal);
+    connect(ui->actionBrushFlipVertical, &QAction::triggered, this, &MainWindow::brushFlipVertical);
+    connect(ui->actionBrushRotate90CW, &QAction::triggered, this, &MainWindow::brushRotate90CW);
+    connect(ui->actionBrushRotate90CCW, &QAction::triggered, this, &MainWindow::brushRotate90CCW);
+    connect(ui->actionBrushRotateNumeric, &QAction::triggered, this, &MainWindow::brushRotateNumeric);
+    connect(ui->actionBrushDouble, &QAction::triggered, this, &MainWindow::brushDouble);
+    connect(ui->actionBrushDoubleX, &QAction::triggered, this, &MainWindow::brushDoubleX);
+    connect(ui->actionBrushDoubleY, &QAction::triggered, this, &MainWindow::brushDoubleY);
+    connect(ui->actionBrushHalve, &QAction::triggered, this, &MainWindow::brushHalve);
+    connect(ui->actionBrushHalveX, &QAction::triggered, this, &MainWindow::brushHalveX);
+    connect(ui->actionBrushHalveY, &QAction::triggered, this, &MainWindow::brushHalveY);
+    connect(ui->actionBrushScaleToSize, &QAction::triggered, this, &MainWindow::brushScaleToSize);
+    connect(ui->actionBrushShearX, &QAction::triggered, &BrushTool::instance, &BrushTool::startShearX);
+    connect(ui->actionBrushShearY, &QAction::triggered, &BrushTool::instance, &BrushTool::startShearY);
+    connect(ui->actionBrushBendX, &QAction::triggered, &BrushTool::instance, &BrushTool::startBendX);
+    connect(ui->actionBrushBendY, &QAction::triggered, &BrushTool::instance, &BrushTool::startBendY);
+    connect(ui->actionBrushOutline, &QAction::triggered, this, &MainWindow::brushOutline);
+    connect(ui->actionBrushTrim, &QAction::triggered, this, &MainWindow::brushTrim);
+    connect(ui->actionBrushRestore, &QAction::triggered, this, &MainWindow::brushRestore);
+    connect(ui->actionWindowNewWindow, &QAction::triggered, this, &MainWindow::newWindow);
+    connect(ui->actionWindowCloseWindow, &QAction::triggered, this, &MainWindow::closeWindow);
+    connect(ui->actionWindowFitToImage, &QAction::triggered, this, &MainWindow::fitWindowToImage);
     connect(ui->actionWindowFloatPanels, &QAction::toggled, this, &MainWindow::toggleFloatPanels);
     connect(ui->actionWindowSingleWindow, &QAction::toggled, this, &MainWindow::toggleSingleWindowMode);
     connect(ui->actionHelpAbout, &QAction::triggered, this, &MainWindow::about);
@@ -190,7 +190,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     setWindowFlag(Qt::Tool);
 
-    QTimer::singleShot(1, this, SLOT(initialize()));
+    QTimer::singleShot(1, this, &MainWindow::initialize);
 }
 
 MainWindow::~MainWindow()
@@ -325,19 +325,10 @@ int MainWindow::workBufferIndex() const
 void MainWindow::disconnectBufferSignals(Buffer *b)
 {
     if (!b) return;
-    disconnect(b, &Buffer::paletteModified, this, nullptr);
-    disconnect(b, &Buffer::paintColorChanged, this, nullptr);
-    disconnect(b, &Buffer::eraseColorChanged, this, nullptr);
-    disconnect(b, &Buffer::paintColorChanged, penTip, nullptr);
-    disconnect(b, &Buffer::eraseColorChanged, penTip, nullptr);
-    disconnect(b, &Buffer::paintColorChanged, toolPenTip, nullptr);
-    disconnect(b, &Buffer::eraseColorChanged, toolPenTip, nullptr);
-    disconnect(b, &Buffer::dirtyChanged, this, nullptr);
-    disconnect(b, &Buffer::toolChanged, this, nullptr);
-    disconnect(b, &Buffer::penChanged, this, nullptr);
-    disconnect(b, &Buffer::paintModeChanged, this, nullptr);
-    disconnect(b, &Buffer::paintColorChanged, statusColorsButton_, nullptr);
-    disconnect(b, &Buffer::eraseColorChanged, statusColorsButton_, nullptr);
+    disconnect(b, nullptr, this, nullptr);
+    disconnect(b, nullptr, penTip, nullptr);
+    disconnect(b, nullptr, toolPenTip, nullptr);
+    disconnect(b, nullptr, statusColorsButton_, nullptr);
 }
 
 void MainWindow::activateBuffer(Buffer *newBuffer)
@@ -348,7 +339,7 @@ void MainWindow::activateBuffer(Buffer *newBuffer)
     for (Tool *tool : tools)
         tool->setBuffer(buffer);
 
-    foreach (BufferView *bufferView, bufferViews) {
+    for (BufferView *bufferView : bufferViews) {
         bufferView->setBuffer(buffer);
     }
 
@@ -362,8 +353,10 @@ void MainWindow::activateBuffer(Buffer *newBuffer)
         static const int paletteButtonPerRow = 16;
         for (int i = 0, row = 0, column = 0; i < buffer->image().colorCount(); i++) {
             PaletteButton *button = new PaletteButton();
-            connect(button, SIGNAL(paintColorSelected(unsigned)), this, SLOT(runPaletteActionForPaintColor(unsigned)));
-            connect(button, SIGNAL(eraseColorSelected(unsigned)), this, SLOT(runPaletteActionForEraseColor(unsigned)));
+            connect(button, &PaletteButton::paintColorSelected,
+                    this, &MainWindow::runPaletteActionForPaintColor);
+            connect(button, &PaletteButton::eraseColorSelected,
+                    this, &MainWindow::runPaletteActionForEraseColor);
             button->setPaletteIndex(static_cast<unsigned>(i));
             button->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred));
             ui->paletteLayout->addWidget(button, row, column);
@@ -379,24 +372,26 @@ void MainWindow::activateBuffer(Buffer *newBuffer)
     }
 
     updatePalette();
-    connect(buffer, SIGNAL(paletteModified()), this, SLOT(updatePalette()));
-    connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updatePalette()));
-    connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updatePalette()));
+    connect(buffer, &Buffer::paletteModified, this, &MainWindow::updatePalette);
+    connect(buffer, &Buffer::paintColorChanged, this, &MainWindow::updatePalette);
+    connect(buffer, &Buffer::eraseColorChanged, this, &MainWindow::updatePalette);
     paletteRestorePoint_ = buffer->image().colorTable();
     paletteUndoSnapshot_ = paletteRestorePoint_;
-    connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), penTip, SLOT(setPaintColor(unsigned)));
-    connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), penTip, SLOT(setEraseColor(unsigned)));
-    connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), toolPenTip, SLOT(setPaintColor(unsigned)));
-    connect(buffer, SIGNAL(eraseColorChanged(unsigned, QColor)), toolPenTip, SLOT(setEraseColor(unsigned)));
+    connect(buffer, &Buffer::paintColorChanged, penTip, &PenTip::setPaintColor);
+    connect(buffer, &Buffer::eraseColorChanged, penTip, &PenTip::setEraseColor);
+    connect(buffer, &Buffer::paintColorChanged, toolPenTip, &PenTip::setPaintColor);
+    connect(buffer, &Buffer::eraseColorChanged, toolPenTip, &PenTip::setEraseColor);
     connect(buffer, &Buffer::dirtyChanged, this, &MainWindow::onDirtyChanged);
-    connect(buffer, SIGNAL(toolChanged(Tool*)), this, SLOT(updateStatusBarStatic()));
+    connect(buffer, &Buffer::toolChanged, this, &MainWindow::updateStatusBarStatic);
     connect(buffer, &Buffer::penChanged, this, [this](Pen *) { updateStatusBarStatic(); });
     connect(buffer, &Buffer::paintModeChanged, this, [this](Buffer::PaintMode) { updateStatusBarStatic(); });
-    connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), this, SLOT(updateStatusBarStatic()));
-    connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), this, SLOT(updateStatusBarStatic()));
-    connect(buffer, SIGNAL(paletteModified()), this, SLOT(updateStatusBarStatic()));
-    connect(buffer, SIGNAL(paintColorChanged(unsigned,QColor)), statusColorsButton_, SLOT(setPaintColor(unsigned,QColor)));
-    connect(buffer, SIGNAL(eraseColorChanged(unsigned,QColor)), statusColorsButton_, SLOT(setEraseColor(unsigned,QColor)));
+    connect(buffer, &Buffer::paintColorChanged, this, &MainWindow::updateStatusBarStatic);
+    connect(buffer, &Buffer::eraseColorChanged, this, &MainWindow::updateStatusBarStatic);
+    connect(buffer, &Buffer::paletteModified, this, &MainWindow::updateStatusBarStatic);
+    connect(buffer, &Buffer::paintColorChanged,
+            statusColorsButton_, &CurrentColorsButton::setPaintColor);
+    connect(buffer, &Buffer::eraseColorChanged,
+            statusColorsButton_, &CurrentColorsButton::setEraseColor);
     updateStatusBarStatic();
 }
 
@@ -904,15 +899,10 @@ void MainWindow::toggleFloatPanels(bool checked)
 void MainWindow::toggleSingleWindowMode(bool checked)
 {
     if (checked) {
-        // Capture geometry before any layout changes. On macOS the frame origin
-        // equals the content origin (frame.y() == pos().y()), but the frame
-        // extends past the content on the bottom by a fixed amount (resize
-        // handle/shadow). Reading both rects here, while the window is still
-        // compact, gives a reliable overhead for the screen-fit calculation.
+        // Preserve frame overhead for screen fitting.
         QRect geo   = geometry();
         QRect frame = frameGeometry();
 
-        // Dock all open panels and strip their floatable feature
         for (Tool *tool : tools) {
             QDockWidget *dw = tool->dockWidget();
             if (dw) {
@@ -928,8 +918,7 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         ui->actionWindowFloatPanels->setEnabled(false);
         ui->actionWindowNewWindow->setEnabled(false);
 
-        // Rearrange widgetMain's gridLayout to insert the BufferView above the tools/palette.
-        // Remove the two sub-layouts by searching for them to avoid index-order assumptions.
+        // Insert the buffer view above the tool and palette rows.
         QLayoutItem *toolsItem = nullptr;
         QLayoutItem *paletteItem = nullptr;
         for (int i = ui->gridLayout->count() - 1; i >= 0; --i) {
@@ -944,10 +933,8 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         ui->gridLayout->addItem(toolsItem, 1, 0);
         ui->gridLayout->addItem(paletteItem, 2, 0);
 
-        // Reparenting hides the view; show it so the layout counts its size.
         activeBufferView->show();
 
-        // Grow the window to fit the buffer.
         int left, top, right, bottom;
         ui->gridLayout->getContentsMargins(&left, &top, &right, &bottom);
         QSize bvSize = activeBufferView->sizeHint();
@@ -955,21 +942,17 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         int newH = geo.height() + bvSize.height() + ui->gridLayout->verticalSpacing();
         resize(newW, newH);
 
-        // Reposition so the full frame fits the screen. The frame overhead
-        // (frame size minus content size, read before the resize) accounts for
-        // the bottom shadow/handle that extends past the content on macOS.
+        // Keep the full frame on screen.
         QRect av = screen()->availableGeometry();
         int newFrameW = newW + (frame.width()  - geo.width());
         int newFrameH = newH + (frame.height() - geo.height());
         int nx = qMax(av.left(), qMin(frame.x(), av.right()  - newFrameW + 1));
         int ny = qMax(av.top(),  qMin(frame.y(), av.bottom() - newFrameH + 1));
-        // On macOS, move() sets the frame origin (not the content origin), so
-        // pass nx/ny directly — no border offset needed.
         if (nx != frame.x() || ny != frame.y())
             move(nx, ny);
 
     } else {
-        // Restore widgetMain's gridLayout: remove the BufferView and shift sub-layouts back up.
+        // Restore the detached-window layout.
         QLayoutItem *toolsItem = nullptr;
         QLayoutItem *paletteItem = nullptr;
         QLayoutItem *bvItem = nullptr;
@@ -986,14 +969,12 @@ void MainWindow::toggleSingleWindowMode(bool checked)
         ui->gridLayout->addItem(toolsItem, 0, 0);
         ui->gridLayout->addItem(paletteItem, 1, 0);
 
-        // bvItem is a QWidgetItem wrapper; delete it after reparenting the widget
         activeBufferView->setParent(nullptr);
         delete bvItem;
         activeBufferView->show();
 
         resize(minimumSizeHint());
 
-        // Restore floatable feature on existing panels
         for (Tool *tool : tools) {
             QDockWidget *dw = tool->dockWidget();
             if (dw)
@@ -1414,7 +1395,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
         break;
     }
     case QEvent::WindowActivate:
-        foreach (BufferView *bufferView, bufferViews) {
+        for (BufferView *bufferView : bufferViews) {
             if (watched == bufferView) {
                 activeBufferView = bufferView;
             }

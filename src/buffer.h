@@ -31,7 +31,7 @@ public:
     QString path() const;
     void setImage(const QImage &image);
     QImage &image();
-    void press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers);
+    void press(const QPoint &point, Qt::MouseButton button, Qt::KeyboardModifiers modifiers);
     void move(const QPoint &point);
     void release(const QPoint &point);
     void doubleClick(const QPoint &point);
@@ -169,11 +169,11 @@ private:
 
     QString path_;
     QImage image_;
-    QRect modifiedArea;
-    QImage preModificationImage;
-    QList<UndoBuffer *> undoBuffers;
-    QList<UndoBuffer *> redoStack;
-    UndoBuffer *moveUndoBuffer;
+    QRect modifiedArea_;
+    QImage preModificationImage_;
+    QList<UndoBuffer *> undoBuffers_;
+    QList<UndoBuffer *> redoStack_;
+    UndoBuffer *moveUndoBuffer_;
     Tool *tool_ = nullptr;
     Pen *pen_;
     Pen *toolPen_;

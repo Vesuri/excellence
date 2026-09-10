@@ -5,41 +5,21 @@
 
 PaletteTool PaletteTool::instance;
 
-PaletteTool::PaletteTool(QObject *parent) : Tool(parent),
-    colorDialog(nullptr)
+PaletteTool::PaletteTool(QObject *parent) : Tool(parent)
 {
 }
 
 void PaletteTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr) {
-        disconnect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), this, SLOT(setPaintColor(unsigned, QColor)));
-        disconnect(colorDialog, SIGNAL(currentColorChanged(QColor)), this, SLOT(editPaintColor(QColor)));
-    }
+    if (buffer_)
+        disconnect(buffer_, &Buffer::paintColorChanged, this, &PaletteTool::setPaintColor);
 
     Tool::setBuffer(buffer);
 
-    if (buffer_ != nullptr) {
-        setPaintColor(buffer->paintColor(), buffer->image().color(static_cast<int>(buffer->paintColor())));
-
-        connect(buffer, SIGNAL(paintColorChanged(unsigned, QColor)), this, SLOT(setPaintColor(unsigned, QColor)));
-        connect(colorDialog, SIGNAL(currentColorChanged(QColor)), this, SLOT(editPaintColor(QColor)));
+    if (buffer_) {
+        setPaintColor(buffer_->paintColor(), buffer_->image().color(static_cast<int>(buffer_->paintColor())));
+        connect(buffer_, &Buffer::paintColorChanged, this, &PaletteTool::setPaintColor);
     }
-}
-
-QRect PaletteTool::press(const QPoint &, const Qt::KeyboardModifiers &)
-{
-    return QRect();
-}
-
-QRect PaletteTool::move(const QPoint &)
-{
-    return QRect();
-}
-
-QRect PaletteTool::release(const QPoint &)
-{
-    return QRect();
 }
 
 void PaletteTool::registerTool()
@@ -48,15 +28,17 @@ void PaletteTool::registerTool()
 
     button_->setIcon(QIcon(":/palette.png"));
     button_->setToolTip("Palette – Edit active color\nRight-click: open palette window");
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(toggleColorDialogVisibility()));
+    connect(button_, &QToolButton::clicked, this, &PaletteTool::toggleColorDialogVisibility);
 
-    // Override default right-click (options widget) with palette window toggle
-    disconnect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
-    connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleColorDialogVisibility()));
+    disconnect(button_, &QToolButton::customContextMenuRequested, this, &Tool::toggleOptionsWidget);
+    connect(button_, &QToolButton::customContextMenuRequested,
+            this, &PaletteTool::toggleColorDialogVisibility);
 
-    colorDialog = new QColorDialog;
-    colorDialog->setOption(QColorDialog::DontUseNativeDialog);
-    colorDialog->setOption(QColorDialog::NoButtons);
+    colorDialog_ = new QColorDialog;
+    colorDialog_->setOption(QColorDialog::DontUseNativeDialog);
+    colorDialog_->setOption(QColorDialog::NoButtons);
+    connect(colorDialog_, &QColorDialog::currentColorChanged,
+            this, &PaletteTool::editPaintColor);
 }
 
 void PaletteTool::addButtonToGridLayout(QGridLayout *layout)
@@ -66,12 +48,12 @@ void PaletteTool::addButtonToGridLayout(QGridLayout *layout)
 
 void PaletteTool::toggleColorDialogVisibility()
 {
-    colorDialog->setVisible(!colorDialog->isVisible());
+    colorDialog_->setVisible(!colorDialog_->isVisible());
 }
 
 void PaletteTool::setPaintColor(unsigned, const QColor &color)
 {
-    colorDialog->setCurrentColor(color);
+    colorDialog_->setCurrentColor(color);
 }
 
 void PaletteTool::editPaintColor(const QColor &color)

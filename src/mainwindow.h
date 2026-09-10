@@ -31,7 +31,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    ~MainWindow() override;
 
     int bufferCount() const;
     Buffer *bufferAt(int index) const;

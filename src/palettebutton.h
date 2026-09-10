@@ -31,10 +31,10 @@ protected:
 private:
     void setColorFlag(bool &member, bool value);
 
-    unsigned paletteIndex_;
+    unsigned paletteIndex_ = 0;
     QColor color_;
-    bool paintButtonDown;
-    bool eraseButtonDown;
+    bool paintButtonDown_ = false;
+    bool eraseButtonDown_ = false;
     bool isPaintColor_ = false;
     bool isEraseColor_ = false;
     bool stencilSelected_ = false;

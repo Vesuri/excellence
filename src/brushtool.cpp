@@ -10,7 +10,6 @@
 #include <QPainter>
 #include <QPushButton>
 #include <QRect>
-#include <QSignalMapper>
 #include <QVBoxLayout>
 #include <QWidget>
 #include "brush.h"
@@ -193,7 +192,7 @@ void BrushTool::setBuffer(Buffer *buffer)
     refreshBrushDisplay();
 }
 
-QRect BrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect BrushTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (distortMode_ != NoDistort)
         return distortPress(point);
@@ -231,8 +230,7 @@ QRect BrushTool::move(const QPoint &point)
         return changedRect;
     }
 
-    // No rectangle preview — guides show the selection area instead.
-    // Restore the initial press dot but keep undoBuffer_ for release().
+    // Guides show the selection area.
     currentPoint_ = point;
     if (undoBuffer_)
         undoBuffer_->apply(buffer_);
@@ -304,11 +302,7 @@ QRect BrushTool::release(const QPoint &point)
             changedRect = changedRect.united(draw(p));
         });
 
-    // setTool() synchronously emits toolChanged, which BufferView::onToolChanged()
-    // handles by calling buffer_->move() to refresh the new tool's hover preview.
-    // That must happen after the erase above, otherwise the preview's undo snapshot
-    // captures the pre-erase pixels and restores them over the just-cleared area on
-    // the next mouse move.
+    // Refresh the hover preview after erasing the selection.
     buffer_->setTool(tools.at(0));
 
     return changedRect;
@@ -399,18 +393,14 @@ QWidget *BrushTool::createOptionsWidget()
         ui_->well0, ui_->well1, ui_->well2, ui_->well3,
         ui_->well4, ui_->well5, ui_->well6, ui_->well7
     };
-    QSignalMapper *clickMapper = new QSignalMapper(w);
-    QSignalMapper *ctrlMapper  = new QSignalMapper(w);
-    connect(clickMapper, SIGNAL(mapped(int)), this, SLOT(wellClicked(int)));
-    connect(ctrlMapper,  SIGNAL(mapped(int)), this, SLOT(wellCtrlClicked(int)));
     for (int i = 0; i < WellCount; i++) {
         wellButtons_[i] = wellPtrs[i];
         if (!wells_[i].isNull())
             wellButtons_[i]->store(wells_[i]);
-        clickMapper->setMapping(wellButtons_[i], i);
-        ctrlMapper->setMapping(wellButtons_[i], i);
-        connect(wellButtons_[i], SIGNAL(clicked()),     clickMapper, SLOT(map()));
-        connect(wellButtons_[i], SIGNAL(ctrlClicked()), ctrlMapper,  SLOT(map()));
+        connect(wellButtons_[i], &QAbstractButton::clicked,
+                this, [this, i]() { wellClicked(i); });
+        connect(wellButtons_[i], &BrushWellButton::ctrlClicked,
+                this, [this, i]() { wellCtrlClicked(i); });
     }
 
     ui_->tileCutCheck->setChecked(tileCut_);
@@ -423,11 +413,11 @@ QWidget *BrushTool::createOptionsWidget()
     ui_->handleBL->setIcon(QIcon(":/bottomleft.png"));
     ui_->handleBR->setIcon(QIcon(":/bottomright.png"));
 
-    connect(ui_->handleTL,     SIGNAL(clicked()), this, SLOT(setHandleTopLeft()));
-    connect(ui_->handleTR,     SIGNAL(clicked()), this, SLOT(setHandleTopRight()));
-    connect(ui_->handleCenter, SIGNAL(clicked()), this, SLOT(setHandleCenter()));
-    connect(ui_->handleBL,     SIGNAL(clicked()), this, SLOT(setHandleBottomLeft()));
-    connect(ui_->handleBR,     SIGNAL(clicked()), this, SLOT(setHandleBottomRight()));
+    connect(ui_->handleTL, &QAbstractButton::clicked, this, &BrushTool::setHandleTopLeft);
+    connect(ui_->handleTR, &QAbstractButton::clicked, this, &BrushTool::setHandleTopRight);
+    connect(ui_->handleCenter, &QAbstractButton::clicked, this, &BrushTool::setHandleCenter);
+    connect(ui_->handleBL, &QAbstractButton::clicked, this, &BrushTool::setHandleBottomLeft);
+    connect(ui_->handleBR, &QAbstractButton::clicked, this, &BrushTool::setHandleBottomRight);
 
     refreshBrushDisplay();
     return w;
@@ -440,10 +430,6 @@ static Brush *currentBrush(Buffer *buf)
     return qobject_cast<Brush *>(buf ? buf->pen() : nullptr);
 }
 
-// Brush::image()-mutating methods all emit imageChanged(), which Buffer relays
-// as penModified(); setPen() itself emits penChanged(). BrushTool listens to
-// both (see setBuffer()) and funnels them here, so no call site needs to
-// manually refresh the preview/size display.
 void BrushTool::refreshBrushDisplay()
 {
     if (!ui_) return;
@@ -483,15 +469,7 @@ void BrushTool::brushRestore()
 void BrushTool::setTileCut(bool enabled) { tileCut_ = enabled; }
 void BrushTool::setAutoBg(bool enabled)  { autoBg_ = enabled; }
 
-// ── Interactive Shear/Bend (Brush menu) ──────────────────────────────────────
-//
-// Triggered from the Brush menu; drags in the buffer view control the amount
-// while the previous tool is temporarily suspended. The distorted shape is
-// live-previewed by stamping the brush at the drag-start point and reverting
-// on every subsequent move, exactly like the tool-managed drag-preview pattern
-// used by LineTool/CurveTool -- except the "permanent result" here is a
-// mutation of the Brush's own image, not a canvas paint, so release() reverts
-// the preview stamp too and leaves the canvas untouched.
+// Preview distortion without modifying the canvas.
 
 static void applyDistort(Brush *brush, BrushTool::DistortMode mode, const QPoint &delta)
 {
@@ -613,7 +591,7 @@ void BrushTool::registerTool()
     button_->setToolTip("Brush – Rectangle selection [B]");
     button_->setCheckable(true);
 
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &BrushTool::activate);
 }
 
 void BrushTool::addButtonToGridLayout(QGridLayout *layout)

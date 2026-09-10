@@ -14,8 +14,9 @@ PropertiesDialog::PropertiesDialog(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(this, SIGNAL(accepted()), this, SLOT(setProperties()));
-    connect(ui->checkBoxRetainImage, SIGNAL(stateChanged(int)), this, SLOT(setRetainImageState(int)));
+    connect(this, &QDialog::accepted, this, &PropertiesDialog::setProperties);
+    connect(ui->checkBoxRetainImage, &QCheckBox::toggled,
+            this, &PropertiesDialog::setRetainImageState);
     connect(ui->pushButtonScreenSize, &QPushButton::clicked, this, &PropertiesDialog::setToScreenSize);
 }
 
@@ -96,10 +97,8 @@ void PropertiesDialog::setToScreenSize()
     ui->spinBoxHeight->setValue(s.height());
 }
 
-void PropertiesDialog::setRetainImageState(int state)
+void PropertiesDialog::setRetainImageState(bool enabled)
 {
-    bool enabled = state == Qt::Checked;
-
     ui->comboBoxScaling->setEnabled(enabled);
     ui->comboBoxPalette->setEnabled(enabled);
 }

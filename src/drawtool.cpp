@@ -19,9 +19,9 @@ DrawTool::DrawTool(QObject *parent) : Tool(parent)
 {
 }
 
-void DrawTool::setDrawMode(const DrawMode &drawMode)
+void DrawTool::setDrawMode(DrawMode drawMode)
 {
-    this->drawMode = drawMode;
+    drawMode_ = drawMode;
 
     button_->setIcon(QIcon(icons[drawMode]));
 
@@ -35,7 +35,7 @@ void DrawTool::setDrawMode(const DrawMode &drawMode)
 
 QString DrawTool::name() const
 {
-    switch (drawMode) {
+    switch (drawMode_) {
     case Dotted:        return "Draw";
     case ConnectedDraw: return "Connected Draw";
     case FilledShape:   return "Filled Shape";
@@ -50,7 +50,7 @@ void DrawTool::setBuffer(Buffer *buffer)
     connectToolChecked();
 }
 
-QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect DrawTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (rubberBand_.pending) {
         QPoint savedFrom = rubberBand_.from;
@@ -58,8 +58,8 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         rubberBand_.clear();
         // Reset draw state so the subsequent release() produces a no-op shape
         // instead of splicing the confirmation click into the previous polygon.
-        startingPoint = point;
-        previousPoint = point;
+        startingPoint_ = point;
+        previousPoint_ = point;
         pathPoints_.clear();
         // The shape was pre-filled before the rubber band; merge that undo entry
         // so the whole operation collapses to a single undo step.
@@ -73,12 +73,12 @@ QRect DrawTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         return applyPolygonGradient(savedPath, savedFrom, point);
     }
 
-    startingPoint = point;
-    previousPoint = point;
-    lastStampedPoint = point;
+    startingPoint_ = point;
+    previousPoint_ = point;
+    lastStampedPoint_ = point;
     buffer_->setSmearDirection(QPoint(0, 0));
     buffer_->resetCycle();
-    Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
+    Pen *p = drawMode_ == FilledShape ? buffer_->toolPen() : buffer_->pen();
     drawnBounds_ = p->rect(point).intersected(buffer_->image().rect());
     pathPoints_.clear();
     pathPoints_.append(point);
@@ -91,12 +91,12 @@ QRect DrawTool::move(const QPoint &point)
         if (rubberBand_.pending)
             return rubberBand_.draw(point, buffer_->image());
         return draw(point);
-    } else if (drawMode == Dotted) {
-        QPoint delta = point - lastStampedPoint;
+    } else if (drawMode_ == Dotted) {
+        QPoint delta = point - lastStampedPoint_;
         constexpr int threshold = 1;
         if (delta.x() * delta.x() + delta.y() * delta.y() >= threshold * threshold) {
-            buffer_->setSmearDirection(point - lastStampedPoint);
-            lastStampedPoint = point;
+            buffer_->setSmearDirection(point - lastStampedPoint_);
+            lastStampedPoint_ = point;
             return draw(point);
         }
         return QRect();
@@ -106,11 +106,11 @@ QRect DrawTool::move(const QPoint &point)
         if (pathPoints_.isEmpty())
             return QRect();
         QRect changedRect;
-        buffer_->setSmearDirection(point - previousPoint);
-        Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
-        previousPoint = point;
+        buffer_->setSmearDirection(point - previousPoint_);
+        Algorithms::line(previousPoint_, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        previousPoint_ = point;
         drawnBounds_ = drawnBounds_.united(changedRect);
-        if (drawMode == FilledShape)
+        if (drawMode_ == FilledShape)
             pathPoints_.append(point);
         return changedRect;
     }
@@ -120,24 +120,24 @@ QRect DrawTool::hover(const QPoint &point)
 {
     if (rubberBand_.pending)
         return rubberBand_.hoverRect(point, buffer_->image().rect());
-    Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
+    Pen *p = drawMode_ == FilledShape ? buffer_->toolPen() : buffer_->pen();
     return p->rect(point);
 }
 
 QRect DrawTool::release(const QPoint &point)
 {
-    if (drawMode == Dotted) {
+    if (drawMode_ == Dotted) {
         return QRect();
-    } else if (drawMode == ConnectedDraw) {
+    } else if (drawMode_ == ConnectedDraw) {
         QRect changedRect;
-        Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+        Algorithms::line(previousPoint_, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         return changedRect;
     } else {
         pathPoints_.append(point);
         QRect changedRect;
         if (pathPoints_.size() >= 2) {
-            Algorithms::line(previousPoint, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
-            Algorithms::line(point, startingPoint, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+            Algorithms::line(previousPoint_, point, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
+            Algorithms::line(point, startingPoint_, [this, &changedRect](const QPoint &point) { changedRect = changedRect.united(this->draw(point)); });
         }
         int fillColor = static_cast<int>(mouseButton_ == Qt::RightButton
                                          ? buffer_->eraseColor()
@@ -162,11 +162,11 @@ QRect DrawTool::release(const QPoint &point)
 
 QRect DrawTool::draw(const QPoint &point)
 {
-    Pen *p = drawMode == FilledShape ? buffer_->toolPen() : buffer_->pen();
+    Pen *p = drawMode_ == FilledShape ? buffer_->toolPen() : buffer_->pen();
     if (mouseButton_ == Qt::RightButton) {
         return p->erase(point, buffer_);
     }
-    if (drawMode == FilledShape && gradientFillActive()) {
+    if (drawMode_ == FilledShape && gradientFillActive()) {
         return p->paintAsColor(point, buffer_);
     }
     return p->paint(point, buffer_);
@@ -203,7 +203,7 @@ QRect DrawTool::polygonFill(int fillColor, const QPoint &to)
     for (const QPoint &p : pathPoints_)
         polyBbox = polyBbox.united(QRect(p, p));
 
-    auto [gradFrom, gradTo] = gradientEndpoints(polyBbox, startingPoint, to);
+    auto [gradFrom, gradTo] = gradientEndpoints(polyBbox, startingPoint_, to);
 
     if (useGradient)
         return GradientRenderer::applyPolygonGradient(image, pathPoints_, fillColor,
@@ -220,13 +220,13 @@ void DrawTool::registerTool()
     setDrawMode(ConnectedDraw);
     button_->setCheckable(true);
 
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &DrawTool::activate);
 }
 
 void DrawTool::activate()
 {
     if (buffer_->tool() == this) {
-        setDrawMode(static_cast<DrawMode>((drawMode + 1) % (FilledShape + 1)));
+        setDrawMode(static_cast<DrawMode>((drawMode_ + 1) % (FilledShape + 1)));
         button_->setChecked(true);
     }
 

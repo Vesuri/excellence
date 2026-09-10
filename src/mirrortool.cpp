@@ -17,10 +17,10 @@ MirrorTool::MirrorTool(QObject *parent) : Tool(parent)
 void MirrorTool::setBuffer(Buffer *buffer)
 {
     if (buffer_)
-        disconnect(buffer_, SIGNAL(mirrorChanged()), this, SLOT(syncButtonState()));
+        disconnect(buffer_, &Buffer::mirrorChanged, this, &MirrorTool::syncButtonState);
     Tool::setBuffer(buffer);
     if (buffer_) {
-        connect(buffer_, SIGNAL(mirrorChanged()), this, SLOT(syncButtonState()));
+        connect(buffer_, &Buffer::mirrorChanged, this, &MirrorTool::syncButtonState);
         syncButtonState();
         syncWidgets();
     }
@@ -40,14 +40,12 @@ void MirrorTool::activate()
     if (!buffer_)
         return;
     bool enabled = buffer_->mirrorX() || buffer_->mirrorY();
-    // Toggle: if any mirror is active, turn both off; otherwise enable X mirror
     if (enabled) {
         buffer_->setMirrorX(false);
         buffer_->setMirrorY(false);
     } else {
         buffer_->setMirrorX(true);
     }
-    // Do NOT call Tool::activate() — mirror does not change the active drawing tool.
 }
 
 void MirrorTool::toggle()

@@ -19,7 +19,7 @@ class BufferView : public QWidget
 
 public:
     explicit BufferView(QWidget *parent = nullptr);
-    ~BufferView();
+    ~BufferView() override;
 
     void setBuffer(Buffer *buffer);
     void setZoomLevel(int level);

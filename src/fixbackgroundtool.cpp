@@ -11,10 +11,12 @@ FixBackgroundTool::FixBackgroundTool(QObject *parent) : Tool(parent)
 void FixBackgroundTool::setBuffer(Buffer *buffer)
 {
     if (buffer_)
-        disconnect(buffer_, SIGNAL(fixBackgroundChanged()), this, SLOT(syncButtonState()));
+        disconnect(buffer_, &Buffer::fixBackgroundChanged,
+                   this, &FixBackgroundTool::syncButtonState);
     Tool::setBuffer(buffer);
     if (buffer_) {
-        connect(buffer_, SIGNAL(fixBackgroundChanged()), this, SLOT(syncButtonState()));
+        connect(buffer_, &Buffer::fixBackgroundChanged,
+                this, &FixBackgroundTool::syncButtonState);
         syncButtonState();
     }
 }
@@ -32,7 +34,6 @@ void FixBackgroundTool::activate()
 {
     if (buffer_)
         buffer_->setFixBackgroundLocked(!buffer_->fixBackgroundLocked());
-    // Do NOT call Tool::activate() — Fix Background does not change the active drawing tool.
 }
 
 void FixBackgroundTool::syncButtonState()

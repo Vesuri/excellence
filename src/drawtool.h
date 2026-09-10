@@ -15,11 +15,11 @@ public:
 
     explicit DrawTool(QObject *parent = nullptr);
 
-    void setDrawMode(const DrawMode &drawMode);
+    void setDrawMode(DrawMode drawMode);
     void setBuffer(Buffer *buffer) override;
     QString name() const override;
-    bool hasFill() const override { return drawMode == FilledShape; }
-    QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
+    bool hasFill() const override { return drawMode_ == FilledShape; }
+    QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
@@ -37,10 +37,10 @@ private:
     QRect polygonFill(int fillColor, const QPoint &to);
     QRect applyPolygonGradient(const QList<QPoint> &path, const QPoint &gradFrom, const QPoint &gradTo);
 
-    DrawMode drawMode;
-    QPoint startingPoint;
-    QPoint previousPoint;
-    QPoint lastStampedPoint;
+    DrawMode drawMode_ = ConnectedDraw;
+    QPoint startingPoint_;
+    QPoint previousPoint_;
+    QPoint lastStampedPoint_;
     QRect drawnBounds_;
     QList<QPoint> pathPoints_;
     GradientRubberBand rubberBand_;

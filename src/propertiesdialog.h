@@ -15,13 +15,13 @@ class PropertiesDialog : public QDialog
 
 public:
     explicit PropertiesDialog(QWidget *parent = nullptr);
-    ~PropertiesDialog();
+    ~PropertiesDialog() override;
 
     void setBuffer(Buffer *buffer);
 
 private slots:
     void setProperties();
-    void setRetainImageState(int state);
+    void setRetainImageState(bool enabled);
     void setToScreenSize();
 
 signals:

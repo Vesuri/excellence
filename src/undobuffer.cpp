@@ -13,7 +13,7 @@ QPoint UndoBuffer::pos() const
     return pos_;
 }
 
-QImage UndoBuffer::image() const
+const QImage &UndoBuffer::image() const
 {
     return image_;
 }

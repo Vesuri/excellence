@@ -14,7 +14,7 @@ public:
 
     void setBuffer(Buffer *buffer) override;
     bool hasFill() const override { return true; }
-    QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
+    QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers) override;
     QRect move(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     QRect hover(const QPoint &point) override;

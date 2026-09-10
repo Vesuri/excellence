@@ -194,8 +194,7 @@ void DrawModeTool::registerTool()
 
 void DrawModeTool::activate()
 {
-    // Toggle the active state; do NOT call Tool::activate() — the active
-    // drawing tool must not change when the draw mode button is pressed.
+    // Keep the active drawing tool unchanged.
     applyMode();
 }
 
@@ -205,7 +204,6 @@ QWidget *DrawModeTool::createOptionsWidget()
     ui_ = new Ui::DrawModeToolOptions;
     ui_->setupUi(w);
 
-    // Set initial state
     ui_->brushModeBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::BrushMode);
     ui_->colorBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Color);
     ui_->tintBtn->setChecked(!fillModeSelected_ && buffer_ && buffer_->paintMode() == Buffer::Tint);

@@ -15,7 +15,7 @@ class BufferListDialog : public QDialog
 
 public:
     explicit BufferListDialog(MainWindow *mainWindow, QWidget *parent = nullptr);
-    ~BufferListDialog();
+    ~BufferListDialog() override;
 
 public slots:
     void refresh();

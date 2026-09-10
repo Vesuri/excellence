@@ -18,18 +18,12 @@ ZoomTool::ZoomTool(QObject *parent) : Tool(parent),
 
 void ZoomTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr) {
-        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
-    }
-
+    disconnectToolChecked();
     Tool::setBuffer(buffer);
-
-    if (buffer_ != nullptr) {
-        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
-    }
+    connectToolChecked();
 }
 
-QRect ZoomTool::press(const QPoint &point, const Qt::KeyboardModifiers &modifiers)
+QRect ZoomTool::press(const QPoint &point, Qt::KeyboardModifiers modifiers)
 {
     if (placeMagnifierMode_) {
         placeMagnifierMode_ = false;
@@ -96,7 +90,7 @@ void ZoomTool::registerTool()
 
     button_->setCheckable(true);
 
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &ZoomTool::activate);
 }
 
 void ZoomTool::activate()

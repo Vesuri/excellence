@@ -14,7 +14,7 @@ public:
     explicit UndoBuffer(const QPoint &pos, const QImage &image, QObject *parent = nullptr);
 
     QPoint pos() const;
-    QImage image() const;
+    const QImage &image() const;
     QRect rect() const;
     void apply(Buffer *buffer) const;
 

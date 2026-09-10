@@ -32,9 +32,9 @@ protected:
     void dropEvent(QDropEvent *event) override;
 
 private:
-    static const int kSlotCount = kGradientSlotCount;
-    static const int kMarkerRowHeight = 20;
-    static const int kPreviewHeight = 10;
+    static constexpr int kSlotCount = kGradientSlotCount;
+    static constexpr int kMarkerRowHeight = 20;
+    static constexpr int kPreviewHeight = 10;
 
     int slotAt(int x) const;
     int slotX(int slot) const;

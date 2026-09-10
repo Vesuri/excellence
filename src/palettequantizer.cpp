@@ -151,8 +151,8 @@ QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMo
     }
 
     array2d< vector_fixed<double, 3> >* filters[] =
-        {NULL, &filter1_weights, NULL, &filter3_weights,
-         NULL, &filter5_weights};
+        {nullptr, &filter1_weights, nullptr, &filter3_weights,
+         nullptr, &filter5_weights};
     spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
     //spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
 

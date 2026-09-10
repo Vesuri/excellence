@@ -1,5 +1,5 @@
 #include <QImage>
-#include <QSharedPointer>
+#include <QScopedPointer>
 
 #include "chunk.h"
 #include "bitmapheader.h"
@@ -32,7 +32,7 @@ QImageIOHandler *ILBMPlugin::create(QIODevice */*device*/, const QByteArray &/*f
 }
 
 ILBMHandler::ILBMHandler() : QImageIOHandler(),
-    compressionRatio(-1)
+    compressionRatio_(-1)
 {
 }
 
@@ -52,9 +52,9 @@ bool ILBMHandler::read(QImage *outputImage)
         return false;
     }
 
-    QSharedPointer<BitmapHeader> bitmapHeader;
-    QSharedPointer<ColorMap> colorMap;
-    QSharedPointer<CommodoreAmiga> commodoreAmiga(new CommodoreAmiga());
+    QScopedPointer<BitmapHeader> bitmapHeader;
+    QScopedPointer<ColorMap> colorMap;
+    QScopedPointer<CommodoreAmiga> commodoreAmiga(new CommodoreAmiga);
     QImage image;
     QByteArray asIsChunks;
     Chunk form(device()->readAll());
@@ -70,15 +70,14 @@ bool ILBMHandler::read(QImage *outputImage)
                 } else if (chunk.id() == "CAMG") {
                     commodoreAmiga.reset(new CommodoreAmiga(chunk));
                 } else if (chunk.id() == "BODY") {
-                    Body body = Body(chunk);
-
-                    // The bitmap header and colormap must be valid at this point
+                    if (!bitmapHeader || !colorMap)
+                        return false;
+                    Body body(chunk);
                     image = body.toImage(*bitmapHeader, *colorMap, *commodoreAmiga);
                 } else {
                     asIsChunks.append(chunk.toByteArray());
                 }
 
-                // A chunk's total physical size is ckSize rounded up to an even number plus the size of the header
                 offset += ((chunk.size() + 1) & 0xfffffffe) + 8;
             }
         }
@@ -88,7 +87,7 @@ bool ILBMHandler::read(QImage *outputImage)
         asIsChunks.append(commodoreAmiga->toByteArray());
     }
 
-    if (asIsChunks.size() > 0) {
+    if (!asIsChunks.isEmpty()) {
         image.setText("Unknown ILBM chunks", QString(asIsChunks.toBase64()));
     }
 
@@ -102,7 +101,7 @@ bool ILBMHandler::write(const QImage &image)
         return false;
     }
 
-    BitmapHeader::Compression compression(compressionRatio.toInt() >= 0 ? static_cast<BitmapHeader::Compression>(compressionRatio.toInt()) : BitmapHeader::CompressionByteRun1);
+    BitmapHeader::Compression compression(compressionRatio_.toInt() >= 0 ? static_cast<BitmapHeader::Compression>(compressionRatio_.toInt()) : BitmapHeader::CompressionByteRun1);
     BitmapHeader bitmapHeader(image, compression);
     ColorMap colorMap(image);
     Body body(image, compression);
@@ -126,15 +125,14 @@ bool ILBMHandler::write(const QImage &image)
 
     ilbm.append(body.toByteArray());
     Chunk form("FORM", ilbm);
-    device()->write(form.toByteArray());
-
-    return true;
+    const QByteArray data = form.toByteArray();
+    return device()->write(data) == data.size();
 }
 
 QVariant ILBMHandler::option(QImageIOHandler::ImageOption option) const
 {
     if (option == QImageIOHandler::CompressionRatio) {
-        return compressionRatio;
+        return compressionRatio_;
     } else {
         return QImageIOHandler::option(option);
     }
@@ -143,7 +141,7 @@ QVariant ILBMHandler::option(QImageIOHandler::ImageOption option) const
 void ILBMHandler::setOption(QImageIOHandler::ImageOption option, const QVariant &value)
 {
     if (option == QImageIOHandler::CompressionRatio) {
-        compressionRatio = value;
+        compressionRatio_ = value;
     } else {
         QImageIOHandler::setOption(option, value);
     }

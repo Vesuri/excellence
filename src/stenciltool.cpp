@@ -35,7 +35,7 @@ void StencilTool::setBuffer(Buffer *buffer)
     }
 }
 
-QRect StencilTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect StencilTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (!buffer_)
         return QRect();
@@ -92,11 +92,9 @@ void StencilTool::registerTool()
 
 void StencilTool::activate()
 {
-    // Left-click toggles protection on/off; does nothing until a mask exists.
-    // Does NOT call Tool::activate() -- stencil does not change the active drawing tool.
+    // Keep the active drawing tool unchanged.
     if (!buffer_ || !buffer_->hasStencil()) {
-        // Qt auto-toggles a checkable QToolButton's visual state before clicked() fires;
-        // undo that here since no actual state change happened.
+        // Revert QToolButton's automatic toggle.
         if (buffer_)
             button_->setChecked(buffer_->stencilEnabled());
         return;
@@ -113,9 +111,7 @@ void StencilTool::syncButtonState()
 {
     if (!buffer_)
         return;
-    // Stay enabled even without a mask yet -- right-click must still open the options
-    // panel, since that's how a mask gets built in the first place. The no-op-without-a-
-    // mask behavior for left-click lives in activate().
+    // Keep options accessible before a mask exists.
     button_->setChecked(buffer_->stencilEnabled());
 }
 

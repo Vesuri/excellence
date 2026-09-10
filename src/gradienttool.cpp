@@ -16,7 +16,7 @@ GradientTool GradientTool::instance;
 GradientTool::GradientTool() : Tool()
 {
     cycleTimer_ = new QTimer(this);
-    cycleTimer_->setInterval(14); // ~71 Hz
+    cycleTimer_->setInterval(14);
     connect(cycleTimer_, &QTimer::timeout, this, &GradientTool::onCycleTick);
 }
 
@@ -35,7 +35,6 @@ void GradientTool::activate()
     memset(cycleAccumulators_, 0, sizeof(cycleAccumulators_));
     updateTimer();
     syncButtonState();
-    // Do NOT call Tool::activate() — this does not change the active drawing tool.
 }
 
 void GradientTool::toggle()

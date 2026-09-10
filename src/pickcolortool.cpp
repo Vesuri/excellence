@@ -17,7 +17,7 @@ void PickColorTool::setBuffer(Buffer *buffer)
     connectToolChecked();
 }
 
-QRect PickColorTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect PickColorTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     const QImage &image = buffer_->image();
     if (!image.rect().contains(point))
@@ -39,9 +39,7 @@ QRect PickColorTool::move(const QPoint &)
 
 QRect PickColorTool::release(const QPoint &)
 {
-    // Restore the previous tool only after the release half of the click has been
-    // handled here, so Buffer::release() doesn't hand the release event to the
-    // restored tool (which could otherwise act on stale drag state).
+    // Restore after Buffer dispatches this release.
     if (oneShotTarget_ != None) {
         Tool *prev = previousTool_;
         oneShotTarget_ = None;
@@ -58,7 +56,7 @@ void PickColorTool::registerTool()
     Tool::registerTool();
     button_->setToolTip("Pick Color [,]");
     button_->setCheckable(true);
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &PickColorTool::activate);
 }
 
 void PickColorTool::activate()
@@ -70,7 +68,6 @@ void PickColorTool::activate()
 
 void PickColorTool::addButtonToGridLayout(QGridLayout *)
 {
-    // No toolbar button — activated via foreground/background color rectangles
 }
 
 void PickColorTool::activateOneShotForeground(Tool *previousTool)

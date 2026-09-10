@@ -58,9 +58,7 @@ static void smoothPixel(const QPoint &p, Buffer *buffer)
         rSum += qRed(nc); gSum += qGreen(nc); bSum += qBlue(nc); count++;
     }
     if (count == 0) return;  // no color boundary, leave pixel unchanged
-    // Find the palette color closest to the midpoint between this pixel and its
-    // differently-colored neighbours. Only apply if a genuinely intermediate
-    // palette entry exists (i.e. the result differs from the original colour).
+    // Use the nearest intermediate palette color at boundaries.
     QRgb neighborAvg = qRgb(rSum / count, gSum / count, bSum / count);
     QRgb mid = qRgb((qRed(centerColor)   + qRed(neighborAvg))   / 2,
                     (qGreen(centerColor) + qGreen(neighborAvg)) / 2,

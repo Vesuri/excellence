@@ -103,7 +103,7 @@ QRect LineTool::doubleClick(const QPoint &point)
 
 // ── Single line ────────────────────────────────────────────────────────────
 
-QRect LineTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect LineTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (rubberBand_.pending) {
         QPoint savedFrom = rubberBand_.from;
@@ -383,7 +383,7 @@ void LineTool::registerTool()
     button_->setCheckable(true);
     updateButton();
 
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &LineTool::activate);
 }
 
 void LineTool::activate()

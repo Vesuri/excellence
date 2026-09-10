@@ -7,9 +7,7 @@
 #include "colorutils.h"
 #include "palettebutton.h"
 
-PaletteButton::PaletteButton(QWidget *parent) : QAbstractButton(parent),
-    paintButtonDown(false),
-    eraseButtonDown(false)
+PaletteButton::PaletteButton(QWidget *parent) : QAbstractButton(parent)
 {
     setAcceptDrops(false);
     setMinimumHeight(16);
@@ -47,10 +45,10 @@ void PaletteButton::mousePressEvent(QMouseEvent *event)
     QAbstractButton::mousePressEvent(event);
 
     if (event->button() == Qt::LeftButton) {
-        paintButtonDown = true;
+        paintButtonDown_ = true;
         dragStartPos_ = event->pos();
     } else if (event->button() == Qt::RightButton) {
-        eraseButtonDown = true;
+        eraseButtonDown_ = true;
     }
 }
 
@@ -60,7 +58,7 @@ void PaletteButton::mouseMoveEvent(QMouseEvent *event)
         return;
     if ((event->pos() - dragStartPos_).manhattanLength() < QApplication::startDragDistance())
         return;
-    paintButtonDown = false;
+    paintButtonDown_ = false;
 
     QDrag *drag = new QDrag(this);
     QMimeData *mime = new QMimeData;
@@ -81,15 +79,15 @@ void PaletteButton::mouseReleaseEvent(QMouseEvent *event)
     QAbstractButton::mouseReleaseEvent(event);
 
     if (event->button() == Qt::LeftButton) {
-        if (paintButtonDown && contentsRect().contains(event->pos())) {
+        if (paintButtonDown_ && contentsRect().contains(event->pos())) {
             emit paintColorSelected(paletteIndex_);
         }
-        paintButtonDown = false;
+        paintButtonDown_ = false;
     } else if (event->button() == Qt::RightButton) {
-        if (eraseButtonDown && contentsRect().contains(event->pos())) {
+        if (eraseButtonDown_ && contentsRect().contains(event->pos())) {
             emit eraseColorSelected(paletteIndex_);
         }
-        eraseButtonDown = false;
+        eraseButtonDown_ = false;
     }
 }
 

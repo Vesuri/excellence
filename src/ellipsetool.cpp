@@ -136,9 +136,7 @@ QRect EllipseTool::drawEllipseShape(double angle, bool applyGradient)
     return changedRect;
 }
 
-// Applies a gradient fill to the current ellipse with explicit from/to endpoints.
-// Used by both drawEllipseShape() (which derives them from the current mode settings)
-// and the rubber band confirmation path (which supplies user-chosen endpoints).
+// Fill the current ellipse with explicit gradient endpoints.
 QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFrom, const QPoint &gradTo)
 {
     QImage &image = buffer_->image();
@@ -146,16 +144,13 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
     QRect ellipseBbox = QRect(cx_ - rx_, cy_ - ry_, 2 * rx_ + 1, 2 * ry_ + 1);
     QRect conformRect = conformFill ? ellipseBbox : QRect();
 
-    // For H/V conform, the per-row or per-column span matters, not the global bbox.
-    // fillEllipse calls pixels in row order, so we can compute the row's x extent
-    // once per row by re-solving the same quadratic that fillEllipse uses internally.
+    // Conform horizontal and vertical fills per scanline.
     const bool hConform = conformFill && activeGradientFillMode == FillHorizontal;
     const bool vConform = conformFill && activeGradientFillMode == FillVertical;
     const double cosA = std::cos(angle), sinA = std::sin(angle);
     const double rx2 = double(rx_) * rx_, ry2 = double(ry_) * ry_;
 
-    // For V conform: pre-compute per-column y extents.
-    // Solving for dy given dx uses the same quadratic with cosA/sinA swapped.
+    // Precompute vertical extents.
     int xBound = 0;
     QVector<int> colY0, colY1;
     if (vConform) {
@@ -177,8 +172,7 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
         }
     }
 
-    // Highlight, and Radial/Spherical with conform: normalize t per-direction to the actual
-    // ellipse boundary via ray-ellipse intersection in the ellipse's rotated frame.
+    // Normalize radial modes against the rotated ellipse boundary.
     const bool isHighlight = activeGradientFillMode == FillHighlight;
     const bool useShapeConform = isHighlight || (conformFill && gradientFillIsRadial(activeGradientFillMode));
     const float fU0 = float(gradFrom.x() - cx_) * float(cosA) + float(gradFrom.y() - cy_) * float(sinA);
@@ -190,8 +184,7 @@ QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFro
     Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, [&](const QPoint &p) {
         float t;
         if (useShapeConform) {
-            // Ray: gradFrom + t*(P - gradFrom). P is at t=1.
-            // Transform ray into ellipse frame, solve quadratic for boundary intersection.
+            // Intersect the pixel ray with the ellipse boundary.
             float pdx = float(p.x() - gradFrom.x());
             float pdy = float(p.y() - gradFrom.y());
             float distP2 = pdx * pdx + pdy * pdy;
@@ -272,7 +265,7 @@ QRect EllipseTool::draw(const QPoint &point)
 
 // ── press ──────────────────────────────────────────────────────────────────
 
-QRect EllipseTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect EllipseTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (rubberBand_.pending) {
         QPoint savedFrom = rubberBand_.from;
@@ -455,7 +448,7 @@ void EllipseTool::registerTool()
     Tool::registerTool();
     button_->setCheckable(true);
     setDrawMode(drawMode_);
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &EllipseTool::activate);
 }
 
 void EllipseTool::activate()

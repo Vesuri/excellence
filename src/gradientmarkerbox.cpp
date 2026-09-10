@@ -276,7 +276,12 @@ void GradientMarkerBox::dropEvent(QDropEvent *event)
     QDataStream stream(&data, QIODevice::ReadOnly);
     unsigned colorIndex;
     stream >> colorIndex;
-    int slot = slotAt(event->position().toPoint().x());
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    const int x = event->position().toPoint().x();
+#else
+    const int x = event->pos().x();
+#endif
+    int slot = slotAt(x);
     range_->addMarker(slot, static_cast<int>(colorIndex));
     event->acceptProposedAction();
     emit rangeChanged();

@@ -6,8 +6,8 @@
 #include "colorutils.h"
 #include "currentcolorsbutton.h"
 
-static const int kSwatchW = 28;
-static const int kGap     = 1;
+constexpr int kSwatchW = 28;
+constexpr int kGap = 1;
 
 CurrentColorsButton::CurrentColorsButton(QWidget *parent) : QWidget(parent)
 {
@@ -58,7 +58,12 @@ bool CurrentColorsButton::event(QEvent *e)
 
 void CurrentColorsButton::mousePressEvent(QMouseEvent *e)
 {
-    if (e->position().x() <= kSwatchW)
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    const int x = qRound(e->position().x());
+#else
+    const int x = e->pos().x();
+#endif
+    if (x <= kSwatchW)
         emit foregroundClicked();
     else
         emit backgroundClicked();

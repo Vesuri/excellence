@@ -93,7 +93,7 @@ QRect PenTipTool::hover(const QPoint &point)
     return centeredPreviewRect(point, size).intersected(buffer_->image().rect());
 }
 
-QRect PenTipTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect PenTipTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (sizingMode_ == SizingNone) return QRect();
     startPoint_ = point;

@@ -4,7 +4,7 @@
 #include <QImageIOPlugin>
 #include <QVariant>
 
-// Custom ImageOption values above Qt's built-in range (last Qt value: ImageTransformation = 18)
+// Application-specific image options.
 namespace RawOption {
     enum Option {
         Interleave       = 19, // bool — interleave bitplanes line-by-line (default: true)

@@ -24,18 +24,12 @@ Chunk::Chunk(const QByteArray &chunkData) : Chunk()
     }
 }
 
-Chunk::Chunk(const Chunk &chunk) :
-    id_(chunk.id_),
-    data_(chunk.data_)
-{
-}
-
 bool Chunk::isNull() const
 {
     return id_.size() != 4 || size() == 0;
 }
 
-QByteArray Chunk::id() const
+const QByteArray &Chunk::id() const
 {
     return id_;
 }
@@ -80,7 +74,7 @@ void Chunk::setId(const QByteArray &id)
     id_ = id;
 }
 
-void Chunk::setSize(const unsigned size)
+void Chunk::setSize(unsigned size)
 {
     data_.resize(static_cast<int>(size));
 }

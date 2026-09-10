@@ -10,30 +10,13 @@ UndoTool::UndoTool(QObject *parent) : Tool(parent)
 
 void UndoTool::setBuffer(Buffer *buffer)
 {
-    if (buffer_ != nullptr) {
-        disconnect(button_, SIGNAL(clicked(bool)), buffer_, SLOT(undo()));
-    }
+    if (buffer_)
+        disconnect(button_, &QToolButton::clicked, buffer_, &Buffer::undo);
 
     Tool::setBuffer(buffer);
 
-    if (buffer_ != nullptr) {
-        connect(button_, SIGNAL(clicked(bool)), buffer_, SLOT(undo()));
-    }
-}
-
-QRect UndoTool::press(const QPoint &, const Qt::KeyboardModifiers &)
-{
-    return QRect();
-}
-
-QRect UndoTool::move(const QPoint &)
-{
-    return QRect();
-}
-
-QRect UndoTool::release(const QPoint &)
-{
-    return QRect();
+    if (buffer_)
+        connect(button_, &QToolButton::clicked, buffer_, &Buffer::undo);
 }
 
 void UndoTool::registerTool()

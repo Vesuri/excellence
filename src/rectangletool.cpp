@@ -19,13 +19,13 @@ const char *RectangleTool::icons[] = {
 };
 
 RectangleTool::RectangleTool(QObject *parent) : Tool(parent),
-    anchorMode_(CornerToCorner), undoBuffer(nullptr)
+    drawMode_(Rectangle), anchorMode_(CornerToCorner), undoBuffer_(nullptr)
 {
 }
 
-void RectangleTool::setDrawMode(const DrawMode &drawMode)
+void RectangleTool::setDrawMode(DrawMode drawMode)
 {
-    this->drawMode = drawMode;
+    drawMode_ = drawMode;
 
     button_->setIcon(QIcon(icons[drawMode]));
 
@@ -38,7 +38,7 @@ void RectangleTool::setDrawMode(const DrawMode &drawMode)
 
 QString RectangleTool::name() const
 {
-    return drawMode == FilledRectangle ? "Filled Rectangle" : "Rectangle";
+    return drawMode_ == FilledRectangle ? "Filled Rectangle" : "Rectangle";
 }
 
 void RectangleTool::setBuffer(Buffer *buffer)
@@ -48,7 +48,7 @@ void RectangleTool::setBuffer(Buffer *buffer)
     connectToolChecked();
 }
 
-QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect RectangleTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     if (rubberBand_.pending) {
         QPoint savedFrom = rubberBand_.from;
@@ -64,11 +64,11 @@ QRect RectangleTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
         return applyGradientRect(savedFill, savedFrom, point);
     }
 
-    startPoint = point;
+    startPoint_ = point;
     currentPoint_ = point;
 
     QRect rect = changes(point);
-    undoBuffer = new UndoBuffer(rect.topLeft(), buffer_->image().copy(rect), this);
+    undoBuffer_ = new UndoBuffer(rect.topLeft(), buffer_->image().copy(rect), this);
     return draw(point);
 }
 
@@ -76,7 +76,7 @@ QRect RectangleTool::hover(const QPoint &point)
 {
     if (rubberBand_.pending)
         return rubberBand_.hoverRect(point, buffer_->image().rect());
-    Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
+    Pen *p = drawMode_ == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
     return p->rect(point);
 }
 
@@ -85,30 +85,30 @@ QRect RectangleTool::move(const QPoint &point)
     if (mouseButton_ == Qt::NoButton) {
         if (rubberBand_.pending)
             return rubberBand_.draw(point, buffer_->image());
-        Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
+        Pen *p = drawMode_ == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
         return p->paint(point, buffer_);
     }
 
-    if (!undoBuffer)
+    if (!undoBuffer_)
         return QRect();
 
     currentPoint_ = point;
-    undoBuffer->apply(buffer_);
-    delete undoBuffer;
+    undoBuffer_->apply(buffer_);
+    delete undoBuffer_;
 
     QPoint p0, p1;
     cornerPoints(point, p0, p1);
     QRect changedRect;
     auto changesLambda = [this, &changedRect](const QPoint &p) { changedRect = changedRect.united(this->changes(p)); };
     auto drawLambda = [this](const QPoint &p) { this->draw(p); };
-    if (drawMode == Rectangle) {
+    if (drawMode_ == Rectangle) {
         Algorithms::rectangle(p0, p1, changesLambda);
-        undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+        undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
         Algorithms::rectangle(p0, p1, drawLambda);
-    } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
+    } else if (drawMode_ == FilledRectangle && mouseButton_ == Qt::LeftButton
                && gradientFillActive()) {
         changedRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
-        undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+        undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
         bool needsRubberBand = gradientNeedsRubberBand();
         if (needsRubberBand) {
             // Show flat fill during drag; direction/center chosen via rubber band after release.
@@ -118,7 +118,7 @@ QRect RectangleTool::move(const QPoint &point)
         }
     } else {
         Algorithms::fillRectangle(p0, p1, changesLambda);
-        undoBuffer = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
+        undoBuffer_ = new UndoBuffer(changedRect.topLeft(), buffer_->image().copy(changedRect), this);
         Algorithms::fillRectangle(p0, p1, drawLambda);
     }
     return changedRect;
@@ -126,19 +126,19 @@ QRect RectangleTool::move(const QPoint &point)
 
 QRect RectangleTool::release(const QPoint &point)
 {
-    if (!undoBuffer)
+    if (!undoBuffer_)
         return QRect();
 
-    undoBuffer->apply(buffer_);
-    delete undoBuffer;
-    undoBuffer = nullptr;
+    undoBuffer_->apply(buffer_);
+    delete undoBuffer_;
+    undoBuffer_ = nullptr;
 
     QPoint p0, p1;
     cornerPoints(point, p0, p1);
     QRect changedRect;
-    if (drawMode == Rectangle) {
+    if (drawMode_ == Rectangle) {
         Algorithms::rectangle(p0, p1, [this, &changedRect](const QPoint &pt) { changedRect = changedRect.united(this->draw(pt)); });
-    } else if (drawMode == FilledRectangle && mouseButton_ == Qt::LeftButton
+    } else if (drawMode_ == FilledRectangle && mouseButton_ == Qt::LeftButton
                && gradientFillActive()) {
         QRect fillRect = QRect(p0, p1).normalized().intersected(buffer_->image().rect());
         bool needsRubberBand = gradientNeedsRubberBand();
@@ -161,16 +161,16 @@ QRect RectangleTool::release(const QPoint &point)
 void RectangleTool::cornerPoints(const QPoint &current, QPoint &p0, QPoint &p1) const
 {
     if (anchorMode_ == CornerToCorner) {
-        p0 = startPoint;
+        p0 = startPoint_;
         p1 = current;
     } else {
-        int dx = qAbs(current.x() - startPoint.x());
-        int dy = qAbs(current.y() - startPoint.y());
+        int dx = qAbs(current.x() - startPoint_.x());
+        int dy = qAbs(current.y() - startPoint_.y());
         QRect ir = buffer_->image().rect();
-        p0 = QPoint(qMax(ir.left(),   startPoint.x() - dx),
-                    qMax(ir.top(),    startPoint.y() - dy));
-        p1 = QPoint(qMin(ir.right(),  startPoint.x() + dx),
-                    qMin(ir.bottom(), startPoint.y() + dy));
+        p0 = QPoint(qMax(ir.left(),   startPoint_.x() - dx),
+                    qMax(ir.top(),    startPoint_.y() - dy));
+        p1 = QPoint(qMin(ir.right(),  startPoint_.x() + dx),
+                    qMin(ir.bottom(), startPoint_.y() + dy));
     }
 }
 
@@ -223,7 +223,7 @@ QRect RectangleTool::applyGradientRect(const QRect &fillRect, const QPoint &grad
 QRect RectangleTool::drawGradientRect(const QRect &fillRect, const QPoint &current)
 {
     bool isRadial = gradientFillIsRadial(activeGradientFillMode);
-    QPoint from = (centerFill && isRadial) ? fillRect.center() : startPoint;
+    QPoint from = (centerFill && isRadial) ? fillRect.center() : startPoint_;
     return applyGradientRect(fillRect, from, current);
 }
 
@@ -240,7 +240,7 @@ QString RectangleTool::status() const
 {
     if (rubberBand_.pending)
         return rubberBand_.status();
-    if (mouseButton_ == Qt::NoButton || !undoBuffer)
+    if (mouseButton_ == Qt::NoButton || !undoBuffer_)
         return QString();
     QPoint p0, p1;
     cornerPoints(currentPoint_, p0, p1);
@@ -250,15 +250,15 @@ QString RectangleTool::status() const
 
 QRect RectangleTool::changes(const QPoint &point)
 {
-    Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
+    Pen *p = drawMode_ == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
     return p->rect(point);
 }
 
 QRect RectangleTool::draw(const QPoint &point)
 {
-    Pen *p = drawMode == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
+    Pen *p = drawMode_ == FilledRectangle ? buffer_->toolPen() : buffer_->pen();
     if (mouseButton_ == Qt::LeftButton) {
-        if (drawMode == FilledRectangle && gradientFillActive())
+        if (drawMode_ == FilledRectangle && gradientFillActive())
             return p->paintAsColor(point, buffer_);
         return p->paint(point, buffer_);
     } else {
@@ -271,15 +271,15 @@ void RectangleTool::registerTool()
     Tool::registerTool();
 
     button_->setCheckable(true);
-    setDrawMode(drawMode);
+    setDrawMode(drawMode_);
 
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &RectangleTool::activate);
 }
 
 void RectangleTool::activate()
 {
     if (buffer_->tool() == this) {
-        setDrawMode(static_cast<DrawMode>((drawMode + 1) % (FilledRectangle + 1)));
+        setDrawMode(static_cast<DrawMode>((drawMode_ + 1) % (FilledRectangle + 1)));
         button_->setChecked(true);
     }
 

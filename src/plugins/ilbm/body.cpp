@@ -15,7 +15,8 @@ Body::Body(const QImage &image, const BitmapHeader::Compression compression) : C
 
     QByteArray data;
 
-    unsigned char *planarRow = new unsigned char[bytesPerRow];
+    QByteArray planarRowData(static_cast<int>(bytesPerRow), '\0');
+    auto *planarRow = reinterpret_cast<unsigned char *>(planarRowData.data());
     for (unsigned y = 0; y < static_cast<unsigned>(image.height()); y++) {
         unsigned char *planar = planarRow;
         for (unsigned plane = 0; plane < planesPerRow; plane++) {
@@ -126,8 +127,6 @@ Body::Body(const QImage &image, const BitmapHeader::Compression compression) : C
             }
         }
     }
-    delete[] planarRow;
-
     setData(data);
 }
 
@@ -173,7 +172,8 @@ QImage Body::toImage(const BitmapHeader &bitmapHeader, const ColorMap &colorMap,
     unsigned planesPerRow = (bitmapHeader.planes() + (bitmapHeader.masking() == BitmapHeader::MaskingHasMask ? 1 : 0));
     unsigned bytesPerRow = bytesPerPlane * planesPerRow;
 
-    unsigned char *planarRow = new unsigned char[bytesPerRow];
+    QByteArray planarRowData(static_cast<int>(bytesPerRow), '\0');
+    auto *planarRow = reinterpret_cast<unsigned char *>(planarRowData.data());
     for (unsigned y = 0, index = 0; y < static_cast<unsigned>(image.height()); y++) {
         unsigned char *planar = planarRow;
         unsigned char *planarEnd = planar + bytesPerRow;
@@ -213,7 +213,5 @@ QImage Body::toImage(const BitmapHeader &bitmapHeader, const ColorMap &colorMap,
             }
         }
     }
-    delete[] planarRow;
-
     return image;
 }

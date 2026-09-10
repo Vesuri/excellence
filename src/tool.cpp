@@ -17,7 +17,7 @@ Tool::Tool(QObject *parent) : QObject(parent),
     optionsWidget_(nullptr),
     dockWidget_(nullptr)
 {
-    QTimer::singleShot(0, this, SLOT(registerTool()));
+    QTimer::singleShot(0, this, &Tool::registerTool);
 }
 
 void Tool::setMainWindow(QMainWindow *mainWindow)
@@ -25,7 +25,7 @@ void Tool::setMainWindow(QMainWindow *mainWindow)
     mainWindow_ = mainWindow;
 }
 
-void Tool::setMouseButton(const Qt::MouseButton &mouseButton)
+void Tool::setMouseButton(Qt::MouseButton mouseButton)
 {
     mouseButton_ = mouseButton;
 }
@@ -43,7 +43,7 @@ void Tool::setBuffer(Buffer *buffer)
 void Tool::connectToolChecked()
 {
     if (buffer_) {
-        connect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+        connect(buffer_, &Buffer::toolChanged, this, &Tool::setCheckedIfEqual);
         setCheckedIfEqual(buffer_->tool());
     }
 }
@@ -51,12 +51,27 @@ void Tool::connectToolChecked()
 void Tool::disconnectToolChecked()
 {
     if (buffer_)
-        disconnect(buffer_, SIGNAL(toolChanged(Tool*)), this, SLOT(setCheckedIfEqual(Tool*)));
+        disconnect(buffer_, &Buffer::toolChanged, this, &Tool::setCheckedIfEqual);
+}
+
+QRect Tool::press(const QPoint &, Qt::KeyboardModifiers)
+{
+    return {};
+}
+
+QRect Tool::move(const QPoint &)
+{
+    return {};
+}
+
+QRect Tool::release(const QPoint &)
+{
+    return {};
 }
 
 QRect Tool::hover(const QPoint &)
 {
-    return QRect();
+    return {};
 }
 
 Tool::Type Tool::type() const
@@ -75,7 +90,7 @@ QString Tool::name() const
 
 QString Tool::status() const
 {
-    return QString();
+    return {};
 }
 
 void Tool::click()
@@ -88,7 +103,7 @@ void Tool::registerTool()
     button_ = new QToolButton;
     button_->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     button_->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(button_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(toggleOptionsWidget()));
+    connect(button_, &QToolButton::customContextMenuRequested, this, &Tool::toggleOptionsWidget);
     tools.append(this);
 }
 
@@ -140,7 +155,7 @@ void Tool::hideOptionsPanel()
         dockWidget_->hide();
 }
 
-QWidget* Tool::createOptionsWidget()
+QWidget *Tool::createOptionsWidget()
 {
     return nullptr;
 }

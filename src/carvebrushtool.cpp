@@ -21,7 +21,7 @@ void CarveBrushTool::setBuffer(Buffer *buffer)
     connectToolChecked();
 }
 
-QRect CarveBrushTool::press(const QPoint &point, const Qt::KeyboardModifiers &)
+QRect CarveBrushTool::press(const QPoint &point, Qt::KeyboardModifiers)
 {
     polygon_.clear();
     polygon_ << point;
@@ -101,7 +101,7 @@ void CarveBrushTool::registerTool()
     button_->setIcon(QIcon(":/carvebrush.png"));
     button_->setToolTip("Carve Brush – Freehand shape selection");
     button_->setCheckable(true);
-    connect(button_, SIGNAL(clicked(bool)), this, SLOT(activate()));
+    connect(button_, &QToolButton::clicked, this, &CarveBrushTool::activate);
 }
 
 void CarveBrushTool::addButtonToGridLayout(QGridLayout *layout)

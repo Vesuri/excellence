@@ -10,7 +10,7 @@
 #include "defaultpalette.h"
 
 Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(parent),
-    moveUndoBuffer(nullptr),
+    moveUndoBuffer_(nullptr),
     pen_(nullptr),
     toolPen_(nullptr),
     penTip_(nullptr),
@@ -42,7 +42,7 @@ Buffer::Buffer(int width, int height, int colors, QObject *parent) : QObject(par
 Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
     path_(path),
     image_(),
-    moveUndoBuffer(nullptr),
+    moveUndoBuffer_(nullptr),
     pen_(nullptr),
     toolPen_(nullptr),
     penTip_(nullptr),
@@ -84,7 +84,7 @@ Buffer::Buffer(const QString &path, QObject *parent) : QObject(parent),
 Buffer::Buffer(const QImage &image, const QString &path, QObject *parent) : QObject(parent),
     path_(path),
     image_(image),
-    moveUndoBuffer(nullptr),
+    moveUndoBuffer_(nullptr),
     pen_(nullptr),
     toolPen_(nullptr),
     penTip_(nullptr),
@@ -154,9 +154,9 @@ QImage &Buffer::image()
 void Buffer::clear()
 {
     if (!fixedBackground_.isNull()) {
-        undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
-        qDeleteAll(redoStack);
-        redoStack.clear();
+        undoBuffers_.append(new UndoBuffer(QPoint(), image_.copy()));
+        qDeleteAll(redoStack_);
+        redoStack_.clear();
 
         if (stencilEnabled_ && !stencilMask_.isNull()) {
             for (int y = 0; y < image_.height(); y++)
@@ -186,9 +186,9 @@ void Buffer::setFixBackgroundLocked(bool locked)
 
 void Buffer::clearWithColor(unsigned colorIndex)
 {
-    undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
-    qDeleteAll(redoStack);
-    redoStack.clear();
+    undoBuffers_.append(new UndoBuffer(QPoint(), image_.copy()));
+    qDeleteAll(redoStack_);
+    redoStack_.clear();
 
     if (stencilEnabled_ && !stencilMask_.isNull()) {
         for (int y = 0; y < image_.height(); y++)
@@ -334,7 +334,7 @@ void Buffer::restoreStencilSelectedColors()
     emit stencilColorsChanged();
 }
 
-void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt::KeyboardModifiers &modifiers)
+void Buffer::press(const QPoint &point, Qt::MouseButton button, Qt::KeyboardModifiers modifiers)
 {
     tool_->setMouseButton(button);
     const QPoint p = snapToGrid(point);
@@ -347,22 +347,22 @@ void Buffer::press(const QPoint &point, const Qt::MouseButton &button, const Qt:
         break;
     }
     default:
-        if (moveUndoBuffer) {
-            moveUndoBuffer->apply(this);
-            delete moveUndoBuffer;
-            moveUndoBuffer = nullptr;
+        if (moveUndoBuffer_) {
+            moveUndoBuffer_->apply(this);
+            delete moveUndoBuffer_;
+            moveUndoBuffer_ = nullptr;
         }
 
-        preModificationImage = image_.copy();
+        preModificationImage_ = image_.copy();
 
         // Reset segment state for new stroke; pre-charge so first stamp fires at press
         segmentAccum_ = static_cast<float>(segmentValue_);
         segmentLastVisited_ = p;
         segmentPath_.clear();
 
-        modifiedArea = tool_->press(p, modifiers);
+        modifiedArea_ = tool_->press(p, modifiers);
 
-        emit modified(modifiedArea);
+        emit modified(modifiedArea_);
         break;
     }
 }
@@ -371,10 +371,10 @@ void Buffer::move(const QPoint &point)
 {
     const QPoint p = snapToGrid(point);
 
-    if (moveUndoBuffer) {
-        moveUndoBuffer->apply(this);
-        delete moveUndoBuffer;
-        moveUndoBuffer = nullptr;
+    if (moveUndoBuffer_) {
+        moveUndoBuffer_->apply(this);
+        delete moveUndoBuffer_;
+        moveUndoBuffer_ = nullptr;
     }
 
     if (tool_->mouseButton() == Qt::NoButton) {
@@ -389,7 +389,7 @@ void Buffer::move(const QPoint &point)
                 if (mirrorX_ && mirrorY_)      rect = rect.united(rect.translated(dx, dy));
             }
             rect = rect.intersected(image_.rect());
-            moveUndoBuffer = new UndoBuffer(rect.topLeft(), image().copy(rect));
+            moveUndoBuffer_ = new UndoBuffer(rect.topLeft(), image().copy(rect));
         }
     }
 
@@ -408,7 +408,7 @@ void Buffer::move(const QPoint &point)
         emit zoomed(area);
         break;
     default:
-        modifiedArea = modifiedArea.united(area);
+        modifiedArea_ = modifiedArea_.united(area);
 
         emit modified(area);
         break;
@@ -428,12 +428,12 @@ void Buffer::release(const QPoint &point)
         emit zoomed(area);
         break;
     default:
-        modifiedArea = modifiedArea.united(area);
+        modifiedArea_ = modifiedArea_.united(area);
 
         // # of Points segment finalization: stamp N evenly-spaced points along recorded path
         if (segmentActive_ && !segmentByDistance_ && !segmentPath_.isEmpty()) {
             QRect segArea = finalizeSegmentStroke();
-            modifiedArea = modifiedArea.united(segArea);
+            modifiedArea_ = modifiedArea_.united(segArea);
             if (!segArea.isNull())
                 emit modified(segArea);
         }
@@ -441,17 +441,17 @@ void Buffer::release(const QPoint &point)
 
         emit modified(area);
 
-        if (!modifiedArea.isNull()) {
-            undoBuffers.append(new UndoBuffer(modifiedArea.topLeft(), preModificationImage.copy(modifiedArea)));
-            qDeleteAll(redoStack);
-            redoStack.clear();
+        if (!modifiedArea_.isNull()) {
+            undoBuffers_.append(new UndoBuffer(modifiedArea_.topLeft(), preModificationImage_.copy(modifiedArea_)));
+            qDeleteAll(redoStack_);
+            redoStack_.clear();
             if (!dirty_) { dirty_ = true; emit dirtyChanged(true); }
             if (paintMode_ == Cycle && cycleUsed_)
                 setPaintColor(static_cast<unsigned>(lastCycleColor_));
         }
 
-        modifiedArea = QRect();
-        preModificationImage = QImage();
+        modifiedArea_ = QRect();
+        preModificationImage_ = QImage();
         break;
     }
 
@@ -462,16 +462,16 @@ void Buffer::doubleClick(const QPoint &point)
 {
     if (!tool_) return;
     // Save pre-modification state so the subsequent release() can create a valid undo entry.
-    if (preModificationImage.isNull())
-        preModificationImage = image_.copy();
+    if (preModificationImage_.isNull())
+        preModificationImage_ = image_.copy();
     QRect area = tool_->doubleClick(snapToGrid(point));
-    modifiedArea = modifiedArea.united(area);
+    modifiedArea_ = modifiedArea_.united(area);
     emit modified(area);
 }
 
 void Buffer::notifyModified(const QRect &rect)
 {
-    modifiedArea = modifiedArea.united(rect);
+    modifiedArea_ = modifiedArea_.united(rect);
     if (!dirty_) {
         dirty_ = true;
         emit dirtyChanged(true);
@@ -491,14 +491,14 @@ void Buffer::clearDirty()
 
 void Buffer::undo()
 {
-    if (!undoBuffers.isEmpty()) {
-        if (moveUndoBuffer) {
-            moveUndoBuffer->apply(this);
-            delete moveUndoBuffer;
-            moveUndoBuffer = nullptr;
+    if (!undoBuffers_.isEmpty()) {
+        if (moveUndoBuffer_) {
+            moveUndoBuffer_->apply(this);
+            delete moveUndoBuffer_;
+            moveUndoBuffer_ = nullptr;
         }
-        UndoBuffer *undoBuffer = undoBuffers.takeLast();
-        redoStack.append(new UndoBuffer(undoBuffer->pos(), image_.copy(undoBuffer->rect())));
+        UndoBuffer *undoBuffer = undoBuffers_.takeLast();
+        redoStack_.append(new UndoBuffer(undoBuffer->pos(), image_.copy(undoBuffer->rect())));
         undoBuffer->apply(this);
         emit modified(undoBuffer->rect());
         delete undoBuffer;
@@ -507,15 +507,14 @@ void Buffer::undo()
 
 void Buffer::mergeLastUndo()
 {
-    if (undoBuffers.isEmpty()) return;
-    UndoBuffer *last = undoBuffers.takeLast();
-    // Patch preModificationImage with the original pixels stored in this entry
-    // (cheaper than re-copying the entire image), then restore the canvas.
+    if (undoBuffers_.isEmpty()) return;
+    UndoBuffer *last = undoBuffers_.takeLast();
+    // Patch the cached original before restoring the canvas.
     const QImage &orig = last->image();
     const QPoint pos = last->pos();
     for (int y = 0; y < orig.height(); y++)
         for (int x = 0; x < orig.width(); x++)
-            preModificationImage.setPixel(pos.x() + x, pos.y() + y,
+            preModificationImage_.setPixel(pos.x() + x, pos.y() + y,
                                           static_cast<uint>(orig.pixelIndex(x, y)));
     last->apply(this);
     delete last;
@@ -523,14 +522,14 @@ void Buffer::mergeLastUndo()
 
 void Buffer::redo()
 {
-    if (!redoStack.isEmpty()) {
-        if (moveUndoBuffer) {
-            moveUndoBuffer->apply(this);
-            delete moveUndoBuffer;
-            moveUndoBuffer = nullptr;
+    if (!redoStack_.isEmpty()) {
+        if (moveUndoBuffer_) {
+            moveUndoBuffer_->apply(this);
+            delete moveUndoBuffer_;
+            moveUndoBuffer_ = nullptr;
         }
-        UndoBuffer *redoBuffer = redoStack.takeLast();
-        undoBuffers.append(new UndoBuffer(redoBuffer->pos(), image_.copy(redoBuffer->rect())));
+        UndoBuffer *redoBuffer = redoStack_.takeLast();
+        undoBuffers_.append(new UndoBuffer(redoBuffer->pos(), image_.copy(redoBuffer->rect())));
         redoBuffer->apply(this);
         emit modified(redoBuffer->rect());
         delete redoBuffer;
@@ -539,22 +538,22 @@ void Buffer::redo()
 
 void Buffer::undoAll()
 {
-    while (!undoBuffers.isEmpty())
+    while (!undoBuffers_.isEmpty())
         undo();
 }
 
 void Buffer::redoAll()
 {
-    while (!redoStack.isEmpty())
+    while (!redoStack_.isEmpty())
         redo();
 }
 
 void Buffer::clearUndoBuffer()
 {
-    qDeleteAll(undoBuffers);
-    undoBuffers.clear();
-    qDeleteAll(redoStack);
-    redoStack.clear();
+    qDeleteAll(undoBuffers_);
+    undoBuffers_.clear();
+    qDeleteAll(redoStack_);
+    redoStack_.clear();
 }
 
 void Buffer::setPen(Pen *pen)
@@ -610,10 +609,10 @@ void Buffer::setTool(Tool *tool)
 
 void Buffer::clearHoverPreview()
 {
-    if (moveUndoBuffer) {
-        moveUndoBuffer->apply(this);
-        delete moveUndoBuffer;
-        moveUndoBuffer = nullptr;
+    if (moveUndoBuffer_) {
+        moveUndoBuffer_->apply(this);
+        delete moveUndoBuffer_;
+        moveUndoBuffer_ = nullptr;
         emit modified(image_.rect());
     }
 }
@@ -762,7 +761,7 @@ bool Buffer::transparentMixHSV() const { return transparentMixHSV_; }
 void Buffer::setTransparentMixHSV(bool hsv) { transparentMixHSV_ = hsv; }
 const QImage &Buffer::referenceImage() const
 {
-    return preModificationImage.isNull() ? image_ : preModificationImage;
+    return preModificationImage_.isNull() ? image_ : preModificationImage_;
 }
 
 void Buffer::setSegmentActive(bool v) { segmentActive_ = v; emit segmentChanged(); }
@@ -827,8 +826,8 @@ QRect Buffer::finalizeSegmentStroke()
 void Buffer::copyFrom(const Buffer *source)
 {
     if (!source) return;
-    undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
-    qDeleteAll(redoStack); redoStack.clear();
+    undoBuffers_.append(new UndoBuffer(QPoint(), image_.copy()));
+    qDeleteAll(redoStack_); redoStack_.clear();
     const QImage &src = source->image_;
     int w = qMin(image_.width(), src.width()), h = qMin(image_.height(), src.height());
     for (int y = 0; y < h; y++)
@@ -840,8 +839,8 @@ void Buffer::copyFrom(const Buffer *source)
 void Buffer::mergeFrom(const Buffer *source, bool front)
 {
     if (!source) return;
-    undoBuffers.append(new UndoBuffer(QPoint(), image_.copy()));
-    qDeleteAll(redoStack); redoStack.clear();
+    undoBuffers_.append(new UndoBuffer(QPoint(), image_.copy()));
+    qDeleteAll(redoStack_); redoStack_.clear();
     const QImage &src = source->image_;
     unsigned srcBg = source->eraseColor();
     unsigned dstBg = eraseColor_;

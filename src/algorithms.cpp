@@ -7,7 +7,7 @@
 
 static const double ALG_PI = 3.14159265358979323846;
 
-void Algorithms::line(const QPoint &from, const QPoint &to, std::function<void(const QPoint &)> point)
+void Algorithms::line(const QPoint &from, const QPoint &to, const PointCallback &point)
 {
     point(from);
 
@@ -48,7 +48,8 @@ void Algorithms::line(const QPoint &from, const QPoint &to, std::function<void(c
     }
 }
 
-void Algorithms::rectangle(const QPoint &topLeft, const QPoint &bottomRight, std::function<void(const QPoint &)> point)
+void Algorithms::rectangle(const QPoint &topLeft, const QPoint &bottomRight,
+                           const PointCallback &point)
 {
     QPoint topRight(bottomRight.x(), topLeft.y());
     QPoint bottomLeft(topLeft.x(), bottomRight.y());
@@ -58,7 +59,8 @@ void Algorithms::rectangle(const QPoint &topLeft, const QPoint &bottomRight, std
     line(bottomLeft, topLeft, point);
 }
 
-void Algorithms::fillRectangle(const QPoint &topLeft, const QPoint &bottomRight, std::function<void(const QPoint &)> point)
+void Algorithms::fillRectangle(const QPoint &topLeft, const QPoint &bottomRight,
+                               const PointCallback &point)
 {
     int x0 = qMin(topLeft.x(), bottomRight.x());
     int y0 = qMin(topLeft.y(), bottomRight.y());
@@ -69,7 +71,7 @@ void Algorithms::fillRectangle(const QPoint &topLeft, const QPoint &bottomRight,
 }
 
 void Algorithms::ellipse(int cx, int cy, int rx, int ry, double angle,
-                          std::function<void(const QPoint &)> fn)
+                         const PointCallback &fn)
 {
     if (rx < 0) rx = -rx;
     if (ry < 0) ry = -ry;
@@ -136,7 +138,7 @@ QRect Algorithms::floodFill(QImage &image, const QPoint &seed, int targetColor, 
 }
 
 void Algorithms::fillEllipse(int cx, int cy, int rx, int ry, double angle,
-                               std::function<void(const QPoint &)> fn)
+                             const PointCallback &fn)
 {
     if (rx < 0) rx = -rx;
     if (ry < 0) ry = -ry;
