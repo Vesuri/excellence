@@ -20,6 +20,7 @@ public:
 
     void setBuffer(Buffer *buffer) override;
     QString name() const override;
+    QString optionsTitle() const override { return "Airbrush"; }
     bool restrictToColorAndRandom() const override { return sprayMode_ != Splatter; }
     bool allowsBrushModeButton() const override { return sprayMode_ == ShapeAirbrush; }
     QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;

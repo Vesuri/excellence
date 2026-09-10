@@ -22,6 +22,7 @@ public:
     void setDrawMode(const DrawMode &drawMode);
     void setBuffer(Buffer *buffer) override;
     QString name() const override;
+    QString optionsTitle() const override { return "Rectangle"; }
     bool hasFill() const override { return drawMode == FilledRectangle; }
     QRect press(const QPoint &point, const Qt::KeyboardModifiers &modifiers) override;
     QRect move(const QPoint &point) override;
