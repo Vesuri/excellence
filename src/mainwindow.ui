@@ -400,9 +400,6 @@
    </property>
   </action>
   <action name="actionBrushAlign">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
    <property name="text">
     <string>Align</string>
    </property>

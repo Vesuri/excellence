@@ -156,6 +156,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushRemap, &QAction::triggered, this, &MainWindow::brushRemap);
     connect(ui->actionBrushBgFgSwap, &QAction::triggered, this, &MainWindow::brushBgFgSwap);
     connect(ui->actionBrushAutoBackground, &QAction::triggered, this, &MainWindow::brushAutoBackground);
+    connect(ui->actionBrushAlign, &QAction::triggered, &BrushTool::instance, &BrushTool::startAlign);
     connect(ui->actionBrushFlipHorizontal, &QAction::triggered, this, &MainWindow::brushFlipHorizontal);
     connect(ui->actionBrushFlipVertical, &QAction::triggered, this, &MainWindow::brushFlipVertical);
     connect(ui->actionBrushRotate90CW, &QAction::triggered, this, &MainWindow::brushRotate90CW);
@@ -388,6 +389,7 @@ void MainWindow::activateBuffer(Buffer *newBuffer)
     connect(buffer, &Buffer::dirtyChanged, this, &MainWindow::onDirtyChanged);
     connect(buffer, &Buffer::toolChanged, this, &MainWindow::updateStatusBarStatic);
     connect(buffer, &Buffer::penChanged, this, [this](Pen *) { updateStatusBarStatic(); });
+    connect(buffer, &Buffer::penModified, this, &MainWindow::updateStatusBarStatic);
     connect(buffer, &Buffer::paintModeChanged, this, [this](Buffer::PaintMode) { updateStatusBarStatic(); });
     connect(buffer, &Buffer::paintColorChanged, this, &MainWindow::updateStatusBarStatic);
     connect(buffer, &Buffer::eraseColorChanged, this, &MainWindow::updateStatusBarStatic);

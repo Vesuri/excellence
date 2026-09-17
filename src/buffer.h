@@ -58,6 +58,7 @@ public:
     bool replaceMode() const { return replaceMode_; }
     const QImage &brushStamp() const;
     int brushTransparentIndex() const;
+    QPoint brushAlignmentOffset() const;
     void setSmearDirection(const QPoint &dir);
     QPoint smearDirection() const;
     void setDrawModeAmount(int amount);
@@ -140,6 +141,7 @@ public slots:
     void redoAll();
     void clearUndoBuffer();
     void notifyModified(const QRect &rect);
+    void refreshPreview(const QRect &rect);
     void clearHoverPreview();
 
 signals:
@@ -199,6 +201,7 @@ private:
     bool dirty_;
     QImage brushStamp_;
     int brushTransparentIndex_;
+    QPoint brushAlignmentOffset_;
     bool segmentActive_ = false;
     bool segmentByDistance_ = true;
     int segmentValue_ = 10;

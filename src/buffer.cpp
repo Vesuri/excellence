@@ -479,6 +479,12 @@ void Buffer::notifyModified(const QRect &rect)
     emit modified(rect);
 }
 
+void Buffer::refreshPreview(const QRect &rect)
+{
+    if (!rect.isNull())
+        emit modified(rect.intersected(image_.rect()));
+}
+
 bool Buffer::isDirty() const { return dirty_; }
 
 void Buffer::clearDirty()
@@ -559,7 +565,7 @@ void Buffer::clearUndoBuffer()
 void Buffer::setPen(Pen *pen)
 {
     if (Brush *old = qobject_cast<Brush *>(pen_))
-        disconnect(old, &Brush::imageChanged, this, &Buffer::penModified);
+        disconnect(old, nullptr, this, nullptr);
     pen_ = pen;
     if (PenTip *t = qobject_cast<PenTip *>(pen))
         penTip_ = t;
@@ -567,7 +573,16 @@ void Buffer::setPen(Pen *pen)
         brush_ = b;
         brushStamp_ = b->image();
         brushTransparentIndex_ = b->transparentIndex();
-        connect(b, &Brush::imageChanged, this, &Buffer::penModified);
+        brushAlignmentOffset_ = b->alignmentOffset();
+        connect(b, &Brush::imageChanged, this, [this, b]() {
+            brushStamp_ = b->image();
+            brushTransparentIndex_ = b->transparentIndex();
+            emit penModified();
+        });
+        connect(b, &Brush::alignmentChanged, this, [this, b]() {
+            brushAlignmentOffset_ = b->alignmentOffset();
+            emit penModified();
+        });
     }
     emit penChanged(pen);
 }
@@ -585,6 +600,11 @@ const QImage &Buffer::brushStamp() const
 int Buffer::brushTransparentIndex() const
 {
     return brushTransparentIndex_;
+}
+
+QPoint Buffer::brushAlignmentOffset() const
+{
+    return brushAlignmentOffset_;
 }
 
 void Buffer::setToolPen(Pen *pen)

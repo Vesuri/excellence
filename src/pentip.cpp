@@ -71,12 +71,13 @@ void PenTip::applyBrushMode(const QPoint &point, Buffer *buffer) const
     }
     const int bw = stamp.width(), bh = stamp.height();
     const int transparent = buffer->brushTransparentIndex();
+    const QPoint alignment = buffer->brushAlignmentOffset();
     QRect imageRect = buffer->image().rect();
     auto doPixel = [&](const QPoint &p) {
         if (!imageRect.contains(p)) return;
         if (buffer->isStencilProtected(p)) return;
-        int bx = ((p.x() % bw) + bw) % bw;
-        int by = ((p.y() % bh) + bh) % bh;
+        int bx = (((p.x() - alignment.x()) % bw) + bw) % bw;
+        int by = (((p.y() - alignment.y()) % bh) + bh) % bh;
         int ci = stamp.pixelIndex(bx, by);
         if (ci == transparent) return;
         buffer->image().setPixel(p, static_cast<uint>(ci));

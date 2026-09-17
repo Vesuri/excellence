@@ -153,6 +153,8 @@ void BrushHandleWidget::mousePressEvent(QMouseEvent *event)
 
 // ── BrushTool ────────────────────────────────────────────────────────────────
 
+static Brush *currentBrush(Buffer *buf);
+
 BrushTool BrushTool::instance;
 
 BrushTool::BrushTool(QObject *parent) : Tool(parent),
@@ -165,6 +167,7 @@ BrushTool::BrushTool(QObject *parent) : Tool(parent),
 
 void BrushTool::cancel()
 {
+    if (alignMode_) { alignCancel(); return; }
     if (distortMode_ != NoDistort) { distortCancel(); return; }
     if (!undoBuffer_) return;
     undoBuffer_->apply(buffer_);
@@ -176,6 +179,8 @@ void BrushTool::cancel()
 
 QString BrushTool::name() const
 {
+    if (alignMode_)
+        return "Align Brush";
     return mode_ == Freehand ? "Carve Brush" : "Cut Brush";
 }
 
@@ -197,6 +202,8 @@ void BrushTool::setBuffer(Buffer *buffer)
 
 QRect BrushTool::press(const QPoint &point, Qt::KeyboardModifiers modifiers)
 {
+    if (alignMode_)
+        return alignPress(point);
     if (distortMode_ != NoDistort)
         return distortPress(point, modifiers);
 
@@ -217,6 +224,8 @@ QRect BrushTool::press(const QPoint &point, Qt::KeyboardModifiers modifiers)
 
 QRect BrushTool::move(const QPoint &point)
 {
+    if (alignMode_)
+        return alignMove(point);
     if (distortMode_ != NoDistort) {
         if (mouseButton_ == Qt::NoButton) {
             Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
@@ -247,6 +256,10 @@ QRect BrushTool::move(const QPoint &point)
 
 QRect BrushTool::hover(const QPoint &point)
 {
+    if (alignMode_) {
+        Brush *brush = currentBrush(buffer_);
+        return brush ? brush->rect(alignReferencePoint_).intersected(buffer_->image().rect()) : QRect();
+    }
     if (distortMode_ == NoDistort)
         return QRect();
     Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
@@ -255,6 +268,8 @@ QRect BrushTool::hover(const QPoint &point)
 
 QRect BrushTool::release(const QPoint &point)
 {
+    if (alignMode_)
+        return alignRelease(point);
     if (distortMode_ != NoDistort)
         return distortRelease(point);
 
@@ -290,6 +305,7 @@ QRect BrushTool::release(const QPoint &point)
                     areaImage.setPixel(x, y, static_cast<uint>(eraseIdx));
 
         Brush *brush = new Brush(areaImage, eraseIdx, buffer_);
+        brush->setCaptureOrigin(bounds.topLeft());
         if (autoBg_) brush->detectBackground();
         if (tileCut_ && buffer_->gridEnabled()) brush->tileCut();
         buffer_->setPen(brush);
@@ -306,8 +322,10 @@ QRect BrushTool::release(const QPoint &point)
     delete undoBuffer_;
     undoBuffer_ = nullptr;
 
-    QImage image = buffer_->image().copy(QRect(startPoint_, point));
+    const QRect captureRect = QRect(startPoint_, point).normalized();
+    QImage image = buffer_->image().copy(captureRect);
     Brush *brush = new Brush(image, static_cast<int>(buffer_->eraseColor()));
+    brush->setCaptureOrigin(captureRect.topLeft());
     if (autoBg_) brush->detectBackground();
     if (tileCut_ && buffer_->gridEnabled()) brush->tileCut();
     buffer_->setPen(brush);
@@ -326,6 +344,13 @@ QRect BrushTool::release(const QPoint &point)
 
 QString BrushTool::status() const
 {
+    if (alignMode_) {
+        Brush *brush = currentBrush(buffer_);
+        if (brush) {
+            const QPoint offset = brush->alignmentOffset();
+            return QString("offset %1, %2").arg(offset.x()).arg(offset.y());
+        }
+    }
     if (distortMode_ != NoDistort || mode_ != Rectangle || mouseButton_ == Qt::NoButton || !undoBuffer_)
         return QString();
     QRect r = QRect(startPoint_, currentPoint_).normalized();
@@ -507,6 +532,120 @@ void BrushTool::setTransformQuality(int quality)
 {
     Brush::setTransformQuality(static_cast<Brush::TransformQuality>(
         qBound(0, quality, static_cast<int>(Brush::HighQuality))));
+}
+
+// Align is a temporary, non-destructive mode. The brush is drawn into the
+// canvas only as a reversible preview while its persistent pattern/stamp
+// offset is adjusted.
+void BrushTool::startAlign()
+{
+    Brush *brush = currentBrush(buffer_);
+    if (!brush || !buffer_ || alignMode_)
+        return;
+
+    alignMode_ = true;
+    alignDragging_ = false;
+    alignPreviousTool_ = buffer_->tool();
+    alignOriginalOffset_ = brush->alignmentOffset();
+
+    if (brush->hasLastStampPoint())
+        alignReferencePoint_ = brush->lastStampPoint();
+    else if (brush->hasCaptureOrigin())
+        alignReferencePoint_ = brush->captureOrigin() + brush->handleOffset();
+    else
+        alignReferencePoint_ = buffer_->image().rect().center();
+
+    buffer_->setTool(this);
+}
+
+QRect BrushTool::alignPress(const QPoint &point)
+{
+    Brush *brush = currentBrush(buffer_);
+    if (!brush || mouseButton_ != Qt::LeftButton)
+        return QRect();
+
+    const QRect previewRect = brush->rect(alignReferencePoint_);
+    if (!previewRect.contains(point))
+        return QRect();
+
+    alignDragging_ = true;
+    alignDragStartPoint_ = point;
+    alignDragStartOffset_ = brush->alignmentOffset();
+    return QRect();
+}
+
+QRect BrushTool::alignMove(const QPoint &point)
+{
+    Brush *brush = currentBrush(buffer_);
+    if (!brush)
+        return QRect();
+
+    if (mouseButton_ == Qt::NoButton)
+        return brush->paintPreview(alignReferencePoint_, buffer_);
+    if (!alignDragging_)
+        return QRect();
+
+    QRect changed;
+    if (alignUndoBuffer_) {
+        changed = alignUndoBuffer_->rect();
+        alignUndoBuffer_->apply(buffer_);
+        delete alignUndoBuffer_;
+        alignUndoBuffer_ = nullptr;
+    }
+
+    brush->setAlignmentOffset(alignDragStartOffset_ + point - alignDragStartPoint_);
+    const QRect previewRect = brush->rect(alignReferencePoint_).intersected(buffer_->image().rect());
+    changed = changed.united(previewRect);
+    if (!previewRect.isEmpty()) {
+        alignUndoBuffer_ = new UndoBuffer(previewRect.topLeft(), buffer_->image().copy(previewRect), this);
+        brush->paintPreview(alignReferencePoint_, buffer_);
+    }
+    buffer_->refreshPreview(changed);
+    return QRect();
+}
+
+QRect BrushTool::alignRelease(const QPoint &point)
+{
+    Brush *brush = currentBrush(buffer_);
+    if (brush && alignDragging_)
+        brush->setAlignmentOffset(alignDragStartOffset_ + point - alignDragStartPoint_);
+
+    QRect changed;
+    if (alignUndoBuffer_) {
+        changed = alignUndoBuffer_->rect();
+        alignUndoBuffer_->apply(buffer_);
+        delete alignUndoBuffer_;
+        alignUndoBuffer_ = nullptr;
+    }
+    buffer_->refreshPreview(changed);
+
+    alignMode_ = false;
+    alignDragging_ = false;
+    Tool *previous = alignPreviousTool_;
+    alignPreviousTool_ = nullptr;
+    if (previous)
+        buffer_->setTool(previous);
+    return QRect();
+}
+
+void BrushTool::alignCancel()
+{
+    if (alignUndoBuffer_) {
+        const QRect changed = alignUndoBuffer_->rect();
+        alignUndoBuffer_->apply(buffer_);
+        delete alignUndoBuffer_;
+        alignUndoBuffer_ = nullptr;
+        buffer_->refreshPreview(changed);
+    }
+    if (Brush *brush = currentBrush(buffer_))
+        brush->setAlignmentOffset(alignOriginalOffset_);
+
+    alignMode_ = false;
+    alignDragging_ = false;
+    Tool *previous = alignPreviousTool_;
+    alignPreviousTool_ = nullptr;
+    if (previous)
+        buffer_->setTool(previous);
 }
 
 // Preview distortion without modifying the canvas.

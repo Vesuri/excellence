@@ -5,13 +5,15 @@
 #include "buffer.h"
 #include "brush.h"
 #include "colorutils.h"
+#include "tool.h"
 
 Brush::TransformQuality Brush::transformQuality_ = Brush::MediumQuality;
 
 Brush::Brush(const QImage &image, int transparentIndex, QObject *parent) : Pen(parent),
     image_(image),
     transparentIndex_(transparentIndex),
-    handleOffset_(image.width() / 2, image.height() / 2)
+    handleOffset_(image.width() / 2, image.height() / 2),
+    alignmentOffset_()
 {
 }
 
@@ -24,6 +26,30 @@ void Brush::setHandleOffset(const QPoint &offset)
 {
     handleOffset_ = offset;
 }
+
+QPoint Brush::alignmentOffset() const
+{
+    return alignmentOffset_;
+}
+
+void Brush::setAlignmentOffset(const QPoint &offset)
+{
+    if (alignmentOffset_ == offset)
+        return;
+    alignmentOffset_ = offset;
+    emit alignmentChanged();
+}
+
+void Brush::setCaptureOrigin(const QPoint &origin)
+{
+    captureOrigin_ = origin;
+    hasCaptureOrigin_ = true;
+}
+
+bool Brush::hasCaptureOrigin() const { return hasCaptureOrigin_; }
+QPoint Brush::captureOrigin() const { return captureOrigin_; }
+bool Brush::hasLastStampPoint() const { return hasLastStampPoint_; }
+QPoint Brush::lastStampPoint() const { return lastStampPoint_; }
 
 static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer *buffer,
                          const QPoint &origin, bool isErase)
@@ -67,24 +93,28 @@ static void brushStampAt(const QImage &brushImage, int transparentIndex, Buffer 
 QRect Brush::paint(const QPoint &point, Buffer *buffer) const
 {
     if (!buffer->segmentCheck(point)) return QRect();
+    if (buffer->tool() && buffer->tool()->mouseButton() != Qt::NoButton) {
+        lastStampPoint_ = point;
+        hasLastStampPoint_ = true;
+    }
     QRect imageRect = buffer->image().rect();
-    QPoint origin = point - handleOffset_;
+    QPoint origin = point - handleOffset_ + alignmentOffset_;
     brushStampAt(image_, transparentIndex_, buffer, origin, false);
     QRect changed = image_.rect().translated(origin);
 
     int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
     if (buffer->mirrorX()) {
-        QPoint mxOrigin = QPoint(2 * cx - point.x(), point.y()) - handleOffset_;
+        QPoint mxOrigin = QPoint(2 * cx - point.x(), point.y()) - handleOffset_ + alignmentOffset_;
         brushStampAt(image_, transparentIndex_, buffer, mxOrigin, false);
         changed = changed.united(image_.rect().translated(mxOrigin));
     }
     if (buffer->mirrorY()) {
-        QPoint myOrigin = QPoint(point.x(), 2 * cy - point.y()) - handleOffset_;
+        QPoint myOrigin = QPoint(point.x(), 2 * cy - point.y()) - handleOffset_ + alignmentOffset_;
         brushStampAt(image_, transparentIndex_, buffer, myOrigin, false);
         changed = changed.united(image_.rect().translated(myOrigin));
     }
     if (buffer->mirrorX() && buffer->mirrorY()) {
-        QPoint mxyOrigin = QPoint(2 * cx - point.x(), 2 * cy - point.y()) - handleOffset_;
+        QPoint mxyOrigin = QPoint(2 * cx - point.x(), 2 * cy - point.y()) - handleOffset_ + alignmentOffset_;
         brushStampAt(image_, transparentIndex_, buffer, mxyOrigin, false);
         changed = changed.united(image_.rect().translated(mxyOrigin));
     }
@@ -99,24 +129,28 @@ QRect Brush::paintAsColor(const QPoint &point, Buffer *buffer) const
 QRect Brush::erase(const QPoint &point, Buffer *buffer) const
 {
     if (!buffer->segmentCheck(point)) return QRect();
+    if (buffer->tool() && buffer->tool()->mouseButton() != Qt::NoButton) {
+        lastStampPoint_ = point;
+        hasLastStampPoint_ = true;
+    }
     QRect imageRect = buffer->image().rect();
-    QPoint origin = point - handleOffset_;
+    QPoint origin = point - handleOffset_ + alignmentOffset_;
     brushStampAt(image_, transparentIndex_, buffer, origin, true);
     QRect changed = image_.rect().translated(origin);
 
     int cx = buffer->mirrorCenterX(), cy = buffer->mirrorCenterY();
     if (buffer->mirrorX()) {
-        QPoint mxOrigin = QPoint(2 * cx - point.x(), point.y()) - handleOffset_;
+        QPoint mxOrigin = QPoint(2 * cx - point.x(), point.y()) - handleOffset_ + alignmentOffset_;
         brushStampAt(image_, transparentIndex_, buffer, mxOrigin, true);
         changed = changed.united(image_.rect().translated(mxOrigin));
     }
     if (buffer->mirrorY()) {
-        QPoint myOrigin = QPoint(point.x(), 2 * cy - point.y()) - handleOffset_;
+        QPoint myOrigin = QPoint(point.x(), 2 * cy - point.y()) - handleOffset_ + alignmentOffset_;
         brushStampAt(image_, transparentIndex_, buffer, myOrigin, true);
         changed = changed.united(image_.rect().translated(myOrigin));
     }
     if (buffer->mirrorX() && buffer->mirrorY()) {
-        QPoint mxyOrigin = QPoint(2 * cx - point.x(), 2 * cy - point.y()) - handleOffset_;
+        QPoint mxyOrigin = QPoint(2 * cx - point.x(), 2 * cy - point.y()) - handleOffset_ + alignmentOffset_;
         brushStampAt(image_, transparentIndex_, buffer, mxyOrigin, true);
         changed = changed.united(image_.rect().translated(mxyOrigin));
     }
@@ -125,7 +159,24 @@ QRect Brush::erase(const QPoint &point, Buffer *buffer) const
 
 QRect Brush::rect(const QPoint &point) const
 {
-    return image_.rect().translated(point - handleOffset_);
+    return image_.rect().translated(point - handleOffset_ + alignmentOffset_);
+}
+
+QRect Brush::paintPreview(const QPoint &point, Buffer *buffer) const
+{
+    const QPoint origin = point - handleOffset_ + alignmentOffset_;
+    const QRect imageRect = buffer->image().rect();
+    for (int y = 0; y < image_.height(); y++) {
+        for (int x = 0; x < image_.width(); x++) {
+            const int index = image_.pixelIndex(x, y);
+            if (index == transparentIndex_)
+                continue;
+            const QPoint p = origin + QPoint(x, y);
+            if (imageRect.contains(p))
+                buffer->image().setPixel(p, static_cast<uint>(index));
+        }
+    }
+    return image_.rect().translated(origin).intersected(imageRect);
 }
 
 const QImage &Brush::image() const

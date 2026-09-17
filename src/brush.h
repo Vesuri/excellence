@@ -19,6 +19,14 @@ public:
     const QImage &image() const;
     QPoint handleOffset() const;
     void setHandleOffset(const QPoint &offset);
+    QPoint alignmentOffset() const;
+    void setAlignmentOffset(const QPoint &offset);
+    void setCaptureOrigin(const QPoint &origin);
+    bool hasCaptureOrigin() const;
+    QPoint captureOrigin() const;
+    bool hasLastStampPoint() const;
+    QPoint lastStampPoint() const;
+    QRect paintPreview(const QPoint &point, Buffer *buffer) const;
     int transparentIndex() const;
     void setTransparentIndex(int index);
     void remap(const QVector<QRgb> &palette);
@@ -52,6 +60,7 @@ public:
 
 signals:
     void imageChanged();
+    void alignmentChanged();
 
 private:
     QImage reindex(const QImage &src) const;
@@ -61,6 +70,11 @@ private:
     int transparentIndex_;
     QPoint handleOffset_;
     static TransformQuality transformQuality_;
+    QPoint alignmentOffset_;
+    QPoint captureOrigin_;
+    bool hasCaptureOrigin_ = false;
+    mutable QPoint lastStampPoint_;
+    mutable bool hasLastStampPoint_ = false;
 };
 
 #endif // BRUSH_H

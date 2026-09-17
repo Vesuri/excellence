@@ -64,7 +64,7 @@ public:
     void setBuffer(Buffer *buffer) override;
     QString name() const override;
     QString optionsTitle() const override { return "Brush"; }
-    bool showGuides() const override { return distortMode_ == NoDistort && mode_ == Rectangle; }
+    bool showGuides() const override { return !alignMode_ && distortMode_ == NoDistort && mode_ == Rectangle; }
     QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers) override;
     QRect move(const QPoint &point) override;
     QRect hover(const QPoint &point) override;
@@ -104,6 +104,7 @@ public slots:
     void startResizeX();
     void startResizeY();
     void startRotate();
+    void startAlign();
     void startShearX();
     void startShearY();
     void startBendX();
@@ -129,6 +130,10 @@ private:
     QRect distortMove(const QPoint &point);
     QRect distortRelease(const QPoint &point);
     void distortCancel();
+    QRect alignPress(const QPoint &point);
+    QRect alignMove(const QPoint &point);
+    QRect alignRelease(const QPoint &point);
+    void alignCancel();
 
     Mode mode_;
     QPoint startPoint_;
@@ -143,6 +148,15 @@ private:
     DistortMode distortMode_ = NoDistort;
     Tool *distortPreviousTool_ = nullptr;
     QPoint distortStartPoint_;
+
+    bool alignMode_ = false;
+    bool alignDragging_ = false;
+    Tool *alignPreviousTool_ = nullptr;
+    QPoint alignReferencePoint_;
+    QPoint alignDragStartPoint_;
+    QPoint alignOriginalOffset_;
+    QPoint alignDragStartOffset_;
+    UndoBuffer *alignUndoBuffer_ = nullptr;
 
     static constexpr int WellCount = 8;
     QImage wells_[WellCount];
