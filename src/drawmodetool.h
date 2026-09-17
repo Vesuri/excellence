@@ -52,6 +52,7 @@ private:
     Ui::DrawModeToolOptions *ui_ = nullptr;
     QList<QRadioButton *> generalModeBtns_;    // disabled when restrictToColorAndRandom
     QList<QRadioButton *> fillSensitiveBtns_;  // disabled when restrictToColorAndRandom or hasFill
+    QList<QRadioButton *> brushFillBtns_;      // require a fill-capable tool and a current brush
     QList<QPair<QRadioButton *, GradientFillMode>> fillModeBtns_;
 };
 

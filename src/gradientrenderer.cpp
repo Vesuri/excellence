@@ -4,8 +4,62 @@
 #include <climits>
 #include <cmath>
 #include "algorithms.h"
+#include "brush.h"
 
 namespace GradientRenderer {
+
+static int positiveModulo(int value, int divisor)
+{
+    int result = value % divisor;
+    return result < 0 ? result + divisor : result;
+}
+
+bool applyBrushFillPixel(QImage &image, const QPoint &point,
+                         const QRect &fillBounds, GradientFillMode mode,
+                         Buffer *buffer, const QRect &rowBounds)
+{
+    if (!buffer || !image.rect().contains(point) || !fillBounds.isValid())
+        return false;
+    const Brush *brush = buffer->brush();
+    if (!brush || brush->image().isNull())
+        return false;
+
+    const QImage &source = brush->image();
+    int sx = 0;
+    int sy = 0;
+    switch (mode) {
+    case FillPattern:
+        sx = positiveModulo(point.x(), source.width());
+        sy = positiveModulo(point.y(), source.height());
+        break;
+    case FillStretch: {
+        // Preserve the source row selected by the fill's total Y extent, then
+        // stretch that row across the filled shape's actual horizontal span.
+        const QRect horizontalBounds = rowBounds.isValid() ? rowBounds : fillBounds;
+        sx = qBound(0, (point.x() - horizontalBounds.left()) * source.width()
+                       / qMax(1, horizontalBounds.width()), source.width() - 1);
+        sy = qBound(0, (point.y() - fillBounds.top()) * source.height()
+                       / qMax(1, fillBounds.height()), source.height() - 1);
+        break;
+    }
+    case FillShape:
+        sx = qBound(0, (point.x() - fillBounds.left()) * source.width()
+                       / qMax(1, fillBounds.width()), source.width() - 1);
+        sy = qBound(0, (point.y() - fillBounds.top()) * source.height()
+                       / qMax(1, fillBounds.height()), source.height() - 1);
+        break;
+    default:
+        return false;
+    }
+
+    const int colorIndex = source.pixelIndex(sx, sy);
+    if (colorIndex == brush->transparentIndex() && !buffer->replaceMode())
+        return false;
+    if (buffer->isStencilProtected(point))
+        return false;
+    image.setPixel(point, static_cast<uint>(colorIndex));
+    return true;
+}
 
 int colorIndex(float t, int pixelX, int pixelY,
                const GradientRange *range, const QImage &image)
@@ -243,11 +297,20 @@ QRect polygonFillScanline(QImage &image, const QList<QPoint> &polygon,
     QRect changedRect;
     for (int y = minY; y <= maxY; y++) {
         const QList<int> xs = scanlineXS(y);
+        const QRect rowBounds = xs.size() >= 2
+            ? QRect(qMax(xs.first(), imageRect.left()), y,
+                    qMin(xs.last(), imageRect.right()) - qMax(xs.first(), imageRect.left()) + 1, 1)
+            : QRect();
         for (int i = 0; i + 1 < xs.size(); i += 2) {
             int x1 = qMax(xs[i], imageRect.left());
             int x2 = qMin(xs[i + 1], imageRect.right());
             for (int x = x1; x <= x2; x++) {
                 if (useGradient) {
+                    if (brushFillIsMode(fillMode)) {
+                        applyBrushFillPixel(image, QPoint(x, y), conformRect,
+                                            fillMode, buffer, rowBounds);
+                        continue;
+                    }
                     float t;
                     // Highlight, and Radial/Spherical with conform: normalize per-direction
                     // to actual polygon boundary using ray-polygon intersection.
@@ -289,7 +352,7 @@ QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
 {
     QRect polyBbox;
     for (const QPoint &p : polygon) polyBbox = polyBbox.united(QRect(p, p));
-    QRect conformRect = conform ? polyBbox : QRect();
+    QRect conformRect = (brushFillIsMode(mode) || conform) ? polyBbox : QRect();
     QRect r = polygonFillScanline(image, polygon, fillColor, true, range,
                                   mode, gradFrom, gradTo, conformRect, buffer);
 
@@ -301,9 +364,29 @@ QRect applyPolygonGradient(QImage &image, const QList<QPoint> &polygon,
         const bool hvMode = mode == FillHorizontal || mode == FillVertical;
         const bool shapeConform = mode == FillHighlight || (conform && gradientFillIsRadial(mode));
         QRect edgeConformRect = (conform && !hvMode && !shapeConform) ? polyBbox : QRect();
+        QVector<int> rowLeft(polyBbox.height(), INT_MAX);
+        QVector<int> rowRight(polyBbox.height(), INT_MIN);
+        if (brushFillIsMode(mode)) {
+            auto recordEdge = [&](const QPoint &p) {
+                const int row = p.y() - polyBbox.top();
+                if (row < 0 || row >= rowLeft.size()) return;
+                rowLeft[row] = qMin(rowLeft[row], p.x());
+                rowRight[row] = qMax(rowRight[row], p.x());
+            };
+            for (int i = 0; i < polygon.size(); i++)
+                Algorithms::line(polygon[i], polygon[(i + 1) % polygon.size()], recordEdge);
+        }
         auto applyGrad = [&](const QPoint &p) {
             if (!image.rect().contains(p)) return;
             if (buffer && buffer->isStencilProtected(p)) return;
+            if (brushFillIsMode(mode)) {
+                const int row = p.y() - polyBbox.top();
+                QRect rowBounds;
+                if (row >= 0 && row < rowLeft.size() && rowLeft[row] <= rowRight[row])
+                    rowBounds = QRect(rowLeft[row], p.y(), rowRight[row] - rowLeft[row] + 1, 1);
+                applyBrushFillPixel(image, p, polyBbox, mode, buffer, rowBounds);
+                return;
+            }
             float t;
             if (shapeConform) {
                 t = highlightTPolygon(p.x(), p.y(), gradFrom, polygon);

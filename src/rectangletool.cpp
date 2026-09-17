@@ -193,6 +193,13 @@ void RectangleTool::setAnchorMode(bool centerToCorner)
 QRect RectangleTool::applyGradientRect(const QRect &fillRect, const QPoint &gradFrom, const QPoint &gradTo)
 {
     QImage &image = buffer_->image();
+    if (brushFillIsMode(activeGradientFillMode)) {
+        for (int y = fillRect.top(); y <= fillRect.bottom(); y++)
+            for (int x = fillRect.left(); x <= fillRect.right(); x++)
+                GradientRenderer::applyBrushFillPixel(image, QPoint(x, y), fillRect,
+                                                      activeGradientFillMode, buffer_);
+        return fillRect;
+    }
     const GradientRange *range = &gradientRanges[activeGradientRange];
     const bool isHighlight = activeGradientFillMode == FillHighlight;
     // Radial/Spherical with conform also normalize per-direction to the actual shape boundary.

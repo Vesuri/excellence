@@ -11,6 +11,12 @@
 inline float sphericalT(float t) { return 1.0f - sqrtf(1.0f - t * t); }
 
 namespace GradientRenderer {
+    // Paint one pixel from the current brush according to a brush fill mode.
+    // Returns false when the brush pixel is transparent and Replace is off.
+    bool applyBrushFillPixel(QImage &image, const QPoint &point,
+                             const QRect &fillBounds, GradientFillMode mode,
+                             Buffer *buffer, const QRect &rowBounds = QRect());
+
     // Map t in [0, 1] to a dithered palette index.
     int colorIndex(float t, int pixelX, int pixelY,
                    const GradientRange *range, const QImage &image);

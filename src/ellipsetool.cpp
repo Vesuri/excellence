@@ -140,6 +140,33 @@ QRect EllipseTool::drawEllipseShape(double angle, bool applyGradient)
 QRect EllipseTool::drawEllipseGradientPixels(double angle, const QPoint &gradFrom, const QPoint &gradTo)
 {
     QImage &image = buffer_->image();
+    const double boundsCos = std::cos(angle), boundsSin = std::sin(angle);
+    const int boundsRx = int(std::ceil(std::sqrt(double(rx_) * rx_ * boundsCos * boundsCos
+                                                  + double(ry_) * ry_ * boundsSin * boundsSin)));
+    const int boundsRy = int(std::ceil(std::sqrt(double(rx_) * rx_ * boundsSin * boundsSin
+                                                  + double(ry_) * ry_ * boundsCos * boundsCos)));
+    const QRect fillBounds(cx_ - boundsRx, cy_ - boundsRy, 2 * boundsRx + 1, 2 * boundsRy + 1);
+    if (brushFillIsMode(activeGradientFillMode)) {
+        QVector<int> rowLeft(fillBounds.height(), INT_MAX);
+        QVector<int> rowRight(fillBounds.height(), INT_MIN);
+        if (activeGradientFillMode == FillStretch) {
+            Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, [&](const QPoint &p) {
+                const int row = p.y() - fillBounds.top();
+                if (row < 0 || row >= rowLeft.size()) return;
+                rowLeft[row] = qMin(rowLeft[row], p.x());
+                rowRight[row] = qMax(rowRight[row], p.x());
+            });
+        }
+        Algorithms::fillEllipse(cx_, cy_, rx_, ry_, angle, [&](const QPoint &p) {
+            const int row = p.y() - fillBounds.top();
+            QRect rowBounds;
+            if (row >= 0 && row < rowLeft.size() && rowLeft[row] <= rowRight[row])
+                rowBounds = QRect(rowLeft[row], p.y(), rowRight[row] - rowLeft[row] + 1, 1);
+            GradientRenderer::applyBrushFillPixel(image, p, fillBounds,
+                                                  activeGradientFillMode, buffer_, rowBounds);
+        });
+        return fillBounds.intersected(image.rect());
+    }
     const GradientRange *range = &gradientRanges[activeGradientRange];
     QRect ellipseBbox = QRect(cx_ - rx_, cy_ - ry_, 2 * rx_ + 1, 2 * ry_ + 1);
     QRect conformRect = conformFill ? ellipseBbox : QRect();

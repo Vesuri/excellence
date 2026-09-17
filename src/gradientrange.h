@@ -93,7 +93,11 @@ enum GradientFillMode {
     FillLinear,
     FillRadial,
     FillSpherical,
-    FillHighlight
+    FillHighlight,
+    FillPattern,
+    FillStretch,
+    FillShape,
+    FillPerspective
 };
 extern GradientFillMode activeGradientFillMode;
 extern bool drawModeActive;
@@ -118,6 +122,12 @@ inline bool gradientFillIsRadial(GradientFillMode mode)
     return mode == FillRadial || mode == FillSpherical || mode == FillHighlight;
 }
 
+inline bool brushFillIsMode(GradientFillMode mode)
+{
+    return mode == FillPattern || mode == FillStretch
+        || mode == FillShape || mode == FillPerspective;
+}
+
 inline bool gradientNeedsRubberBand()
 {
     return activeGradientFillMode == FillLinear
@@ -134,6 +144,10 @@ inline QString gradientFillModeName(GradientFillMode mode)
     case FillRadial:     return "Radial";
     case FillSpherical:  return "Spherical";
     case FillHighlight:  return "Highlight";
+    case FillPattern:    return "Pattern";
+    case FillStretch:    return "Stretch";
+    case FillShape:      return "Shape";
+    case FillPerspective:return "Perspective";
     }
     return {};
 }
@@ -141,8 +155,10 @@ inline QString gradientFillModeName(GradientFillMode mode)
 inline bool gradientFillActive()
 {
     return drawModeActive
+        && fillModeSelected
         && activeGradientFillMode != FillFlat
-        && !gradientRanges[activeGradientRange].markers().isEmpty();
+        && (brushFillIsMode(activeGradientFillMode)
+            || !gradientRanges[activeGradientRange].markers().isEmpty());
 }
 
 // Resolve gradient endpoints for a filled shape.

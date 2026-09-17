@@ -127,6 +127,37 @@ QRect FillTool::applyGradientFill(const QPoint &gradFrom, const QPoint &gradTo)
         return QRect();
 
     QImage &image = buffer_->image();
+    if (brushFillIsMode(activeGradientFillMode)) {
+        QVector<int> rowLeft(visitedRect_.height(), INT_MAX);
+        QVector<int> rowRight(visitedRect_.height(), INT_MIN);
+        if (activeGradientFillMode == FillStretch) {
+            for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
+                const int row = y - visitedRect_.top();
+                for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
+                    if (x >= 0 && y >= 0 && x < visitedW_ && y < visitedH_
+                            && visited_[y * visitedW_ + x]) {
+                        rowLeft[row] = qMin(rowLeft[row], x);
+                        rowRight[row] = qMax(rowRight[row], x);
+                    }
+                }
+            }
+        }
+        for (int y = visitedRect_.top(); y <= visitedRect_.bottom(); y++) {
+            const int row = y - visitedRect_.top();
+            const QRect rowBounds = rowLeft[row] <= rowRight[row]
+                ? QRect(rowLeft[row], y, rowRight[row] - rowLeft[row] + 1, 1)
+                : QRect();
+            for (int x = visitedRect_.left(); x <= visitedRect_.right(); x++) {
+                if (x < 0 || y < 0 || x >= visitedW_ || y >= visitedH_)
+                    continue;
+                if (!visited_[y * visitedW_ + x])
+                    continue;
+                GradientRenderer::applyBrushFillPixel(image, QPoint(x, y), visitedRect_,
+                                                      activeGradientFillMode, buffer_, rowBounds);
+            }
+        }
+        return visitedRect_;
+    }
     const GradientRange *range = &gradientRanges[activeGradientRange];
 
     // Normalize radial modes against the region boundary.
@@ -284,8 +315,9 @@ QRect FillTool::press(const QPoint &point, Qt::KeyboardModifiers)
 
     startPoint_ = point;
 
-    // Horizontal/Vertical: apply immediately — no direction selection needed.
-    if (activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical) {
+    // Horizontal/Vertical and brush fills apply immediately — no direction selection needed.
+    if (activeGradientFillMode == FillHorizontal || activeGradientFillMode == FillVertical
+            || brushFillIsMode(activeGradientFillMode)) {
         if (collectRegion(point).isEmpty()) return QRect();
         const QImage &image = buffer_->image();
         return applyGradientFill(QPoint(0, 0), QPoint(image.width() - 1, image.height() - 1));

@@ -42,9 +42,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="stretchStub">
+      <widget class="QRadioButton" name="fillStretch">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Brush fill mode</string>
@@ -52,12 +52,15 @@
        <property name="text">
         <string>Stretch</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">modeGroup</string>
+       </attribute>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="patternStub">
+      <widget class="QRadioButton" name="fillPattern">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Brush fill mode</string>
@@ -65,12 +68,15 @@
        <property name="text">
         <string>Pattern</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">modeGroup</string>
+       </attribute>
       </widget>
      </item>
      <item>
-      <widget class="QRadioButton" name="shapeStub">
+      <widget class="QRadioButton" name="fillShape">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
         <string>Brush fill mode</string>
@@ -78,6 +84,9 @@
        <property name="text">
         <string>Shape</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">modeGroup</string>
+       </attribute>
       </widget>
      </item>
      <item>
@@ -91,6 +100,9 @@
        <property name="text">
         <string>Perspective</string>
        </property>
+       <attribute name="buttonGroup">
+        <string notr="true">modeGroup</string>
+       </attribute>
       </widget>
      </item>
      <item>

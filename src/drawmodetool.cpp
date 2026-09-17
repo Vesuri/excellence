@@ -87,6 +87,8 @@ void DrawModeTool::updateAvailability()
     bool brushActive = qobject_cast<Brush *>(buffer_->pen()) != nullptr;
     Tool *tool = buffer_->tool();
     bool hasFill = tool && tool->hasFill();
+    bool fillModeCanActivate = hasFill
+        && (!brushFillIsMode(activeGradientFillMode) || buffer_->brush());
     bool restricted = tool && tool->restrictToColorAndRandom();
     bool allowsBrushBtn = !tool || tool->allowsBrushModeButton();
 
@@ -100,12 +102,14 @@ void DrawModeTool::updateAvailability()
         btn->setEnabled(!restricted);
     for (auto *btn : fillSensitiveBtns_)
         btn->setEnabled(!restricted && !hasFill);
+    for (auto *btn : brushFillBtns_)
+        btn->setEnabled(hasFill && buffer_->brush());
 
     // Sync radio-button selection with fill availability.
-    if (!hasFill && fillModeSelected_) {
+    if (!fillModeCanActivate && fillModeSelected_) {
         setFillModeSelected(false);
         emit activeModeChanged(buffer_->paintMode());
-    } else if (hasFill && !fillModeSelected_ && activeGradientFillMode != FillFlat) {
+    } else if (fillModeCanActivate && !fillModeSelected_ && activeGradientFillMode != FillFlat) {
         setFillModeSelected(true);
         for (auto &fb : fillModeBtns_) {
             if (fb.second == activeGradientFillMode) {
@@ -229,6 +233,9 @@ QWidget *DrawModeTool::createOptionsWidget()
     ui_->fillHighlight->setChecked(fillModeSelected_ && activeGradientFillMode == FillHighlight);
     ui_->fillSpherical->setChecked(fillModeSelected_ && activeGradientFillMode == FillSpherical);
     ui_->fillRadial->setChecked(fillModeSelected_ && activeGradientFillMode == FillRadial);
+    ui_->fillPattern->setChecked(fillModeSelected_ && activeGradientFillMode == FillPattern);
+    ui_->fillStretch->setChecked(fillModeSelected_ && activeGradientFillMode == FillStretch);
+    ui_->fillShape->setChecked(fillModeSelected_ && activeGradientFillMode == FillShape);
 
     ui_->replaceModeBtn->setChecked(buffer_ && buffer_->replaceMode());
     ui_->amountSlider->setValue(buffer_ ? buffer_->drawModeAmount() : 0);
@@ -247,6 +254,8 @@ QWidget *DrawModeTool::createOptionsWidget()
                      << ui_->negativeBtn << ui_->transpBtn << ui_->stencilBtn;
     fillSensitiveBtns_.clear();
     fillSensitiveBtns_ << ui_->mixBtn << ui_->smearBtn << ui_->avgSmearBtn << ui_->cycleBtn;
+    brushFillBtns_.clear();
+    brushFillBtns_ << ui_->fillPattern << ui_->fillStretch << ui_->fillShape;
     fillModeBtns_.clear();
     fillModeBtns_ = {
         {ui_->fillHorizontal, FillHorizontal},
@@ -255,6 +264,9 @@ QWidget *DrawModeTool::createOptionsWidget()
         {ui_->fillHighlight,  FillHighlight},
         {ui_->fillSpherical,  FillSpherical},
         {ui_->fillRadial,     FillRadial},
+        {ui_->fillPattern,    FillPattern},
+        {ui_->fillStretch,    FillStretch},
+        {ui_->fillShape,      FillShape},
     };
 
     // Connect mode buttons
