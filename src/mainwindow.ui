@@ -152,7 +152,11 @@
     <addaction name="actionBrushRotate90CW"/>
     <addaction name="actionBrushRotate90CCW"/>
     <addaction name="actionBrushRotateNumeric"/>
+    <addaction name="actionBrushRotateInteractive"/>
     <addaction name="separator"/>
+    <addaction name="actionBrushResizeInteractive"/>
+    <addaction name="actionBrushResizeX"/>
+    <addaction name="actionBrushResizeY"/>
     <addaction name="actionBrushDouble"/>
     <addaction name="actionBrushDoubleX"/>
     <addaction name="actionBrushDoubleY"/>
@@ -411,7 +415,7 @@
     <string>Flip Horizontal</string>
    </property>
    <property name="shortcut">
-    <string>x</string>
+    <string>X</string>
    </property>
   </action>
   <action name="actionBrushFlipVertical">
@@ -419,7 +423,7 @@
     <string>Flip Vertical</string>
    </property>
    <property name="shortcut">
-    <string>y</string>
+    <string>Y</string>
    </property>
   </action>
   <action name="actionBrushRotate90CW">
@@ -427,7 +431,7 @@
     <string>Rotate 90° CW</string>
    </property>
    <property name="shortcut">
-    <string>z</string>
+    <string>Z</string>
    </property>
   </action>
   <action name="actionBrushRotate90CCW">
@@ -440,12 +444,35 @@
     <string>Rotate by Degrees...</string>
    </property>
   </action>
+  <action name="actionBrushRotateInteractive">
+   <property name="text">
+    <string>Rotate Interactively...</string>
+   </property>
+  </action>
+  <action name="actionBrushResizeInteractive">
+   <property name="text">
+    <string>Adjust Size Interactively...</string>
+   </property>
+   <property name="shortcut">
+    <string>Shift+Z</string>
+   </property>
+  </action>
+  <action name="actionBrushResizeX">
+   <property name="text">
+    <string>Adjust Width Interactively...</string>
+   </property>
+  </action>
+  <action name="actionBrushResizeY">
+   <property name="text">
+    <string>Adjust Height Interactively...</string>
+   </property>
+  </action>
   <action name="actionBrushDouble">
    <property name="text">
     <string>Double Size</string>
    </property>
    <property name="shortcut">
-    <string>H</string>
+    <string>Shift+H</string>
    </property>
   </action>
   <action name="actionBrushDoubleX">
@@ -453,7 +480,7 @@
     <string>Double Width</string>
    </property>
    <property name="shortcut">
-    <string>X</string>
+    <string>Shift+X</string>
    </property>
   </action>
   <action name="actionBrushDoubleY">
@@ -461,7 +488,7 @@
     <string>Double Height</string>
    </property>
    <property name="shortcut">
-    <string>Y</string>
+    <string>Shift+Y</string>
    </property>
   </action>
   <action name="actionBrushHalve">
@@ -469,7 +496,7 @@
     <string>Halve Size</string>
    </property>
    <property name="shortcut">
-    <string>h</string>
+    <string>H</string>
    </property>
   </action>
   <action name="actionBrushHalveX">
@@ -512,7 +539,7 @@
     <string>Outline</string>
    </property>
    <property name="shortcut">
-    <string>o</string>
+    <string>O</string>
    </property>
   </action>
   <action name="actionBrushTrim">

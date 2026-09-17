@@ -50,6 +50,32 @@
     </widget>
    </item>
    <item>
+    <widget class="QGroupBox" name="transformGroup">
+     <property name="title">
+      <string>Transforms</string>
+     </property>
+     <layout class="QFormLayout" name="transformLayout">
+      <property name="spacing"><number>4</number></property>
+      <property name="leftMargin"><number>6</number></property>
+      <property name="topMargin"><number>4</number></property>
+      <property name="rightMargin"><number>6</number></property>
+      <property name="bottomMargin"><number>6</number></property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="transformQualityLabel">
+        <property name="text"><string>Quality</string></property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="transformQualityCombo">
+        <item><property name="text"><string>Low</string></property></item>
+        <item><property name="text"><string>Medium</string></property></item>
+        <item><property name="text"><string>High</string></property></item>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <widget class="QGroupBox" name="handleGroup">
      <property name="title">
       <string>Handle</string>

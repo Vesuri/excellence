@@ -6,6 +6,8 @@
 #include "brush.h"
 #include "colorutils.h"
 
+Brush::TransformQuality Brush::transformQuality_ = Brush::MediumQuality;
+
 Brush::Brush(const QImage &image, int transparentIndex, QObject *parent) : Pen(parent),
     image_(image),
     transparentIndex_(transparentIndex),
@@ -221,9 +223,32 @@ void Brush::rotateByDegrees(double degrees)
 {
     int bg = qMax(0, transparentIndex_);
     QImage argb = image_.convertToFormat(QImage::Format_ARGB32);
+    qreal aspectX = 1.0;
+    qreal aspectY = 1.0;
+    if (Buffer *buffer = qobject_cast<Buffer *>(parent())) {
+        const int dpmX = buffer->image().dotsPerMeterX();
+        const int dpmY = buffer->image().dotsPerMeterY();
+        if (dpmX > 0 && dpmY > 0 && dpmX != dpmY) {
+            const qreal ratio = dpmX / static_cast<qreal>(dpmY);
+            aspectX = ratio > 1.0 ? 1.0 : 1.0 / ratio;
+            aspectY = ratio > 1.0 ? ratio : 1.0;
+        }
+    }
+
+    const int supersample = transformQuality_ == HighQuality ? 2 : 1;
+    const Qt::TransformationMode mode = transformQuality_ == LowQuality
+        ? Qt::FastTransformation : Qt::SmoothTransformation;
+    const QSize displaySize(qMax(1, qRound(argb.width() * aspectX * supersample)),
+                            qMax(1, qRound(argb.height() * aspectY * supersample)));
+    argb = argb.scaled(displaySize, Qt::IgnoreAspectRatio, mode);
     QTransform t;
     t.rotate(degrees);
-    argb = argb.transformed(t, Qt::SmoothTransformation);
+    argb = argb.transformed(t, mode);
+
+    const QSize logicalSize(qMax(1, qRound(argb.width() / (aspectX * supersample))),
+                            qMax(1, qRound(argb.height() / (aspectY * supersample))));
+    if (argb.size() != logicalSize)
+        argb = argb.scaled(logicalSize, Qt::IgnoreAspectRatio, mode);
 
     QImage result(argb.width(), argb.height(), QImage::Format_Indexed8);
     result.setColorTable(image_.colorTable());
@@ -242,10 +267,19 @@ void Brush::rotateByDegrees(double degrees)
 
 void Brush::scale(int width, int height)
 {
-    if (width < 1)  width  = 1;
-    if (height < 1) height = 1;
-    QImage rgb = image_.convertToFormat(QImage::Format_ARGB32)
-                       .scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    width = qBound(1, width, 4096);
+    height = qBound(1, height, 4096);
+    const Qt::TransformationMode mode = transformQuality_ == LowQuality
+        ? Qt::FastTransformation : Qt::SmoothTransformation;
+    QImage rgb = image_.convertToFormat(QImage::Format_ARGB32);
+    if (transformQuality_ == HighQuality) {
+        rgb = rgb.scaled(width * 2, height * 2, Qt::IgnoreAspectRatio,
+                         Qt::SmoothTransformation)
+                 .scaled(width, height, Qt::IgnoreAspectRatio,
+                         Qt::SmoothTransformation);
+    } else {
+        rgb = rgb.scaled(width, height, Qt::IgnoreAspectRatio, mode);
+    }
     image_ = reindex(rgb);
     handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2);
     emit imageChanged();
@@ -402,6 +436,9 @@ void Brush::tileCut()
 void Brush::storeOriginal()   { originalImage_ = image_; }
 void Brush::restoreOriginal() { if (!originalImage_.isNull()) { image_ = originalImage_; handleOffset_ = QPoint(image_.width() / 2, image_.height() / 2); emit imageChanged(); } }
 bool Brush::hasOriginal() const { return !originalImage_.isNull(); }
+
+void Brush::setTransformQuality(TransformQuality quality) { transformQuality_ = quality; }
+Brush::TransformQuality Brush::transformQuality() { return transformQuality_; }
 
 void Brush::detectBackground()
 {
