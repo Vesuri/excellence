@@ -291,21 +291,19 @@ void BufferView::handleKey(QKeyEvent *event)
     switch (event->key()) {
     case '=':
     case '+':
-    case '>':
-        if (buffer && qobject_cast<Brush *>(buffer->pen()))
-            BrushTool::instance.nudgeSize(event->modifiers() & Qt::ShiftModifier ? 10 : 1);
-        else if (event->modifiers() & Qt::KeypadModifier)
-            emit addBufferRequested();
-        else
-            setZoomLevel(zoomLevel_ + 1);
+        setZoomLevel(zoomLevel_ + 1);
         break;
     case '-':
     case '_':
+        setZoomLevel(zoomLevel_ - 1);
+        break;
+    case '>':
+        if (buffer && qobject_cast<Brush *>(buffer->pen()))
+            BrushTool::instance.nudgeSize(1);
+        break;
     case '<':
         if (buffer && qobject_cast<Brush *>(buffer->pen()))
-            BrushTool::instance.nudgeSize(event->modifiers() & Qt::ShiftModifier ? -10 : -1);
-        else
-            setZoomLevel(zoomLevel_ - 1);
+            BrushTool::instance.nudgeSize(-1);
         break;
     case Qt::Key_ParenLeft:
         emit previousBufferRequested();
