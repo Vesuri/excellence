@@ -2,6 +2,7 @@
 #define GRADIENTTOOL_H
 
 #include <QCheckBox>
+#include <QElapsedTimer>
 #include <QLabel>
 #include <QSlider>
 #include <QSpinBox>
@@ -43,6 +44,7 @@ private:
 
     Ui::GradientToolOptions *ui_ = nullptr;
     QTimer *cycleTimer_ = nullptr;
+    QElapsedTimer cycleClock_;
     double cycleAccumulators_[kGradientRangeCount] = {};
     bool cyclingEnabled_ = false;
 };

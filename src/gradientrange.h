@@ -48,7 +48,7 @@ public:
     bool cycling() const { return cycling_; }
     void setCycling(bool v) { cycling_ = v; }
     int cycleSpeed() const { return cycleSpeed_; }
-    void setCycleSpeed(int v) { cycleSpeed_ = qBound(0, v, 71); }
+    void setCycleSpeed(int v) { cycleSpeed_ = qBound(0, v, 60); }
 
     void setDefault(const QImage &image);
 

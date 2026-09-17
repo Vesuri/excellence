@@ -7,11 +7,28 @@
 #include <QSpinBox>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <cmath>
 #include "buffer.h"
 #include "gradienttool.h"
 #include "ui_gradienttool.h"
 
 GradientTool GradientTool::instance;
+
+namespace {
+double cycleRate(int speed)
+{
+    if (speed <= 0)
+        return 0.0;
+    // Brilliance's logarithmic scale approximately halves the interval for
+    // every eight speed units. Speed 30 advances once every 0.67 seconds.
+    constexpr double referenceSpeed = 30.0;
+    constexpr double referenceInterval = 0.67;
+    constexpr double speedUnitsPerDoubling = 8.0;
+    const double interval = referenceInterval
+        * std::pow(2.0, (referenceSpeed - speed) / speedUnitsPerDoubling);
+    return 1.0 / interval;
+}
+}
 
 GradientTool::GradientTool() : Tool()
 {
@@ -119,31 +136,34 @@ void GradientTool::updateTimer()
             }
         }
     }
-    if (needed && !cycleTimer_->isActive())
+    if (needed && !cycleTimer_->isActive()) {
+        cycleClock_.start();
         cycleTimer_->start();
-    else if (!needed && cycleTimer_->isActive())
+    } else if (!needed && cycleTimer_->isActive()) {
         cycleTimer_->stop();
+    }
 }
 
 void GradientTool::onCycleTick()
 {
+    const double elapsedSeconds = cycleClock_.restart() / 1000.0;
     if (!buffer_) return;
     for (int r = 0; r < kGradientRangeCount; r++) {
         GradientRange &range = gradientRanges[r];
         if (!range.cycling() || range.cycleSpeed() == 0) continue;
 
-        cycleAccumulators_[r] += range.cycleSpeed() / 71.0;
-        if (cycleAccumulators_[r] < 1.0) continue;
-        cycleAccumulators_[r] -= 1.0;
-
         const QVector<GradientMarker> &markers = range.markers();
         if (markers.size() < 2) continue;
 
-        int n = markers.size();
-        QRgb saved = buffer_->image().color(markers[n - 1].colorIndex);
-        for (int i = n - 1; i > 0; i--)
-            buffer_->setColor(markers[i].colorIndex, QColor(buffer_->image().color(markers[i - 1].colorIndex)));
-        buffer_->setColor(markers[0].colorIndex, QColor(saved));
+        cycleAccumulators_[r] += cycleRate(range.cycleSpeed()) * elapsedSeconds;
+        while (cycleAccumulators_[r] >= 1.0) {
+            cycleAccumulators_[r] -= 1.0;
+            int n = markers.size();
+            QRgb saved = buffer_->image().color(markers[n - 1].colorIndex);
+            for (int i = n - 1; i > 0; i--)
+                buffer_->setColor(markers[i].colorIndex, QColor(buffer_->image().color(markers[i - 1].colorIndex)));
+            buffer_->setColor(markers[0].colorIndex, QColor(saved));
+        }
     }
 }
 
