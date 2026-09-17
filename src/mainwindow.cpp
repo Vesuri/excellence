@@ -161,6 +161,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionBrushRotate90CW, &QAction::triggered, this, &MainWindow::brushRotate90CW);
     connect(ui->actionBrushRotate90CCW, &QAction::triggered, this, &MainWindow::brushRotate90CCW);
     connect(ui->actionBrushRotateNumeric, &QAction::triggered, this, &MainWindow::brushRotateNumeric);
+    connect(ui->actionBrushRotateInteractive, &QAction::triggered, &BrushTool::instance, &BrushTool::startRotate);
+    connect(ui->actionBrushResizeInteractive, &QAction::triggered, &BrushTool::instance, &BrushTool::startResize);
+    connect(ui->actionBrushResizeX, &QAction::triggered, &BrushTool::instance, &BrushTool::startResizeX);
+    connect(ui->actionBrushResizeY, &QAction::triggered, &BrushTool::instance, &BrushTool::startResizeY);
     connect(ui->actionBrushDouble, &QAction::triggered, this, &MainWindow::brushDouble);
     connect(ui->actionBrushDoubleX, &QAction::triggered, this, &MainWindow::brushDoubleX);
     connect(ui->actionBrushDoubleY, &QAction::triggered, this, &MainWindow::brushDoubleY);
@@ -1193,11 +1197,14 @@ void MainWindow::brushRotate90CCW()
 
 void MainWindow::brushRotateNumeric()
 {
-    Brush *brush = brushForTransform();
+    Brush *brush = qobject_cast<Brush *>(buffer->pen());
     if (!brush) return;
     bool ok;
     double degrees = QInputDialog::getDouble(this, "Rotate Brush", "Degrees (clockwise):", 45.0, -360.0, 360.0, 1, &ok);
-    if (ok) brush->rotateByDegrees(degrees);
+    if (ok) {
+        brush->storeOriginal();
+        brush->rotateByDegrees(degrees);
+    }
 }
 
 void MainWindow::brushDouble()
@@ -1238,7 +1245,7 @@ void MainWindow::brushHalveY()
 
 void MainWindow::brushScaleToSize()
 {
-    Brush *brush = brushForTransform();
+    Brush *brush = qobject_cast<Brush *>(buffer->pen());
     if (!brush)
         return;
     bool ok;
@@ -1246,6 +1253,7 @@ void MainWindow::brushScaleToSize()
     if (!ok) return;
     int h = QInputDialog::getInt(this, "Scale Brush", "Height:", brush->image().height(), 1, 4096, 1, &ok);
     if (!ok) return;
+    brush->storeOriginal();
     brush->scale(w, h);
 }
 

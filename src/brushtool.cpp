@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QFrame>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -12,6 +13,8 @@
 #include <QRect>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QtMath>
+#include <cmath>
 #include "brush.h"
 #include "buffer.h"
 #include "undobuffer.h"
@@ -192,10 +195,10 @@ void BrushTool::setBuffer(Buffer *buffer)
     refreshBrushDisplay();
 }
 
-QRect BrushTool::press(const QPoint &point, Qt::KeyboardModifiers)
+QRect BrushTool::press(const QPoint &point, Qt::KeyboardModifiers modifiers)
 {
     if (distortMode_ != NoDistort)
-        return distortPress(point);
+        return distortPress(point, modifiers);
 
     if (mode_ == Freehand) {
         polygon_.clear();
@@ -214,8 +217,13 @@ QRect BrushTool::press(const QPoint &point, Qt::KeyboardModifiers)
 
 QRect BrushTool::move(const QPoint &point)
 {
-    if (distortMode_ != NoDistort)
+    if (distortMode_ != NoDistort) {
+        if (mouseButton_ == Qt::NoButton) {
+            Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
+            return brush ? brush->paint(point, buffer_) : QRect();
+        }
         return distortMove(point);
+    }
 
     if (mouseButton_ == Qt::NoButton)
         return QRect();
@@ -235,6 +243,14 @@ QRect BrushTool::move(const QPoint &point)
     if (undoBuffer_)
         undoBuffer_->apply(buffer_);
     return QRect();
+}
+
+QRect BrushTool::hover(const QPoint &point)
+{
+    if (distortMode_ == NoDistort)
+        return QRect();
+    Brush *brush = qobject_cast<Brush *>(buffer_ ? buffer_->pen() : nullptr);
+    return brush ? brush->rect(point) : QRect();
 }
 
 QRect BrushTool::release(const QPoint &point)
@@ -407,6 +423,9 @@ QWidget *BrushTool::createOptionsWidget()
     ui_->autoBgCheck->setChecked(autoBg_);
     connect(ui_->tileCutCheck, &QCheckBox::toggled, this, &BrushTool::setTileCut);
     connect(ui_->autoBgCheck,  &QCheckBox::toggled, this, &BrushTool::setAutoBg);
+    ui_->transformQualityCombo->setCurrentIndex(static_cast<int>(Brush::transformQuality()));
+    connect(ui_->transformQualityCombo, qOverload<int>(&QComboBox::currentIndexChanged),
+            this, &BrushTool::setTransformQuality);
 
     ui_->handleTL->setIcon(QIcon(":/topleft.png"));
     ui_->handleTR->setIcon(QIcon(":/topright.png"));
@@ -457,6 +476,13 @@ void BrushTool::brushOutline()
     brush->outline(static_cast<int>(buffer_->paintColor()));
 }
 void BrushTool::brushTrim() { BRUSH_TRANSFORM(trim()) }
+void BrushTool::brushFlipHorizontal() { BRUSH_TRANSFORM(flipHorizontal()) }
+void BrushTool::brushFlipVertical() { BRUSH_TRANSFORM(flipVertical()) }
+void BrushTool::brushRotate90CW() { BRUSH_TRANSFORM(rotate90CW()) }
+void BrushTool::brushDouble() { BRUSH_TRANSFORM(doubleSize()) }
+void BrushTool::brushDoubleX() { BRUSH_TRANSFORM(doubleWidth()) }
+void BrushTool::brushDoubleY() { BRUSH_TRANSFORM(doubleHeight()) }
+void BrushTool::brushHalve() { BRUSH_TRANSFORM(halveSize()) }
 void BrushTool::brushRestore()
 {
     Brush *brush = currentBrush(buffer_);
@@ -464,10 +490,24 @@ void BrushTool::brushRestore()
     brush->restoreOriginal();
 }
 
+void BrushTool::nudgeSize(int amount)
+{
+    Brush *brush = currentBrush(buffer_);
+    if (!brush || amount == 0) return;
+    brush->storeOriginal();
+    brush->scale(qMax(1, brush->image().width() + amount),
+                 qMax(1, brush->image().height() + amount));
+}
+
 #undef BRUSH_TRANSFORM
 
 void BrushTool::setTileCut(bool enabled) { tileCut_ = enabled; }
 void BrushTool::setAutoBg(bool enabled)  { autoBg_ = enabled; }
+void BrushTool::setTransformQuality(int quality)
+{
+    Brush::setTransformQuality(static_cast<Brush::TransformQuality>(
+        qBound(0, quality, static_cast<int>(Brush::HighQuality))));
+}
 
 // Preview distortion without modifying the canvas.
 
@@ -475,10 +515,31 @@ static void applyDistort(Brush *brush, BrushTool::DistortMode mode, const QPoint
 {
     brush->restoreOriginal();
     switch (mode) {
-    case BrushTool::ShearX: brush->shearX(qBound(-2.0, delta.x() / 100.0, 2.0)); break;
-    case BrushTool::ShearY: brush->shearY(qBound(-2.0, delta.y() / 100.0, 2.0)); break;
-    case BrushTool::BendX:  brush->bendX(qBound(-1.0, delta.x() / 100.0, 1.0)); break;
-    case BrushTool::BendY:  brush->bendY(qBound(-1.0, delta.y() / 100.0, 1.0)); break;
+    case BrushTool::Resize: {
+        const qreal factor = qPow(2.0, delta.x() / 100.0);
+        const int width = qRound(qBound(1.0, brush->image().width() * factor, 4096.0));
+        const int height = qRound(qBound(1.0, brush->image().height() * factor, 4096.0));
+        brush->scale(width, height);
+        break;
+    }
+    case BrushTool::ResizeX:
+        brush->scale(qBound(1, brush->image().width() + delta.x(), 4096), brush->image().height());
+        break;
+    case BrushTool::ResizeY:
+        brush->scale(brush->image().width(), qBound(1, brush->image().height() + delta.y(), 4096));
+        break;
+    case BrushTool::Rotate:
+        if (!delta.isNull())
+            brush->rotateByDegrees(qRadiansToDegrees(std::atan2(delta.y(), delta.x())));
+        break;
+    case BrushTool::ShearX:
+        brush->shearX(delta.x() / qMax(1.0, brush->image().height() - 1.0));
+        break;
+    case BrushTool::ShearY:
+        brush->shearY(delta.y() / qMax(1.0, brush->image().width() - 1.0));
+        break;
+    case BrushTool::BendX: brush->bendX(delta.x()); break;
+    case BrushTool::BendY: brush->bendY(delta.y()); break;
     default: break;
     }
 }
@@ -493,14 +554,24 @@ void BrushTool::startDistort(DistortMode mode)
     buffer_->setTool(this);
 }
 
+void BrushTool::startResize() { startDistort(Resize); }
+void BrushTool::startResizeX() { startDistort(ResizeX); }
+void BrushTool::startResizeY() { startDistort(ResizeY); }
+void BrushTool::startRotate() { startDistort(Rotate); }
 void BrushTool::startShearX() { startDistort(ShearX); }
 void BrushTool::startShearY() { startDistort(ShearY); }
 void BrushTool::startBendX()  { startDistort(BendX); }
 void BrushTool::startBendY()  { startDistort(BendY); }
 
-QRect BrushTool::distortPress(const QPoint &point)
+QRect BrushTool::distortPress(const QPoint &point, Qt::KeyboardModifiers modifiers)
 {
     distortStartPoint_ = point;
+    if (distortMode_ == Resize) {
+        if (modifiers & Qt::ControlModifier)
+            distortMode_ = ResizeX;
+        else if (modifiers & Qt::AltModifier)
+            distortMode_ = ResizeY;
+    }
     return QRect();
 }
 
@@ -513,13 +584,15 @@ QRect BrushTool::distortMove(const QPoint &point)
     if (!brush) return QRect();
     applyDistort(brush, distortMode_, point - distortStartPoint_);
 
+    QRect changed;
     if (undoBuffer_) {
+        changed = undoBuffer_->rect();
         undoBuffer_->apply(buffer_);
         delete undoBuffer_;
         undoBuffer_ = nullptr;
     }
     QRect stampRect = brush->rect(distortStartPoint_).intersected(buffer_->image().rect());
-    QRect changed = stampRect;
+    changed = changed.united(stampRect);
     if (!stampRect.isEmpty()) {
         undoBuffer_ = new UndoBuffer(stampRect.topLeft(), buffer_->image().copy(stampRect), this);
         changed = changed.united(brush->paint(distortStartPoint_, buffer_));

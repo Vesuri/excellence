@@ -289,16 +289,23 @@ void BufferView::keyPressEvent(QKeyEvent *event)
 void BufferView::handleKey(QKeyEvent *event)
 {
     switch (event->key()) {
+    case '=':
     case '+':
     case '>':
-        if (event->modifiers() & Qt::KeypadModifier)
+        if (buffer && qobject_cast<Brush *>(buffer->pen()))
+            BrushTool::instance.nudgeSize(event->modifiers() & Qt::ShiftModifier ? 10 : 1);
+        else if (event->modifiers() & Qt::KeypadModifier)
             emit addBufferRequested();
         else
             setZoomLevel(zoomLevel_ + 1);
         break;
     case '-':
+    case '_':
     case '<':
-        setZoomLevel(zoomLevel_ - 1);
+        if (buffer && qobject_cast<Brush *>(buffer->pen()))
+            BrushTool::instance.nudgeSize(event->modifiers() & Qt::ShiftModifier ? -10 : -1);
+        else
+            setZoomLevel(zoomLevel_ - 1);
         break;
     case Qt::Key_ParenLeft:
         emit previousBufferRequested();
@@ -501,6 +508,38 @@ void BufferView::handleKey(QKeyEvent *event)
                     break;
                 }
             }
+        }
+        break;
+    case Qt::Key_H:
+        if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+            if (event->modifiers() & Qt::ShiftModifier)
+                BrushTool::instance.brushDouble();
+            else
+                BrushTool::instance.brushHalve();
+        }
+        break;
+    case Qt::Key_X:
+        if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+            if (event->modifiers() & Qt::ShiftModifier)
+                BrushTool::instance.brushDoubleX();
+            else
+                BrushTool::instance.brushFlipHorizontal();
+        }
+        break;
+    case Qt::Key_Y:
+        if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+            if (event->modifiers() & Qt::ShiftModifier)
+                BrushTool::instance.brushDoubleY();
+            else
+                BrushTool::instance.brushFlipVertical();
+        }
+        break;
+    case Qt::Key_Z:
+        if (!(event->modifiers() & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+            if (event->modifiers() & Qt::ShiftModifier)
+                BrushTool::instance.startResize();
+            else
+                BrushTool::instance.brushRotate90CW();
         }
         break;
     case Qt::Key_B:

@@ -8,6 +8,8 @@ class Brush : public Pen
 {
     Q_OBJECT
 public:
+    enum TransformQuality { LowQuality, MediumQuality, HighQuality };
+
     explicit Brush(const QImage &image, int transparentIndex = -1, QObject *parent = nullptr);
 
     QRect paint(const QPoint &point, Buffer *buffer) const override;
@@ -45,6 +47,8 @@ public:
     void storeOriginal();
     void restoreOriginal();
     bool hasOriginal() const;
+    static void setTransformQuality(TransformQuality quality);
+    static TransformQuality transformQuality();
 
 signals:
     void imageChanged();
@@ -56,6 +60,7 @@ private:
     QImage originalImage_;
     int transparentIndex_;
     QPoint handleOffset_;
+    static TransformQuality transformQuality_;
 };
 
 #endif // BRUSH_H

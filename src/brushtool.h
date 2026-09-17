@@ -55,7 +55,7 @@ class BrushTool : public Tool
 
 public:
     enum Mode { Rectangle, Freehand };
-    enum DistortMode { NoDistort, ShearX, ShearY, BendX, BendY };
+    enum DistortMode { NoDistort, Resize, ResizeX, ResizeY, Rotate, ShearX, ShearY, BendX, BendY };
 
     explicit BrushTool(QObject *parent = nullptr);
 
@@ -67,6 +67,7 @@ public:
     bool showGuides() const override { return distortMode_ == NoDistort && mode_ == Rectangle; }
     QRect press(const QPoint &point, Qt::KeyboardModifiers modifiers) override;
     QRect move(const QPoint &point) override;
+    QRect hover(const QPoint &point) override;
     QRect release(const QPoint &point) override;
     void cancel() override;
     QString status() const override;
@@ -88,8 +89,21 @@ public slots:
     void brushOutline();
     void brushTrim();
     void brushRestore();
+    void brushFlipHorizontal();
+    void brushFlipVertical();
+    void brushRotate90CW();
+    void brushDouble();
+    void brushDoubleX();
+    void brushDoubleY();
+    void brushHalve();
+    void nudgeSize(int amount);
     void setTileCut(bool enabled);
     void setAutoBg(bool enabled);
+    void setTransformQuality(int quality);
+    void startResize();
+    void startResizeX();
+    void startResizeY();
+    void startRotate();
     void startShearX();
     void startShearY();
     void startBendX();
@@ -111,7 +125,7 @@ private:
     QRect draw(const QPoint &point);
     void storeToWell(int index);
     void startDistort(DistortMode mode);
-    QRect distortPress(const QPoint &point);
+    QRect distortPress(const QPoint &point, Qt::KeyboardModifiers modifiers);
     QRect distortMove(const QPoint &point);
     QRect distortRelease(const QPoint &point);
     void distortCancel();
