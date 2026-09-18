@@ -72,7 +72,7 @@ GridColor findNearestUnused(GridColor target, int levels, const QSet<int> &used)
 
 }
 
-QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMode mode, int outOf, PaletteSortMode sortMode)
+QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMode mode, int outOf, PaletteSortMode sortMode, ProgressCallback progress)
 {
     int levelsPerChannel = qMax(2, qRound(qPow((double)outOf, 1.0 / 3.0)));
     qint64 maxColors = qint64(levelsPerChannel) * levelsPerChannel * levelsPerChannel;
@@ -153,7 +153,7 @@ QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMo
     array2d< vector_fixed<double, 3> >* filters[] =
         {nullptr, &filter1_weights, nullptr, &filter3_weights,
          nullptr, &filter5_weights};
-    spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1);
+    spatial_color_quant(image, *filters[filter_size], quantized_image, palette, coarse_variables, 1.0, 0.001, 3, 1, progress);
     //spatial_color_quant(image, filter3_weights, quantized_image, palette, coarse_variables, 0.05, 0.02);
 
     QSet<int> usedGridColors;

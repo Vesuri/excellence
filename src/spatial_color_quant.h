@@ -33,6 +33,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <stdio.h>
 #include <time.h>
 #include <limits>
+#include <functional>
 
 using namespace std;
 
@@ -717,7 +718,8 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
              double initial_temperature,
              double final_temperature,
              int temps_per_level,
-             int repeats_per_temp)
+             int repeats_per_temp,
+             function<void(int)> progress_callback = {})
 {
     int max_coarse_level = //1;
         compute_max_coarse_level(image.get_width(), image.get_height());
@@ -730,6 +732,15 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
     fill_random(coarse_variables);
 
     double temperature = initial_temperature;
+    long long completed_steps = 0;
+    long long estimated_steps = 0;
+    for (int level = max_coarse_level; level >= 0; level--) {
+        long long level_width = max(1, image.get_width() >> level);
+        long long level_height = max(1, image.get_height() >> level);
+        estimated_steps += level_width * level_height * temps_per_level * repeats_per_temp;
+    }
+    if (progress_callback)
+        progress_callback(0);
 
     // Compute a_i, b_{ij} according to (11)
     int extended_neighborhood_width = filter_weights.get_width()*2 - 1;
@@ -800,8 +811,7 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
     cout << "Temperature: " << temperature << endl;
 #endif
     int center_x = (b.get_width()-1)/2, center_y = (b.get_height()-1)/2;
-    int step_counter = 0;
-    for(int repeat=0; repeat<repeats_per_temp; repeat++)
+        for(int repeat=0; repeat<repeats_per_temp; repeat++)
     {
 #if TRACE
         int pixels_changed = 0;
@@ -899,13 +909,12 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
             }
             }
         }
-        // Show progress with dots - in a graphical interface,
-        // we'd show progressive refinements of the image instead,
-        // and maybe a palette preview.
-        step_counter++;
-        if ((step_counter % 10000) == 0) {
-            cout << ".";
-            cout.flush();
+        completed_steps++;
+        if ((completed_steps % 10000) == 0) {
+            if (progress_callback) {
+                int percent = static_cast<int>(min(99LL, completed_steps * 100 / estimated_steps));
+                progress_callback(percent);
+            }
 #if TRACE
             cout << visit_queue.size();
 #endif
@@ -981,6 +990,8 @@ void spatial_color_quant(array2d< vector_fixed<double, 3> >& image,
 #endif
     }
     }
+    if (progress_callback)
+        progress_callback(100);
 }
 
 #endif // SPATIAL_COLOR_QUANT_H

@@ -21,6 +21,7 @@
 #include <QPushButton>
 #include <QImageReader>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QApplication>
 #include <QGuiApplication>
 #include <QScreen>
@@ -646,16 +647,41 @@ void MainWindow::openFile(const QString &path)
         if (!confirmDiscard(buffer))
             return;
 
+        bool useOptimalPalette = dialog.useOptimalPalette();
+        QProgressDialog progress(tr("Reducing image colors\xe2\x80\xa6"), QString(),
+                                 0, useOptimalPalette ? 100 : 0, this);
+        progress.setWindowTitle(tr("Open File"));
+        progress.setWindowModality(Qt::ApplicationModal);
+        progress.setCancelButton(nullptr);
+        progress.setMinimumDuration(0);
+        progress.setAutoClose(false);
+        progress.setAutoReset(false);
+        progress.show();
+        QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
         QImage indexed;
-        if (dialog.useOptimalPalette())
-            indexed = PaletteQuantizer::quantize(loaded, dialog.colors(), DitherMode::None, dialog.outOf());
-        else
+        if (useOptimalPalette) {
+            auto updateProgress = [&progress](int percent) {
+                progress.setValue(percent);
+                QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            };
+            indexed = PaletteQuantizer::quantize(loaded, dialog.colors(), DitherMode::None,
+                                                 dialog.outOf(), PaletteSortMode::None,
+                                                 updateProgress);
+        } else {
             indexed = convertToIndexed(loaded);
+        }
         indexed.setDotsPerMeterX(loaded.dotsPerMeterX());
         indexed.setDotsPerMeterY(loaded.dotsPerMeterY());
 
         replaceActiveBufferSlot(new Buffer(indexed, path, this));
         openDialog->setDirectory(path);
+
+        // Flush input received during the synchronous conversion while the
+        // application-modal progress dialog still blocks the new palette.
+        // Otherwise those clicks can be delivered to the replacement buffer.
+        QApplication::processEvents();
+        progress.close();
         return;
     }
 
