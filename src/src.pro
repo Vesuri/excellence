@@ -55,6 +55,7 @@ SOURCES += main.cpp\
     defaultpalette.cpp \
     rawsaveoptionsdialog.cpp \
     importimagedialog.cpp \
+    quantizedialog.cpp \
     dither.cpp \
     buffertool.cpp \
     bufferlistdialog.cpp \
@@ -103,6 +104,7 @@ HEADERS  += mainwindow.h \
     defaultpalette.h \
     rawsaveoptionsdialog.h \
     importimagedialog.h \
+    quantizedialog.h \
     dithermode.h \
     dither.h \
     palettesortmode.h \
@@ -126,6 +128,7 @@ FORMS    += mainwindow.ui \
     gradienttool.ui \
     rawsaveoptionsdialog.ui \
     importimagedialog.ui \
+    quantizedialog.ui \
     bufferlistdialog.ui
 
 RESOURCES += \

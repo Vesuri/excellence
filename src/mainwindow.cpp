@@ -29,6 +29,7 @@
 #include "brushtool.h"
 #include "importimagedialog.h"
 #include "palettequantizer.h"
+#include "quantizedialog.h"
 #include "propertiesdialog.h"
 #include "buffer.h"
 #include "bufferlistdialog.h"
@@ -617,13 +618,37 @@ void MainWindow::updatePalette()
 
 void MainWindow::openFile(const QString &path)
 {
-    if (!confirmDiscard(buffer))
-        return;
-
     if (path.isEmpty()) {
+        if (!confirmDiscard(buffer))
+            return;
         replaceActiveBufferSlot(new Buffer(640, 512, buffer->image().colorCount(), this));
         return;
     }
+
+    QImage loaded(path);
+    if (!loaded.isNull() && loaded.format() != QImage::Format_Indexed8) {
+        QuantizeDialog dialog(this);
+        dialog.setCurrentPalette(buffer->image().colorTable());
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+        if (!confirmDiscard(buffer))
+            return;
+
+        QImage indexed;
+        if (dialog.useOptimalPalette())
+            indexed = PaletteQuantizer::quantize(loaded, dialog.colors(), DitherMode::None, dialog.outOf());
+        else
+            indexed = convertToIndexed(loaded);
+        indexed.setDotsPerMeterX(loaded.dotsPerMeterX());
+        indexed.setDotsPerMeterY(loaded.dotsPerMeterY());
+
+        replaceActiveBufferSlot(new Buffer(indexed, path, this));
+        openDialog->setDirectory(path);
+        return;
+    }
+
+    if (!confirmDiscard(buffer))
+        return;
 
     Buffer *incoming = new Buffer(path, this);
     int incomingColors = incoming->image().colorCount();
