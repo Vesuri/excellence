@@ -546,8 +546,11 @@ void zoom_double(array3d<double>& small, array3d<double>& big)
     // pixels falling under each fine pixel, weighted by area.
     // To mix the pixels a little, we assume each fine pixel
     // is 1.2 fine pixels wide and high.
-    for(int y=0; y<big.get_height()/2*2; y++) {
-    for(int x=0; x<big.get_width()/2*2; x++) {
+    // Refinement dimensions are not necessarily even. Fill the final row and
+    // column too; leaving them untouched feeds uninitialized weights into the
+    // following annealing pass.
+    for(int y=0; y<big.get_height(); y++) {
+    for(int x=0; x<big.get_width(); x++) {
         double left = max(0.0, (x-0.1)/2.0), right  = min(small.get_width()-0.001, (x+1.1)/2.0);
         double top  = max(0.0, (y-0.1)/2.0), bottom = min(small.get_height()-0.001, (y+1.1)/2.0);
         int x_left = (int)floor(left), x_right  = (int)floor(right);
