@@ -22,6 +22,7 @@ public:
 private slots:
     void setProperties();
     void setRetainImageState(bool enabled);
+    void setPaletteMode(int index);
     void setToScreenSize();
 
 signals:

@@ -88,6 +88,15 @@ DitherMode QuantizeDialog::ditherMode() const
     }
 }
 
+PaletteSortMode QuantizeDialog::sortMode() const
+{
+    switch (ui->comboBoxSorting->currentIndex()) {
+    case 1: return PaletteSortMode::DarkToLight;
+    case 2: return PaletteSortMode::LightToDark;
+    default: return PaletteSortMode::None;
+    }
+}
+
 void QuantizeDialog::setPaletteMode(int index)
 {
     bool optimal = index == 1;
@@ -97,4 +106,5 @@ void QuantizeDialog::setPaletteMode(int index)
     }
     ui->comboBoxColors->setEnabled(optimal);
     ui->comboBoxOutOf->setEnabled(optimal);
+    ui->comboBoxSorting->setEnabled(optimal);
 }

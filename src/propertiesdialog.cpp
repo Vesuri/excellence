@@ -17,7 +17,11 @@ PropertiesDialog::PropertiesDialog(QWidget *parent) :
     connect(this, &QDialog::accepted, this, &PropertiesDialog::setProperties);
     connect(ui->checkBoxRetainImage, &QCheckBox::toggled,
             this, &PropertiesDialog::setRetainImageState);
+    connect(ui->comboBoxPalette, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &PropertiesDialog::setPaletteMode);
     connect(ui->pushButtonScreenSize, &QPushButton::clicked, this, &PropertiesDialog::setToScreenSize);
+
+    setPaletteMode(ui->comboBoxPalette->currentIndex());
 }
 
 PropertiesDialog::~PropertiesDialog()
@@ -65,7 +69,13 @@ void PropertiesDialog::setProperties()
             }
 
             int outOf = qRound(qPow(8, ui->comboBoxOutOf->currentIndex() + 1));
-            newBuffer->setImage(PaletteQuantizer::quantize(image, colors, DitherMode::None, outOf));
+            PaletteSortMode sortMode = PaletteSortMode::None;
+            switch (ui->comboBoxSorting->currentIndex()) {
+            case 1: sortMode = PaletteSortMode::DarkToLight; break;
+            case 2: sortMode = PaletteSortMode::LightToDark; break;
+            }
+            newBuffer->setImage(PaletteQuantizer::quantize(image, colors, DitherMode::None,
+                                                           outOf, sortMode));
         } else {
             if (ui->comboBoxScaling->currentIndex() == 0) {
                 for (int y = 0; y < qMin(height, buffer->image().height()); y++) {
@@ -101,4 +111,12 @@ void PropertiesDialog::setRetainImageState(bool enabled)
 {
     ui->comboBoxScaling->setEnabled(enabled);
     ui->comboBoxPalette->setEnabled(enabled);
+    setPaletteMode(ui->comboBoxPalette->currentIndex());
+}
+
+void PropertiesDialog::setPaletteMode(int index)
+{
+    bool optimal = ui->checkBoxRetainImage->isChecked() && index == 1;
+    ui->comboBoxOutOf->setEnabled(optimal);
+    ui->comboBoxSorting->setEnabled(optimal);
 }

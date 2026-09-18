@@ -667,7 +667,7 @@ void MainWindow::openFile(const QString &path)
                 QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
             };
             indexed = PaletteQuantizer::quantize(loaded, dialog.colors(), ditherMode,
-                                                 dialog.outOf(), PaletteSortMode::None,
+                                                 dialog.outOf(), dialog.sortMode(),
                                                  updateProgress);
         } else {
             indexed = convertToIndexed(loaded, ditherMode);

@@ -5,6 +5,7 @@
 #include <QVector>
 #include <QRgb>
 #include "dithermode.h"
+#include "palettesortmode.h"
 
 namespace Ui {
 class QuantizeDialog;
@@ -24,6 +25,7 @@ public:
     int colors() const;
     int outOf() const;
     DitherMode ditherMode() const;
+    PaletteSortMode sortMode() const;
 
 private slots:
     void setPaletteMode(int index);
