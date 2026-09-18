@@ -74,14 +74,29 @@ GridColor findNearestUnused(GridColor target, int levels, const QSet<int> &used)
 
 QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMode mode, int outOf, PaletteSortMode sortMode, ProgressCallback progress)
 {
+    // The spatial quantizer only supplies the palette; ditherToPalette() maps
+    // the original image to that palette below. Running the palette search on
+    // every source pixel makes its annealing passes prohibitively expensive
+    // for large images without materially improving the resulting palette.
+    constexpr qint64 maxPalettePixels = 65536;
+    QImage paletteSource = source;
+    qint64 sourcePixels = qint64(source.width()) * source.height();
+    if (sourcePixels > maxPalettePixels) {
+        double scale = qSqrt(static_cast<double>(maxPalettePixels) / sourcePixels);
+        int scaledWidth = qMax(1, qFloor(source.width() * scale));
+        int scaledHeight = qMax(1, qFloor(source.height() * scale));
+        paletteSource = source.scaled(scaledWidth, scaledHeight,
+                                      Qt::IgnoreAspectRatio, Qt::FastTransformation);
+    }
+
     int levelsPerChannel = qMax(2, qRound(qPow((double)outOf, 1.0 / 3.0)));
     qint64 maxColors = qint64(levelsPerChannel) * levelsPerChannel * levelsPerChannel;
     if (num_colors > maxColors) {
         num_colors = static_cast<int>(maxColors);
     }
 
-    int width = source.width();
-    int height = source.height();
+    int width = paletteSource.width();
+    int height = paletteSource.height();
     array2d< vector_fixed<double, 3> > image(width, height);
     array2d< vector_fixed<double, 3> > filter1_weights(1, 1);
     array2d< vector_fixed<double, 3> > filter3_weights(3, 3);
@@ -103,7 +118,7 @@ QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMo
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            QColor color = source.pixelColor(x, y);
+            QColor color = paletteSource.pixelColor(x, y);
             image(x, y)(0) = color.redF();
             image(x, y)(1) = color.greenF();
             image(x, y)(2) = color.blueF();
