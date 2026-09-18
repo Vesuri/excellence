@@ -660,16 +660,17 @@ void MainWindow::openFile(const QString &path)
         QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
         QImage indexed;
+        DitherMode ditherMode = dialog.ditherMode();
         if (useOptimalPalette) {
             auto updateProgress = [&progress](int percent) {
                 progress.setValue(percent);
                 QApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
             };
-            indexed = PaletteQuantizer::quantize(loaded, dialog.colors(), DitherMode::None,
+            indexed = PaletteQuantizer::quantize(loaded, dialog.colors(), ditherMode,
                                                  dialog.outOf(), PaletteSortMode::None,
                                                  updateProgress);
         } else {
-            indexed = convertToIndexed(loaded);
+            indexed = convertToIndexed(loaded, ditherMode);
         }
         indexed.setDotsPerMeterX(loaded.dotsPerMeterX());
         indexed.setDotsPerMeterY(loaded.dotsPerMeterY());

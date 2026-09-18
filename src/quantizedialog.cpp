@@ -79,6 +79,15 @@ int QuantizeDialog::outOf() const
     return qRound(qPow(8, ui->comboBoxOutOf->currentIndex() + 1));
 }
 
+DitherMode QuantizeDialog::ditherMode() const
+{
+    switch (ui->comboBoxDither->currentIndex()) {
+    case 1: return DitherMode::FloydSteinberg;
+    case 2: return DitherMode::Pattern;
+    default: return DitherMode::None;
+    }
+}
+
 void QuantizeDialog::setPaletteMode(int index)
 {
     bool optimal = index == 1;

@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QVector>
 #include <QRgb>
+#include "dithermode.h"
 
 namespace Ui {
 class QuantizeDialog;
@@ -22,6 +23,7 @@ public:
     bool useOptimalPalette() const;
     int colors() const;
     int outOf() const;
+    DitherMode ditherMode() const;
 
 private slots:
     void setPaletteMode(int index);
