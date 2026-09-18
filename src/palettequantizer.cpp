@@ -192,12 +192,14 @@ QImage PaletteQuantizer::quantize(const QImage &source, int num_colors, DitherMo
         paletteRgb[i] = qRgba(r, g, b, 255);
     }
 
-    if (sortMode != PaletteSortMode::None) {
-        bool darkToLight = sortMode == PaletteSortMode::DarkToLight;
-        std::sort(paletteRgb.begin(), paletteRgb.end(), [darkToLight](QRgb a, QRgb b) {
-            return darkToLight ? luma(a) < luma(b) : luma(a) > luma(b);
-        });
-    }
+    bool darkToLight = sortMode == PaletteSortMode::DarkToLight;
+    std::sort(paletteRgb.begin(), paletteRgb.end(), [darkToLight](QRgb a, QRgb b) {
+        int lumaA = luma(a);
+        int lumaB = luma(b);
+        if (lumaA != lumaB)
+            return darkToLight ? lumaA < lumaB : lumaA > lumaB;
+        return a < b;
+    });
 
     QImage out = ditherToPalette(source.convertToFormat(QImage::Format_RGB32), paletteRgb, mode);
     out.setDotsPerMeterX(source.dotsPerMeterX());

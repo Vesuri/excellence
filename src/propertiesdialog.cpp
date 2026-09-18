@@ -69,11 +69,9 @@ void PropertiesDialog::setProperties()
             }
 
             int outOf = qRound(qPow(8, ui->comboBoxOutOf->currentIndex() + 1));
-            PaletteSortMode sortMode = PaletteSortMode::None;
-            switch (ui->comboBoxSorting->currentIndex()) {
-            case 1: sortMode = PaletteSortMode::DarkToLight; break;
-            case 2: sortMode = PaletteSortMode::LightToDark; break;
-            }
+            PaletteSortMode sortMode = ui->comboBoxSorting->currentIndex() == 1
+                ? PaletteSortMode::LightToDark
+                : PaletteSortMode::DarkToLight;
             newBuffer->setImage(PaletteQuantizer::quantize(image, colors, DitherMode::None,
                                                            outOf, sortMode));
         } else {

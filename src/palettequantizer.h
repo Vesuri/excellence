@@ -15,7 +15,7 @@ public:
     // with outOf total addressable colors (e.g. 4096 = 12-bit, 16 levels per
     // channel). Entries are guaranteed distinct as long as num_colors does
     // not exceed outOf; num_colors is clamped to outOf otherwise.
-    static QImage quantize(const QImage &source, int num_colors, DitherMode mode = DitherMode::None, int outOf = 16777216, PaletteSortMode sortMode = PaletteSortMode::None, ProgressCallback progress = {});
+    static QImage quantize(const QImage &source, int num_colors, DitherMode mode = DitherMode::None, int outOf = 16777216, PaletteSortMode sortMode = PaletteSortMode::DarkToLight, ProgressCallback progress = {});
 };
 
 #endif // PALETTEQUANTIZER_H

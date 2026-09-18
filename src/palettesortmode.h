@@ -2,7 +2,6 @@
 #define PALETTESORTMODE_H
 
 enum class PaletteSortMode {
-    None,
     DarkToLight,
     LightToDark
 };

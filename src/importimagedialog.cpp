@@ -75,9 +75,8 @@ DitherMode ImportImageDialog::ditherMode() const
 PaletteSortMode ImportImageDialog::sortMode() const
 {
     switch (ui->comboBoxSorting->currentIndex()) {
-    case 1: return PaletteSortMode::DarkToLight;
-    case 2: return PaletteSortMode::LightToDark;
-    default: return PaletteSortMode::None;
+    case 1: return PaletteSortMode::LightToDark;
+    default: return PaletteSortMode::DarkToLight;
     }
 }
 

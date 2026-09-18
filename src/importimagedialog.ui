@@ -231,11 +231,6 @@
       <widget class="QComboBox" name="comboBoxSorting">
        <item>
         <property name="text">
-         <string>None</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>Dark to light</string>
         </property>
        </item>
