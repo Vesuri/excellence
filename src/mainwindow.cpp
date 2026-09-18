@@ -275,7 +275,7 @@ void MainWindow::initialize()
 
     QStringList args = qApp->arguments();
     QString startupPath = args.length() > 1 ? args.last() : QString();
-    Buffer *work = startupPath.isEmpty() ? new Buffer(640, 512, 32, this) : new Buffer(startupPath, this);
+    Buffer *work = new Buffer(640, 512, 32, this);
     wireBuffer(work);
     buffers_ = { work };
     activeIndex_ = 0;
@@ -283,6 +283,9 @@ void MainWindow::initialize()
     spareIndex_ = -1;
     preSpareIndex_ = -1;
     activateBuffer(work);
+
+    if (!startupPath.isEmpty())
+        openFile(startupPath);
 
     penTip->setPaintColor(buffer->paintColor());
     penTip->setEraseColor(buffer->eraseColor());
@@ -626,7 +629,16 @@ void MainWindow::openFile(const QString &path)
     }
 
     QImage loaded(path);
-    if (!loaded.isNull() && loaded.format() != QImage::Format_Indexed8) {
+    if (loaded.isNull()) {
+        QImageReader reader(path);
+        reader.read();
+        QMessageBox::warning(this, tr("Open File"),
+                             tr("Could not load \"%1\".\n%2")
+                                 .arg(QFileInfo(path).fileName(), reader.errorString()));
+        return;
+    }
+
+    if (loaded.format() != QImage::Format_Indexed8) {
         QuantizeDialog dialog(this);
         dialog.setCurrentPalette(buffer->image().colorTable());
         if (dialog.exec() != QDialog::Accepted)
